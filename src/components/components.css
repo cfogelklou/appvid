@@ -702,6 +702,12 @@
   overflow: hidden;
 }
 
+@media (max-height: 500px) {
+  .ad-banner-wrapper {
+    display: none !important;
+  }
+}
+
 .top-bar {
   display: flex;
   justify-content: space-between;
@@ -882,6 +888,8 @@
   font-family: var(--font-sans);
   color: var(--color-text-primary);
   min-height: 100%;
+  overflow-y: auto;
+  max-height: 100%;
 }
 
 .landing-hero {

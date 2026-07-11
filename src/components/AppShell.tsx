@@ -10,6 +10,7 @@ import { ProcessingOverlay } from './ProcessingOverlay';
 import { ExportCompletePanel } from './ExportCompletePanel';
 import { processVideo, type ProcessLog } from '../utils/ffmpegEngine';
 import { Sparkles, Shield, MonitorPlay, Save } from 'lucide-react';
+import { AdBanner } from './AdBanner';
 import './components.css';
 
 export const AppShell: React.FC = () => {
@@ -177,6 +178,11 @@ export const AppShell: React.FC = () => {
           onClose={() => setExportBlob(null)}
         />
       )}
+
+      {/* Manual AdSense Banner */}
+      <div className="ad-banner-wrapper">
+        <AdBanner orientation="portrait" height={90} width={1200} />
+      </div>
     </div>
   );
 };

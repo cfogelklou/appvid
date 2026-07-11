@@ -23,7 +23,7 @@ interface ProjectContextType {
   setZoom: (zoom: number) => void;
   setSelectedSegmentId: (id: string | null) => void;
   importVideo: (video: Omit<VideoAssetMetadata, 'blobUrl'> & { file: File }) => void;
-  importAudio: (file: File, duration: number) => void;
+  importAudio: (file: File, duration: number, peaks?: number[]) => void;
   removeAudio: (assetId: string) => void;
   addSegment: (assetId: string) => void;
   updateSegment: (id: string, updates: Partial<Pick<AudioSegment, 'startTime' | 'volume'>>) => void;
@@ -34,6 +34,7 @@ interface ProjectContextType {
   clearProject: () => void;
   relinkVideo: (file: File) => boolean;
   relinkAudio: (assetId: string, file: File) => boolean;
+  updateAudioPeaks: (assetId: string, peaks: number[]) => void;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -105,7 +106,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     setPlayheadState(0);
   };
 
-  const importAudio = (file: File, duration: number) => {
+  const importAudio = (file: File, duration: number, peaks?: number[]) => {
     const id = crypto.randomUUID();
     const blobUrl = URL.createObjectURL(file);
     setProject((prev) => {
@@ -116,6 +117,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         duration,
         blobUrl,
         placedCount: 0,
+        peaks,
       };
 
       const updated = {
@@ -158,6 +160,17 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         project.segments.find((s) => s.id === selectedSegmentId)?.assetId === assetId;
       if (isDeleted) setSelectedSegmentId(null);
     }
+  };
+
+  const updateAudioPeaks = (assetId: string, peaks: number[]) => {
+    setProject((prev) => {
+      const updated = {
+        ...prev,
+        audioAssets: prev.audioAssets.map((a) => (a.id === assetId ? { ...a, peaks } : a)),
+        updatedAt: Date.now(),
+      };
+      return updated;
+    });
   };
 
   const addSegment = (assetId: string) => {
@@ -277,6 +290,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         name: a.name,
         size: a.size,
         duration: a.duration,
+        peaks: a.peaks,
       })),
       segments: project.segments,
       settings: project.settings,
@@ -382,6 +396,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         setSelectedSegmentId,
         importVideo,
         importAudio,
+        updateAudioPeaks,
         removeAudio,
         addSegment,
         updateSegment,

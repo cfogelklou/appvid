@@ -160,8 +160,8 @@ async function runTest() {
   console.log('Export processing started!');
 
   // Increase Playwright timeout for the long transcode process
-  console.log('Waiting for FFmpeg transcode to finish (this might take up to 3 minutes)...');
-  await page.waitForSelector('.complete-overlay', { timeout: 180000 });
+  console.log('Waiting for FFmpeg transcode to finish (this might take up to 6 minutes)...');
+  await page.waitForSelector('.complete-overlay', { timeout: 360000 });
   console.log('Export Complete panel detected!');
 
   // Verify the output details

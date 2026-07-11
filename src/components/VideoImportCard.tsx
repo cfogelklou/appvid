@@ -87,7 +87,7 @@ export const VideoImportCard: React.FC<VideoImportCardProps> = ({ onFileSelected
         <p className='import-subtitle'>
           Drag & drop your screen recording here, or click to browse files.
         </p>
-        <button className='import-btn' type='button'>
+        <button className='btn-secondary' type='button' style={{ maxWidth: '160px', marginTop: '16px', padding: '10px 24px', fontSize: '0.85rem' }}>
           Choose File
         </button>
       </div>

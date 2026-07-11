@@ -15,6 +15,7 @@ export interface AudioAssetMetadata {
   duration: number;
   blobUrl: string;
   placedCount: number;
+  peaks?: number[];
 }
 
 export interface AudioSegment {

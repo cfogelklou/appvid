@@ -1,8 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { timeToX, xToTime, getSnappedTime } from '../utils/timelineMath';
 import type { AudioSegment as AudioSegmentType } from '../types';
 import { AlertTriangle, Link } from 'lucide-react';
+import { getAudioPeaks } from '../utils/audioWaveform';
 
 interface AudioSegmentProps {
   segment: AudioSegmentType;
@@ -23,7 +24,8 @@ export const AudioSegment: React.FC<AudioSegmentProps> = ({
     zoom,
     selectedSegmentId,
     setSelectedSegmentId,
-    updateSegment
+    updateSegment,
+    updateAudioPeaks
   } = useProject();
 
   const segmentRef = useRef<HTMLDivElement>(null);
@@ -59,6 +61,50 @@ export const AudioSegment: React.FC<AudioSegmentProps> = ({
     const s = Math.floor(time % 60);
     const ms = Math.floor((time % 1) * 10);
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${ms}`;
+  };
+
+  const [peaks, setPeaks] = useState<number[]>(asset?.peaks || []);
+
+  useEffect(() => {
+    // If the component already has peaks in state, sync it if the asset changes
+    if (asset?.peaks && asset.peaks.length > 0) {
+      setPeaks(asset.peaks);
+    }
+  }, [asset?.peaks]);
+
+  useEffect(() => {
+    if (asset && (!peaks || peaks.length === 0) && asset.blobUrl) {
+      const loadPeaks = async () => {
+        try {
+          const response = await fetch(asset.blobUrl);
+          const blob = await response.blob();
+          const file = new File([blob], asset.name, { type: blob.type });
+          const generatedPeaks = await getAudioPeaks(file);
+          setPeaks(generatedPeaks);
+          updateAudioPeaks(asset.id, generatedPeaks);
+        } catch (e) {
+          console.warn('Failed to load peaks dynamically:', e);
+        }
+      };
+      loadPeaks();
+    }
+  }, [asset?.id, asset?.blobUrl]);
+
+  const renderWaveform = () => {
+    if (!peaks || peaks.length === 0) return null;
+    return (
+      <div className="audio-segment-waveform">
+        {peaks.map((peak, idx) => (
+          <div
+            key={idx}
+            className="waveform-bar"
+            style={{
+              height: `${peak * 100}%`
+            }}
+          />
+        ))}
+      </div>
+    );
   };
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -168,6 +214,8 @@ export const AudioSegment: React.FC<AudioSegmentProps> = ({
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
     >
+      {renderWaveform()}
+
       <div className="audio-segment-content">
         <div className="audio-segment-title-bar">
           <span className="audio-segment-name">{name}</span>

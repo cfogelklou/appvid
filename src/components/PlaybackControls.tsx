@@ -126,17 +126,17 @@ export const PlaybackControls: React.FC = () => {
           {/* Speed Selector */}
           <select
             className='rate-select'
-            value={rate}
+            value={rate.toString()}
             onChange={handleRateChange}
             disabled={!hasVideo}
             title='Playback Speed'
             aria-label='Playback Speed'
           >
             <option value='0.5'>0.5x</option>
-            <option value='1.0'>1.0x</option>
+            <option value='1'>1.0x</option>
             <option value='1.25'>1.25x</option>
             <option value='1.5'>1.5x</option>
-            <option value='2.0'>2.0x</option>
+            <option value='2'>2.0x</option>
           </select>
         </div>
 

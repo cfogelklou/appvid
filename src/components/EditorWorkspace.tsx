@@ -3,7 +3,6 @@ import { useProject } from '../context/ProjectContext';
 import { VideoPreview } from './VideoPreview';
 import { PlaybackControls } from './PlaybackControls';
 import { Timeline } from './Timeline';
-import { TimelineZoomControls } from './TimelineZoomControls';
 import { AssetPanel } from './AssetPanel';
 import { ClipInspector } from './ClipInspector';
 import { StoreReadinessPanel } from './StoreReadinessPanel';
@@ -85,7 +84,6 @@ export const EditorWorkspace: React.FC = () => {
       <div className="workspace-lower">
         <div className="timeline-header-row">
           <span className="section-label">Timeline Editor</span>
-          <TimelineZoomControls />
         </div>
         <div className="timeline-container-wrapper">
           <Timeline />

@@ -41,7 +41,7 @@ export const TimelineZoomControls: React.FC = () => {
       >
         <ZoomOut size={16} />
       </button>
-      <span className='zoom-percentage'>{zoom}px/s</span>
+      <span className='zoom-percentage'>{Math.round(zoom)}px/s</span>
       <button
         type='button'
         className='zoom-btn'

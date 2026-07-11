@@ -842,3 +842,200 @@
   background-size: 50px 100%; /* Corresponds to zoom ticks */
 }
 
+/* ==========================================================================
+   5. Landing & Entry Screen Styling (Rich dark-mode theme)
+   ========================================================================== */
+.landing-screen {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  min-height: 100%;
+}
+
+.landing-hero {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(90deg, rgba(168, 85, 247, 0.12) 0%, rgba(59, 130, 246, 0.12) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  color: #c084fc; /* Purple 400 */
+  padding: 6px 16px;
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.08);
+}
+
+.landing-title {
+  font-size: 3.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #ffffff 40%, #a855f7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.03em;
+  margin: 16px 0 8px;
+}
+
+.landing-tagline {
+  font-size: 1.15rem;
+  color: var(--color-text-secondary);
+  font-weight: 400;
+  max-width: 500px;
+  margin: 0 auto 16px;
+}
+
+.landing-trust-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: rgba(22, 163, 74, 0.06);
+  border: 1px solid rgba(22, 163, 74, 0.15);
+  color: #4ade80; /* Green 400 */
+  padding: 8px 18px;
+  border-radius: var(--radius-md);
+  font-size: 0.82rem;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.04);
+}
+
+.landing-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+@media (min-width: 868px) {
+  .landing-grid {
+    grid-template-columns: 1.62fr 1fr;
+  }
+}
+
+.landing-main-card {
+  background: rgba(24, 24, 27, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  box-shadow: var(--shadow-lg), 0 30px 60px -15px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card-section-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #c084fc; /* Purple 400 */
+  border-left: 3px solid var(--accent);
+  padding-left: 10px;
+  margin-bottom: 4px;
+}
+
+.landing-side-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.landing-side-card {
+  background: rgba(24, 24, 27, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.landing-side-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.card-icon-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--color-primary-hover);
+}
+
+.card-icon-header h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.restore-card {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(24, 24, 27, 0.45) 100%);
+  border-color: rgba(37, 99, 235, 0.2);
+}
+
+.restore-card .card-icon-header {
+  color: var(--color-primary-hover);
+}
+
+.guidance-card .card-icon-header {
+  color: #c084fc; /* Purple icon */
+}
+
+.guidance-card p, .restore-card p {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.guidance-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+}
+
+.guidance-list li {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  position: relative;
+  padding-left: 20px;
+}
+
+.guidance-list li::before {
+  content: "•";
+  color: #c084fc; /* Purple bullet */
+  font-weight: bold;
+  font-size: 1.25rem;
+  position: absolute;
+  left: 4px;
+  top: -2px;
+}
+
+/* Background radial gradient glow for landing screen */
+.app-shell:has(.landing-screen) {
+  background-image: 
+    radial-gradient(circle at 50% -20%, rgba(168, 85, 247, 0.08) 0%, transparent 60%),
+    radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.03) 0%, transparent 40%);
+}
+
+

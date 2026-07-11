@@ -51,6 +51,7 @@
   position: relative;
   min-height: 140px;
   height: auto;
+  padding-bottom: 24px;
 }
 
 /* Ruler Wrapper */

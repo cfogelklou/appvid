@@ -1,5 +1,5 @@
 import React from 'react';
-import { useProject } from '../context/ProjectContext';
+import { useProject, getEditedVideoDuration } from '../context/ProjectContext';
 import { STORE_PRESETS } from '../constants';
 import { X, AlertTriangle, Check } from 'lucide-react';
 import './components.css';
@@ -27,9 +27,10 @@ export const ExportSettingsSheet: React.FC<ExportSettingsSheetProps> = ({
   const warnings: string[] = [];
   if (video) {
     // 1. Duration warning: iOS App Store previews must be 15s to 30s
-    if (video.duration < 15 || video.duration > 30) {
+    const editedDuration = getEditedVideoDuration(project);
+    if (editedDuration < 15 || editedDuration > 30) {
       warnings.push(
-        `Duration is ${video.duration.toFixed(1)}s. App Store Previews must be between 15 and 30 seconds.`
+        `Duration is ${editedDuration.toFixed(1)}s. App Store Previews must be between 15 and 30 seconds.`
       );
     }
 

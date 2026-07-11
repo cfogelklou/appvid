@@ -17,7 +17,7 @@ export const TimelineTrack: React.FC = () => {
       const asset = project.audioAssets.find(a => a.id === s.assetId);
       return {
         ...s,
-        duration: asset ? asset.duration : 0
+        duration: s.duration !== undefined ? s.duration : (asset ? asset.duration : 0)
       };
     })
     .sort((a, b) => a.startTime - b.startTime);

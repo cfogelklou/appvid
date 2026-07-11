@@ -6,9 +6,18 @@ import type {
   VideoAssetMetadata,
   AudioAssetMetadata,
   AudioSegment,
+  VideoSegment,
   ExportSettings,
 } from '../types';
 import { STORE_PRESETS } from '../constants';
+
+export const getEditedVideoDuration = (project: Project): number => {
+  if (!project.videoSegments || project.videoSegments.length === 0) {
+    return project.video ? project.video.duration : 0;
+  }
+  const lastSeg = project.videoSegments[project.videoSegments.length - 1];
+  return lastSeg.startTime + lastSeg.duration;
+};
 
 interface ProjectContextType {
   project: Project;
@@ -17,11 +26,13 @@ interface ProjectContextType {
   isPlaying: boolean;
   zoom: number;
   selectedSegmentId: string | null;
+  selectedVideoSegmentId: string | null;
   hasDraft: boolean;
   setPlayhead: (time: number) => void;
   setIsPlaying: (playing: boolean) => void;
   setZoom: (zoom: number) => void;
   setSelectedSegmentId: (id: string | null) => void;
+  setSelectedVideoSegmentId: (id: string | null) => void;
   importVideo: (video: Omit<VideoAssetMetadata, 'blobUrl'> & { file: File }) => void;
   importAudio: (file: File, duration: number, peaks?: number[]) => void;
   removeAudio: (assetId: string) => void;
@@ -35,6 +46,9 @@ interface ProjectContextType {
   relinkVideo: (file: File) => boolean;
   relinkAudio: (assetId: string, file: File) => boolean;
   updateAudioPeaks: (assetId: string, peaks: number[]) => void;
+  splitVideoSegment: (segmentId: string, splitTime: number) => void;
+  deleteVideoSegment: (segmentId: string) => void;
+  updateVideoSegmentSpeed: (segmentId: string, speed: number) => void;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -64,6 +78,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [zoom, setZoom] = useState<number>(50); // pixels per second
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
+  const [selectedVideoSegmentId, setSelectedVideoSegmentId] = useState<string | null>(null);
   const [hasDraft, setHasDraft] = useState<boolean>(false);
 
   // Relinking states are tracked via context and matching metadata
@@ -78,8 +93,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     STORE_PRESETS.find((p) => p.id === project.settings.presetId) || STORE_PRESETS[0];
 
   const setPlayhead = (time: number) => {
+    const videoDuration = getEditedVideoDuration(project);
     if (project.video) {
-      setPlayheadState(Math.max(0, Math.min(time, project.video.duration)));
+      setPlayheadState(Math.max(0, Math.min(time, videoDuration)));
     } else {
       setPlayheadState(Math.max(0, time));
     }
@@ -88,6 +104,14 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   const importVideo = (videoData: Omit<VideoAssetMetadata, 'blobUrl'> & { file: File }) => {
     const blobUrl = URL.createObjectURL(videoData.file);
     setProject((prev) => {
+      const defaultSegment: VideoSegment = {
+        id: crypto.randomUUID(),
+        clipStart: 0,
+        duration: videoData.duration,
+        startTime: 0,
+        playbackRate: 1.0,
+      };
+
       const updated = {
         ...prev,
         video: {
@@ -99,6 +123,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
           aspectRatio: videoData.aspectRatio,
           blobUrl,
         },
+        videoSegments: [defaultSegment],
         updatedAt: Date.now(),
       };
       return updated;
@@ -210,7 +235,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (updates.startTime !== undefined) {
           startTime = Math.max(0, updates.startTime);
           if (prev.video) {
-            startTime = Math.min(startTime, prev.video.duration);
+            startTime = Math.min(startTime, getEditedVideoDuration(prev));
           }
         }
         return {
@@ -285,6 +310,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             aspectRatio: project.video.aspectRatio,
           }
         : null,
+      videoSegments: project.videoSegments,
       audioAssets: project.audioAssets.map((a) => ({
         id: a.id,
         name: a.name,
@@ -308,11 +334,20 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     try {
       const parsed = JSON.parse(draft);
 
+      const defaultSegments = parsed.video ? [{
+        id: crypto.randomUUID(),
+        clipStart: 0,
+        duration: parsed.video.duration,
+        startTime: 0,
+        playbackRate: 1.0,
+      }] : [];
+
       // Re-initialize draft project with empty blobUrls (relink required)
       const restoredProject: Project = {
         id: parsed.id,
         name: parsed.name,
         video: parsed.video ? { ...parsed.video, blobUrl: '' } : null,
+        videoSegments: parsed.videoSegments || defaultSegments,
         audioAssets: parsed.audioAssets.map((a: any) => ({
           ...a,
           blobUrl: '',
@@ -343,6 +378,151 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     setProject(createDefaultProject());
     setPlayheadState(0);
     setSelectedSegmentId(null);
+  };
+
+  const splitVideoSegment = (segmentId: string, splitTime: number) => {
+    setProject((prev) => {
+      if (!prev.videoSegments) return prev;
+      const idx = prev.videoSegments.findIndex((s) => s.id === segmentId);
+      if (idx === -1) return prev;
+
+      const S = prev.videoSegments[idx];
+      // Validation: split time must be strictly within segment bounds
+      if (splitTime - S.startTime < 0.1 || (S.startTime + S.duration) - splitTime < 0.1) {
+        return prev;
+      }
+
+      const S1: VideoSegment = {
+        id: crypto.randomUUID(),
+        clipStart: S.clipStart,
+        duration: splitTime - S.startTime,
+        startTime: S.startTime,
+        playbackRate: S.playbackRate,
+      };
+
+      const S2: VideoSegment = {
+        id: crypto.randomUUID(),
+        clipStart: S.clipStart + (splitTime - S.startTime) * S.playbackRate,
+        duration: S.duration - S1.duration,
+        startTime: splitTime,
+        playbackRate: S.playbackRate,
+      };
+
+      const newVideoSegments = [
+        ...prev.videoSegments.slice(0, idx),
+        S1,
+        S2,
+        ...prev.videoSegments.slice(idx + 1),
+      ];
+
+      // Update start times of subsequent segments
+      let currentStartTime = 0;
+      const finalVideoSegments = newVideoSegments.map((s) => {
+        const updated = { ...s, startTime: currentStartTime };
+        currentStartTime += s.duration;
+        return updated;
+      });
+
+      // Split overlapping audio segments
+      const updatedSegments: AudioSegment[] = [];
+      prev.segments.forEach((A) => {
+        const asset = prev.audioAssets.find((a) => a.id === A.assetId);
+        const assetDuration = asset ? asset.duration : 0;
+        const currentDuration = A.duration !== undefined ? A.duration : assetDuration;
+        const currentClipStart = A.clipStart !== undefined ? A.clipStart : 0;
+
+        if (splitTime > A.startTime && splitTime < A.startTime + currentDuration) {
+          const duration1 = splitTime - A.startTime;
+          const A1: AudioSegment = {
+            id: crypto.randomUUID(),
+            assetId: A.assetId,
+            startTime: A.startTime,
+            volume: A.volume,
+            clipStart: currentClipStart,
+            duration: duration1,
+          };
+          const A2: AudioSegment = {
+            id: crypto.randomUUID(),
+            assetId: A.assetId,
+            startTime: splitTime,
+            volume: A.volume,
+            clipStart: currentClipStart + duration1,
+            duration: currentDuration - duration1,
+          };
+          updatedSegments.push(A1, A2);
+        } else {
+          updatedSegments.push(A);
+        }
+      });
+
+      const finalAudioAssets = prev.audioAssets.map((a) => {
+        const count = updatedSegments.filter((s) => s.assetId === a.id).length;
+        return { ...a, placedCount: count };
+      });
+
+      return {
+        ...prev,
+        videoSegments: finalVideoSegments,
+        segments: updatedSegments,
+        audioAssets: finalAudioAssets,
+        updatedAt: Date.now(),
+      };
+    });
+  };
+
+  const deleteVideoSegment = (segmentId: string) => {
+    setProject((prev) => {
+      if (!prev.videoSegments || prev.videoSegments.length <= 1) return prev;
+      const newVideoSegments = prev.videoSegments.filter((s) => s.id !== segmentId);
+
+      // Re-calculate start times magnetically
+      let currentStartTime = 0;
+      const finalVideoSegments = newVideoSegments.map((s) => {
+        const updated = { ...s, startTime: currentStartTime };
+        currentStartTime += s.duration;
+        return updated;
+      });
+
+      return {
+        ...prev,
+        videoSegments: finalVideoSegments,
+        updatedAt: Date.now(),
+      };
+    });
+    if (selectedVideoSegmentId === segmentId) {
+      setSelectedVideoSegmentId(null);
+    }
+  };
+
+  const updateVideoSegmentSpeed = (segmentId: string, speed: number) => {
+    setProject((prev) => {
+      if (!prev.videoSegments) return prev;
+      const newVideoSegments = prev.videoSegments.map((s) => {
+        if (s.id !== segmentId) return s;
+        // visual duration = raw duration / speed
+        const rawDuration = s.duration * s.playbackRate;
+        const newDuration = rawDuration / speed;
+        return {
+          ...s,
+          playbackRate: speed,
+          duration: newDuration,
+        };
+      });
+
+      // Re-calculate start times magnetically
+      let currentStartTime = 0;
+      const finalVideoSegments = newVideoSegments.map((s) => {
+        const updated = { ...s, startTime: currentStartTime };
+        currentStartTime += s.duration;
+        return updated;
+      });
+
+      return {
+        ...prev,
+        videoSegments: finalVideoSegments,
+        updatedAt: Date.now(),
+      };
+    });
   };
 
   const relinkVideo = (file: File): boolean => {
@@ -389,11 +569,13 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         isPlaying,
         zoom,
         selectedSegmentId,
+        selectedVideoSegmentId,
         hasDraft,
         setPlayhead,
         setIsPlaying,
         setZoom,
         setSelectedSegmentId,
+        setSelectedVideoSegmentId,
         importVideo,
         importAudio,
         updateAudioPeaks,
@@ -407,6 +589,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         clearProject,
         relinkVideo,
         relinkAudio,
+        splitVideoSegment,
+        deleteVideoSegment,
+        updateVideoSegmentSpeed,
       }}
     >
       {children}

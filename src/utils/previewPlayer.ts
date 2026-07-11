@@ -1,12 +1,14 @@
-import type { AudioSegment, AudioAssetMetadata } from '../types';
+import type { Project, AudioSegment, AudioAssetMetadata } from '../types';
 
 export class PreviewPlayer {
   private video: HTMLVideoElement | null = null;
   private audioPool = new Map<string, HTMLAudioElement>();
+  private project: Project | null = null;
   private segments: AudioSegment[] = [];
   private assets: AudioAssetMetadata[] = [];
   private onTimeUpdateCallback?: (time: number) => void;
   private onPlayPauseCallback?: (isPlaying: boolean) => void;
+  private globalRate = 1.0;
 
   // Public flag to prevent feedback loops in React
   public isSelfUpdatingPlayhead = false;
@@ -19,6 +21,11 @@ export class PreviewPlayer {
     this.cleanup();
     this.video = video;
     this.setupListeners();
+  }
+
+  updateProject(project: Project) {
+    this.project = project;
+    this.updateTracks(project.segments, project.audioAssets);
   }
 
   updateTracks(segments: AudioSegment[], assets: AudioAssetMetadata[]) {
@@ -49,12 +56,44 @@ export class PreviewPlayer {
     }
   }
 
+  public timelineTimeToSourceTime(t: number): number {
+    if (!this.project || !this.project.videoSegments || this.project.videoSegments.length === 0) {
+      return t;
+    }
+    // Find segment covering t
+    const seg = this.project.videoSegments.find(
+      (s) => t >= s.startTime && t <= s.startTime + s.duration
+    );
+    if (!seg) {
+      const lastSeg = this.project.videoSegments[this.project.videoSegments.length - 1];
+      return lastSeg.clipStart + lastSeg.duration * lastSeg.playbackRate;
+    }
+    return seg.clipStart + (t - seg.startTime) * seg.playbackRate;
+  }
+
+  public sourceTimeToTimelineTime(srcTime: number): number {
+    if (!this.project || !this.project.videoSegments || this.project.videoSegments.length === 0) {
+      return srcTime;
+    }
+    // Find segment covering srcTime
+    const seg = this.project.videoSegments.find(
+      (s) => srcTime >= s.clipStart && srcTime <= s.clipStart + s.duration * s.playbackRate
+    );
+    if (!seg) {
+      const lastSeg = this.project.videoSegments[this.project.videoSegments.length - 1];
+      return lastSeg.startTime + lastSeg.duration;
+    }
+    return seg.startTime + (srcTime - seg.clipStart) / seg.playbackRate;
+  }
+
   seek(time: number) {
     if (!this.video) return;
+    const targetSourceTime = this.timelineTimeToSourceTime(time);
     // Only seek if the difference is significant to avoid feedback jitter
-    if (Math.abs(this.video.currentTime - time) > 0.05) {
+    if (Math.abs(this.video.currentTime - targetSourceTime) > 0.05) {
       try {
-        this.video.currentTime = time;
+        this.video.currentTime = targetSourceTime;
+        this.syncPlaybackRate();
         this.syncAudio();
       } catch (err) {
         console.warn('[PreviewPlayer] Video seek failed:', err);
@@ -63,9 +102,22 @@ export class PreviewPlayer {
   }
 
   setPlaybackRate(rate: number) {
-    if (this.video) {
-      this.video.playbackRate = rate;
+    this.globalRate = rate;
+    this.syncPlaybackRate();
+  }
+
+  private syncPlaybackRate() {
+    if (!this.video) return;
+    if (!this.project || !this.project.videoSegments || this.project.videoSegments.length === 0) {
+      this.video.playbackRate = this.globalRate;
+      return;
     }
+    const vTime = this.sourceTimeToTimelineTime(this.video.currentTime);
+    const seg = this.project.videoSegments.find(
+      (s) => vTime >= s.startTime && vTime <= s.startTime + s.duration
+    );
+    const segmentRate = seg ? seg.playbackRate : 1.0;
+    this.video.playbackRate = segmentRate * this.globalRate;
   }
 
   cleanup() {
@@ -75,6 +127,7 @@ export class PreviewPlayer {
     this.onTimeUpdateCallback = undefined;
     this.onPlayPauseCallback = undefined;
     this.isSelfUpdatingPlayhead = false;
+    this.project = null;
   }
 
   private setupListeners() {
@@ -108,8 +161,34 @@ export class PreviewPlayer {
   private handleTimeUpdate = () => {
     if (!this.video) return;
     this.isSelfUpdatingPlayhead = true;
+
+    // Check if the playhead crossed a segment boundary
+    if (this.project && this.project.videoSegments && this.project.videoSegments.length > 0) {
+      const vTime = this.sourceTimeToTimelineTime(this.video.currentTime);
+      const segIndex = this.project.videoSegments.findIndex(
+        (s) => vTime >= s.startTime && vTime <= s.startTime + s.duration
+      );
+
+      if (segIndex !== -1) {
+        const seg = this.project.videoSegments[segIndex];
+        const clipEnd = seg.clipStart + seg.duration * seg.playbackRate;
+        if (this.video.currentTime >= clipEnd - 0.01) {
+          // Segment ended, transition to next segment
+          if (segIndex + 1 < this.project.videoSegments.length) {
+            const nextSeg = this.project.videoSegments[segIndex + 1];
+            this.video.currentTime = nextSeg.clipStart;
+            this.syncPlaybackRate();
+          } else {
+            // End of entire video timeline
+            this.video.pause();
+          }
+        }
+      }
+    }
+
+    const currentTimelineTime = this.sourceTimeToTimelineTime(this.video.currentTime);
     if (this.onTimeUpdateCallback) {
-      this.onTimeUpdateCallback(this.video.currentTime);
+      this.onTimeUpdateCallback(currentTimelineTime);
     }
     this.syncAudio();
   };
@@ -137,19 +216,15 @@ export class PreviewPlayer {
   };
 
   private handleRateChange = () => {
-    if (!this.video) return;
-    const rate = this.video.playbackRate;
-    for (const audio of this.audioPool.values()) {
-      audio.playbackRate = rate;
-    }
+    // Kept for backward compatibility, but actual rates are synced explicitly
   };
 
   public syncAudio() {
     if (!this.video) return;
 
-    const vTime = this.video.currentTime;
+    const vTime = this.sourceTimeToTimelineTime(this.video.currentTime);
     const isVideoPlaying = !this.video.paused && !this.video.ended;
-    const rate = this.video.playbackRate;
+    const rate = this.globalRate;
 
     const activeSegmentIds = new Set<string>();
 
@@ -157,13 +232,14 @@ export class PreviewPlayer {
       const asset = this.assets.find((a) => a.id === seg.assetId);
       if (!asset || !asset.blobUrl) continue;
 
-      const duration = asset.duration;
+      const duration = seg.duration !== undefined ? seg.duration : asset.duration;
+      const clipStart = seg.clipStart !== undefined ? seg.clipStart : 0;
       const start = seg.startTime;
       const end = start + duration;
 
       if (vTime >= start && vTime < end) {
         activeSegmentIds.add(seg.id);
-        const targetAudioTime = vTime - start;
+        const targetAudioTime = (vTime - start) + clipStart;
 
         let audio = this.audioPool.get(seg.id);
         if (!audio) {

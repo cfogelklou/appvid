@@ -1,5 +1,5 @@
 import React from 'react';
-import { useProject } from '../context/ProjectContext';
+import { useProject, getEditedVideoDuration } from '../context/ProjectContext';
 import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import './TimelineZoomControls.css';
 
@@ -19,7 +19,7 @@ export const TimelineZoomControls: React.FC = () => {
   const handleZoomFit = () => {
     // Find viewport element to calculate zoom fit dynamically
     const viewport = document.querySelector('.timeline-viewport');
-    const duration = project.video?.duration || 30; // default 30s if no video
+    const duration = getEditedVideoDuration(project) || 30; // default 30s if no video
     if (viewport) {
       const width = viewport.clientWidth;
       // Leave a 40px margin

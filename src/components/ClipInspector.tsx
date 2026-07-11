@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useProject } from '../context/ProjectContext';
+import { useProject, getEditedVideoDuration } from '../context/ProjectContext';
 import { Trash2, Anchor, Sparkles } from 'lucide-react';
 import './ClipInspector.css';
 
@@ -66,7 +66,7 @@ export const ClipInspector: React.FC = () => {
       // Clamp to video duration if video exists
       let finalTime = parsed;
       if (project.video) {
-        finalTime = Math.min(parsed, project.video.duration);
+        finalTime = Math.min(parsed, getEditedVideoDuration(project));
       }
       updateSegment(selectedSegment.id, { startTime: finalTime });
       setStartTimeInput(formatTime(finalTime));

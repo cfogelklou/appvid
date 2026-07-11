@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render } from '@testing-library/react';
-import App from './App';
+import App from '../../src/App';
 
 describe('App Component', () => {
   it('renders correctly', () => {

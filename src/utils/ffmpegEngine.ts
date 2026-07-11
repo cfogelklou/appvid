@@ -1,6 +1,7 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { toBlobURL } from '@ffmpeg/util';
 import type { Project } from '../types';
+import { getEditedVideoDuration } from '../context/ProjectContext';
 
 export interface ProcessLog {
   timestamp: number;
@@ -168,19 +169,85 @@ export async function processVideo(
     const fitMode = project.settings.fitMode;
     const targetRatio = tw / th;
 
+    const segments = project.videoSegments || [];
+    const videoFilters: string[] = [];
+    let videoSourceLabel = '[0:v]';
+
+    if (segments.length === 1) {
+      const S = segments[0];
+      const clipEnd = S.clipStart + S.duration * S.playbackRate;
+      videoFilters.push(`[0:v]trim=start=${S.clipStart.toFixed(3)}:end=${clipEnd.toFixed(3)},setpts=(PTS-STARTPTS)/${S.playbackRate.toFixed(3)}[trimmed_v]`);
+      videoSourceLabel = '[trimmed_v]';
+    } else if (segments.length > 1) {
+      const concatLabels: string[] = [];
+      segments.forEach((S, idx) => {
+        const clipEnd = S.clipStart + S.duration * S.playbackRate;
+        videoFilters.push(`[0:v]trim=start=${S.clipStart.toFixed(3)}:end=${clipEnd.toFixed(3)},setpts=(PTS-STARTPTS)/${S.playbackRate.toFixed(3)}[v_seg_${idx}]`);
+        concatLabels.push(`[v_seg_${idx}]`);
+      });
+      videoFilters.push(`${concatLabels.join('')}concat=n=${segments.length}:v=1:a=0[trimmed_v]`);
+      videoSourceLabel = '[trimmed_v]';
+    }
+
     // Video Filter Chain
     let videoFilter = '';
     if (fitMode === 'fit') {
-      videoFilter = `[0:v]scale=w='if(gt(iw/ih,${targetRatio}),${tw},-2)':h='if(gt(iw/ih,${targetRatio}),-2,${th})',pad=w=${tw}:h=${th}:x='(ow-iw)/2':y='(oh-ih)/2':color=black[out_v]`;
+      videoFilter = `${videoSourceLabel}scale=w='if(gt(iw/ih,${targetRatio}),${tw},-2)':h='if(gt(iw/ih,${targetRatio}),-2,${th})',pad=w=${tw}:h=${th}:x='(ow-iw)/2':y='(oh-ih)/2':color=black[out_v]`;
     } else {
       // fill (crop)
-      videoFilter = `[0:v]scale=w='if(gt(iw/ih,${targetRatio}),-2,${tw})':h='if(gt(iw/ih,${targetRatio}),${th},-2)',crop=w=${tw}:h=${th}:x='(iw-ow)/2':y='(ih-oh)/2'[out_v]`;
+      videoFilter = `${videoSourceLabel}scale=w='if(gt(iw/ih,${targetRatio}),-2,${tw})':h='if(gt(iw/ih,${targetRatio}),${th},-2)',crop=w=${tw}:h=${th}:x='(iw-ow)/2':y='(ih-oh)/2'[out_v]`;
+    }
+
+    if (videoFilters.length > 0) {
+      videoFilter = videoFilters.join(';') + ';' + videoFilter;
     }
 
     // Audio Inputs and Filter Chains
     const audioInputs: string[] = [];
     const audioLabelList: string[] = [];
     const audioFilters: string[] = [];
+
+    const buildAudioTempoFilter = (rate: number): string => {
+      const parts: string[] = [];
+      let remaining = rate;
+      while (remaining > 2.0) {
+        parts.push('atempo=2.0');
+        remaining /= 2.0;
+      }
+      if (remaining > 0.5) {
+        parts.push(`atempo=${remaining.toFixed(3)}`);
+      }
+      return parts.join(',');
+    };
+
+    // Check if we should keep original audio
+    if (project.settings.originalAudioMode === 'keep' && hasAudio) {
+      let origAudioLabel = '';
+      if (segments.length === 1) {
+        const S = segments[0];
+        const clipEnd = S.clipStart + S.duration * S.playbackRate;
+        const tempo = buildAudioTempoFilter(S.playbackRate);
+        const tempoStr = tempo ? `,${tempo}` : '';
+        audioFilters.push(`[0:a]atrim=start=${S.clipStart.toFixed(3)}:end=${clipEnd.toFixed(3)},asetpts=PTS-STARTPTS${tempoStr}[trimmed_a]`);
+        origAudioLabel = '[trimmed_a]';
+      } else if (segments.length > 1) {
+        const concatLabels: string[] = [];
+        segments.forEach((S, idx) => {
+          const clipEnd = S.clipStart + S.duration * S.playbackRate;
+          const tempo = buildAudioTempoFilter(S.playbackRate);
+          const tempoStr = tempo ? `,${tempo}` : '';
+          audioFilters.push(`[0:a]atrim=start=${S.clipStart.toFixed(3)}:end=${clipEnd.toFixed(3)},asetpts=PTS-STARTPTS${tempoStr}[a_seg_${idx}]`);
+          concatLabels.push(`[a_seg_${idx}]`);
+        });
+        audioFilters.push(`${concatLabels.join('')}concat=n=${segments.length}:v=0:a=1[trimmed_a]`);
+        origAudioLabel = '[trimmed_a]';
+      } else {
+        origAudioLabel = '[0:a]';
+      }
+
+      audioFilters.push(`${origAudioLabel}volume=volume=1.0[aud_orig]`);
+      audioLabelList.push('[aud_orig]');
+    }
 
     // Map segments to inputs starting at index 1 (index 0 is the video input)
     project.segments.forEach((segment, idx) => {
@@ -189,18 +256,18 @@ export async function processVideo(
         audioInputs.push('-i', filename);
         const inputIdx = 1 + idx; // video is 0, so segments start at 1
         const delayMs = Math.round(Math.max(0, segment.startTime) * 1000);
-        const filterStr = `[${inputIdx}:a]adelay=delays=${delayMs}:all=1,volume=volume=${segment.volume}[aud_${idx}]`;
+        
+        const asset = project.audioAssets.find((a) => a.id === segment.assetId);
+        const assetDuration = asset ? asset.duration : 0;
+        const duration = segment.duration !== undefined ? segment.duration : assetDuration;
+        const clipStart = segment.clipStart !== undefined ? segment.clipStart : 0;
+        const clipEnd = clipStart + duration;
+
+        const filterStr = `[${inputIdx}:a]atrim=start=${clipStart.toFixed(3)}:end=${clipEnd.toFixed(3)},asetpts=PTS-STARTPTS,volume=volume=${segment.volume},adelay=delays=${delayMs}:all=1[aud_${idx}]`;
         audioFilters.push(filterStr);
         audioLabelList.push(`[aud_${idx}]`);
       }
     });
-
-    // Check if we should keep original audio
-    if (project.settings.originalAudioMode === 'keep' && hasAudio) {
-      // Just pass through [0:a] as one of the tracks to mix
-      audioFilters.push(`[0:a]volume=volume=1.0[aud_orig]`);
-      audioLabelList.unshift('[aud_orig]');
-    }
 
     let filterComplex = videoFilter;
     if (audioFilters.length > 0) {
@@ -232,7 +299,7 @@ export async function processVideo(
       '-c:a', 'aac',
       '-b:a', '192k',
       '-movflags', '+faststart',
-      '-t', project.video.duration.toFixed(3),
+      '-t', getEditedVideoDuration(project).toFixed(3),
       'output.mp4'
     ];
 

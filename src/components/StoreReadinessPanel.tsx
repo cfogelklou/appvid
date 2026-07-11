@@ -1,5 +1,5 @@
 import React from 'react';
-import { useProject } from '../context/ProjectContext';
+import { useProject, getEditedVideoDuration } from '../context/ProjectContext';
 import './components.css';
 
 export const StoreReadinessPanel: React.FC = () => {
@@ -29,7 +29,7 @@ export const StoreReadinessPanel: React.FC = () => {
   const warnings: string[] = [];
 
   // 1. Duration Validation
-  const duration = video.duration;
+  const duration = getEditedVideoDuration(project);
   if (duration < 15 || duration > 30) {
     warnings.push(
       `Duration: Video is ${duration.toFixed(1)}s. App previews must be between 15.0 and 30.0 seconds.`,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useProject } from '../context/ProjectContext';
+import { useProject, getEditedVideoDuration } from '../context/ProjectContext';
 import { previewPlayer } from '../utils/previewPlayer';
 import './PlaybackControls.css';
 
@@ -14,7 +14,7 @@ export const PlaybackControls: React.FC = () => {
   }, [rate]);
 
   const hasVideo = !!(project.video && project.video.blobUrl);
-  const duration = project.video ? project.video.duration : 0;
+  const duration = getEditedVideoDuration(project);
 
   const handlePlayPause = () => {
     if (!hasVideo) return;

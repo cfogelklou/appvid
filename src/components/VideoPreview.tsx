@@ -25,9 +25,9 @@ export const VideoPreview: React.FC = () => {
     if (videoRef.current && project.video?.blobUrl) {
       previewPlayer.setVideoElement(videoRef.current);
       // Sync track metadata to player
-      previewPlayer.updateTracks(project.segments, project.audioAssets);
+      previewPlayer.updateProject(project);
     }
-  }, [project.video?.blobUrl, project.segments, project.audioAssets]);
+  }, [project.video?.blobUrl, project, project.segments, project.audioAssets]);
 
   // Sync playhead state updates (react -> player)
   useEffect(() => {

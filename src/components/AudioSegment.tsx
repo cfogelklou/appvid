@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useProject } from '../context/ProjectContext';
+import { useProject, getEditedVideoDuration } from '../context/ProjectContext';
 import { timeToX, xToTime, getSnappedTime } from '../utils/timelineMath';
 import type { AudioSegment as AudioSegmentType } from '../types';
 import { AlertTriangle, Link } from 'lucide-react';
@@ -35,9 +35,10 @@ export const AudioSegment: React.FC<AudioSegmentProps> = ({
   const name = asset ? asset.name : 'Unknown Audio';
 
   // Warnings
+  const editedDuration = getEditedVideoDuration(project);
   const needsRelink = !asset || asset.blobUrl === '';
-  const extendsPastVideo = project.video ? (segment.startTime + duration > project.video.duration) : false;
-  const startsAfterVideo = project.video ? (segment.startTime >= project.video.duration) : false;
+  const extendsPastVideo = project.video ? (segment.startTime + duration > editedDuration) : false;
+  const startsAfterVideo = project.video ? (segment.startTime >= editedDuration) : false;
   const hasWarning = needsRelink || extendsPastVideo || startsAfterVideo;
 
   // Local drag state
@@ -134,13 +135,13 @@ export const AudioSegment: React.FC<AudioSegmentProps> = ({
     rawTime = Math.max(0, rawTime);
     if (project.video) {
       // Let them drag slightly past video end if they want, but clamp to a reasonable maximum
-      rawTime = Math.min(rawTime, project.video.duration + 5);
+      rawTime = Math.min(rawTime, editedDuration + 5);
     }
 
     // Build list of snap targets
     const snapTargets: number[] = [0];
     if (project.video) {
-      snapTargets.push(project.video.duration);
+      snapTargets.push(editedDuration);
     }
     snapTargets.push(playhead);
 
@@ -148,14 +149,14 @@ export const AudioSegment: React.FC<AudioSegmentProps> = ({
     project.segments.forEach(other => {
       if (other.id !== segment.id) {
         const otherAsset = project.audioAssets.find(a => a.id === other.assetId);
-        const otherDur = otherAsset ? otherAsset.duration : 0;
+        const otherDur = otherAsset ? (other.duration !== undefined ? other.duration : otherAsset.duration) : 0;
         snapTargets.push(other.startTime);
         snapTargets.push(other.startTime + otherDur);
       }
     });
 
     // Add whole seconds within duration
-    const maxTime = project.video?.duration || 120;
+    const maxTime = editedDuration || 120;
     for (let sec = 1; sec <= maxTime; sec++) {
       snapTargets.push(sec);
     }

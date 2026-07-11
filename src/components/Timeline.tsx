@@ -122,9 +122,16 @@ export const Timeline: React.FC = () => {
     e.preventDefault();
     setSelectedVideoSegmentId(segId);
     setSelectedSegmentId(null);
+    
+    // Clamp context menu to screen viewport bounds to prevent clipping at bottom/right
+    const menuWidth = 180;
+    const menuHeight = 250;
+    const x = Math.min(e.clientX, window.innerWidth - menuWidth - 10);
+    const y = Math.min(e.clientY, window.innerHeight - menuHeight - 10);
+
     setContextMenu({
-      x: e.clientX,
-      y: e.clientY,
+      x,
+      y,
       segmentId: segId
     });
   };

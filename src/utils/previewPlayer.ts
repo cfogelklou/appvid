@@ -106,18 +106,33 @@ export class PreviewPlayer {
     this.syncPlaybackRate();
   }
 
-  private syncPlaybackRate() {
-    if (!this.video) return;
+  private getTargetPlaybackRate(): number {
+    if (!this.video) return this.globalRate;
     if (!this.project || !this.project.videoSegments || this.project.videoSegments.length === 0) {
-      this.video.playbackRate = this.globalRate;
-      return;
+      return this.globalRate;
     }
     const vTime = this.sourceTimeToTimelineTime(this.video.currentTime);
     const seg = this.project.videoSegments.find(
       (s) => vTime >= s.startTime && vTime <= s.startTime + s.duration
     );
     const segmentRate = seg ? seg.playbackRate : 1.0;
-    this.video.playbackRate = segmentRate * this.globalRate;
+    return segmentRate * this.globalRate;
+  }
+
+  private syncPlaybackRate() {
+    if (!this.video) return;
+    const targetRate = this.getTargetPlaybackRate();
+    
+    // Mute the video element if playing at a high speed to bypass Safari's 2.0x cap
+    const originalAudioMode = this.project?.settings.originalAudioMode;
+    const shouldMuteVideoElement = targetRate > 2.0 || originalAudioMode === 'mute';
+    if (this.video.muted !== shouldMuteVideoElement) {
+      this.video.muted = shouldMuteVideoElement;
+    }
+
+    if (Math.abs(this.video.playbackRate - targetRate) > 0.01) {
+      this.video.playbackRate = targetRate;
+    }
   }
 
   cleanup() {
@@ -212,11 +227,16 @@ export class PreviewPlayer {
   };
 
   private handleSeeked = () => {
+    this.syncPlaybackRate();
     this.syncAudio();
   };
 
   private handleRateChange = () => {
-    // Kept for backward compatibility, but actual rates are synced explicitly
+    if (!this.video) return;
+    const targetRate = this.getTargetPlaybackRate();
+    if (Math.abs(this.video.playbackRate - targetRate) > 0.01) {
+      this.video.playbackRate = targetRate;
+    }
   };
 
   public syncAudio() {

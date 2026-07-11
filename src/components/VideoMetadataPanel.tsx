@@ -57,7 +57,7 @@ export const VideoMetadataPanel: React.FC<VideoMetadataPanelProps> = ({
         aspectRatio,
       });
       setLoading(false);
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     };
 
     const handleError = () => {
@@ -65,7 +65,7 @@ export const VideoMetadataPanel: React.FC<VideoMetadataPanelProps> = ({
         'Failed to load video metadata. The file might be corrupted or in an unsupported format.',
       );
       setLoading(false);
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     };
 
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
@@ -74,7 +74,7 @@ export const VideoMetadataPanel: React.FC<VideoMetadataPanelProps> = ({
     return () => {
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
       video.removeEventListener('error', handleError);
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     };
   }, [file]);
 

@@ -1,32 +1,55 @@
-# React + TypeScript + Vite
+# AppVid
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+AppStore and PlayStore video preview creator. High fidelity, offline, and local-first video styling.
 
-Currently, two official plugins are available:
+AppVid operates completely client-side in the browser. Absolute data privacy is a core requirement: *"No uploads. No accounts. Your files never leave your browser."*
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## ⚠️ Important: System Requirements & RAM Constraints
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Because AppVid runs **FFmpeg WebAssembly (WASM)** locally inside your web browser without a server backend, video transcoding is extremely CPU and memory-intensive:
 
-## Expanding the Oxlint configuration
+* **High Memory Usage:** Transcoding large video files (especially portrait recordings > 30s) requires significant RAM. The browser's WASM runtime must load video frames, filter graphs, and audio streams in-memory.
+* **Device Limits:** On mobile devices (like iPhones or Android phones) or machines with low RAM (< 16 GB), large exports may hit the browser's tab memory limit and cause the tab to crash (reload).
+* **Recommendations:**
+  * Use a desktop/laptop browser (Chrome, Safari, Firefox) with plenty of free system RAM for exporting.
+  * Keep screen recording files short (15s to 30s) and close other high-memory tabs before exporting.
+  * Keep the browser tab active and focused while encoding is in progress.
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+---
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+## Features
+- **Local-First Processing:** FFmpeg single-threaded WASM compiles filter graphs directly in-browser.
+- **Store-Compliant Resolution Presets:** 6.9", 6.7", 6.5", and 5.5" portrait crop/pad ratios.
+- **Audio Overlays:** Layer voiceover and background music tracks onto the timeline with millisecond precision and interactive snapping.
+- **Store Readiness validation:** Inline warning panel checking duration and resolution compliance parameters.
+
+## Technology Stack
+- React 19 + TypeScript (under strict `verbatimModuleSyntax`)
+- Vite
+- Bun
+- `@ffmpeg/ffmpeg` (WASM)
+- Vitest
+
+## Getting Started
+
+### Install Dependencies
+```bash
+bun install
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+### Run Local Development Server
+```bash
+bun run dev
+```
+
+### Run Vitest Sanity Tests
+```bash
+bun run test
+```
+
+### Compile Production Build
+```bash
+bun run build
+```

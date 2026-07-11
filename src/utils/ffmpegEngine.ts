@@ -39,10 +39,9 @@ export async function getFFmpeg(onLog?: (message: string) => void): Promise<FFmp
   }
 
   // Single-threaded core URL
-  const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd';
   await ffmpeg.load({
-    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+    coreURL: await toBlobURL('/appvid/ffmpeg-core.js', 'text/javascript'),
+    wasmURL: await toBlobURL('/appvid/ffmpeg-core.wasm', 'application/wasm'),
   });
 
   ffmpegInstance = ffmpeg;
@@ -228,6 +227,7 @@ export async function processVideo(
       '-c:v', 'libx264',
       '-preset', 'superfast',
       '-crf', '22',
+      '-r', '30',
       '-pix_fmt', 'yuv420p',
       '-c:a', 'aac',
       '-b:a', '192k',

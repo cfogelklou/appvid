@@ -48,10 +48,12 @@ export const AppShell: React.FC = () => {
       const output = await processVideo(
         project,
         ({ stage, progress }) => {
+          console.log(`[Export Progress] ${stage}: ${(progress * 100).toFixed(0)}%`);
           setExportStage(stage);
           setExportProgress(progress);
         },
         (log) => {
+          console.log(`[FFmpeg Log] ${log.message}`);
           setExportLogs((prev) => [...prev, log]);
         },
         controller.signal

@@ -189,6 +189,24 @@ export const ClipInspector: React.FC = () => {
           <span>Delete Clip</span>
         </button>
       </div>
+
+      <div className="nudge-help-guide" style={{ marginTop: '20px', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+        <span className="section-label" style={{ fontSize: '10px', opacity: 0.6, letterSpacing: '0.05em', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Keyboard Shortcuts</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '11px', color: 'var(--color-text-secondary)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>Nudge Clip (0.1s)</span>
+            <kbd style={{ background: 'var(--color-bg-card)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border)', color: 'var(--color-text-primary)', fontFamily: 'var(--mono)', fontSize: '10px' }}>← / →</kbd>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>Fast Nudge (1.0s)</span>
+            <kbd style={{ background: 'var(--color-bg-card)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border)', color: 'var(--color-text-primary)', fontFamily: 'var(--mono)', fontSize: '10px' }}>Shift + ← / →</kbd>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>Delete Clip</span>
+            <kbd style={{ background: 'var(--color-bg-card)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border)', color: 'var(--color-text-primary)', fontFamily: 'var(--mono)', fontSize: '10px' }}>Del / Backspace</kbd>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

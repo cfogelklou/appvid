@@ -38,8 +38,11 @@ export const EditorWorkspace: React.FC = () => {
 
         {/* Desktop Sidebar / Mobile Tabs Panel */}
         <aside className="sidebar-section">
-          <div className="sidebar-tabs">
+          <div className="sidebar-tabs" role="tablist" aria-label="Sidebar Navigation Panels">
             <button
+              role="tab"
+              aria-selected={activeTab === 'assets'}
+              aria-controls="sidebar-panel-content"
               className={`sidebar-tab ${activeTab === 'assets' ? 'active' : ''}`}
               onClick={() => setActiveTab('assets')}
             >
@@ -47,6 +50,9 @@ export const EditorWorkspace: React.FC = () => {
               <span>Assets</span>
             </button>
             <button
+              role="tab"
+              aria-selected={activeTab === 'inspector'}
+              aria-controls="sidebar-panel-content"
               className={`sidebar-tab ${activeTab === 'inspector' ? 'active' : ''}`}
               onClick={() => setActiveTab('inspector')}
               disabled={!selectedSegmentId}
@@ -56,6 +62,9 @@ export const EditorWorkspace: React.FC = () => {
               <span>Inspector</span>
             </button>
             <button
+              role="tab"
+              aria-selected={activeTab === 'readiness'}
+              aria-controls="sidebar-panel-content"
               className={`sidebar-tab ${activeTab === 'readiness' ? 'active' : ''}`}
               onClick={() => setActiveTab('readiness')}
             >
@@ -64,7 +73,7 @@ export const EditorWorkspace: React.FC = () => {
             </button>
           </div>
 
-          <div className="sidebar-content">
+          <div className="sidebar-content" id="sidebar-panel-content" role="tabpanel">
             {activeTab === 'assets' && <AssetPanel />}
             {activeTab === 'inspector' && <ClipInspector />}
             {activeTab === 'readiness' && <StoreReadinessPanel />}

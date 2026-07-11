@@ -160,6 +160,9 @@ export const AudioSegment: React.FC<AudioSegmentProps> = ({
         top: `${lane * laneHeight}px`,
         height: `${laneHeight - 6}px` // slightly smaller than lane height for spacing
       }}
+      role="button"
+      tabIndex={0}
+      aria-label={`Audio segment: ${name}`}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}

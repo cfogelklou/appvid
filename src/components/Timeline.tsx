@@ -5,6 +5,7 @@ import { TimelineTrack } from './TimelineTrack';
 import { Playhead } from './Playhead';
 import { TimelineZoomControls } from './TimelineZoomControls';
 import { timeToX, xToTime } from '../utils/timelineMath';
+import { Video } from 'lucide-react';
 import './Timeline.css';
 
 export const Timeline: React.FC = () => {
@@ -126,6 +127,20 @@ export const Timeline: React.FC = () => {
           </div>
 
           <div className="timeline-tracks">
+            {/* Visual Video Track Lane */}
+            {project.video && (
+              <div className="video-track-lane">
+                <div 
+                  className="video-track-clip"
+                  style={{ width: `${timeToX(project.video.duration, zoom)}px` }}
+                >
+                  <Video size={13} className="video-clip-icon" />
+                  <span className="video-clip-name">{project.video.name}</span>
+                  <span className="video-clip-duration">({project.video.duration.toFixed(1)}s)</span>
+                </div>
+              </div>
+            )}
+
             {/* Visual marker for Video Duration end */}
             {project.video && (
               <div 

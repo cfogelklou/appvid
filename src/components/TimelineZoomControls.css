@@ -1,0 +1,52 @@
+.zoom-controls-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 4px;
+}
+
+.zoom-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text);
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.zoom-btn:hover:not(:disabled) {
+  background-color: var(--border);
+  color: var(--text-h);
+}
+
+.zoom-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.zoom-percentage {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text);
+  user-select: none;
+  min-width: 50px;
+  text-align: center;
+}
+
+.zoom-fit-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  width: auto;
+  font-size: 11px;
+  font-weight: 600;
+}

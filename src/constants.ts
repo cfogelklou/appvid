@@ -1,7 +1,7 @@
 import type { StorePreset } from './types';
 
 export const STORE_PRESETS: StorePreset[] = [
-  {
+  /*{
     id: 'ios-6.9',
     name: 'iOS 6.9" Portrait (iPhone 16 Pro Max)',
     width: 1320,
@@ -24,14 +24,22 @@ export const STORE_PRESETS: StorePreset[] = [
     height: 2688,
     platform: 'ios',
     description: '1242 x 2688'
-  },
+  },*/
   {
-    id: 'ios-5.5',
-    name: 'iOS 5.5" Portrait (iPhone 8 Plus)',
-    width: 1080,
+    id: 'appstore-portrait',
+    name: 'Appstore Portrait',
+    width: 886,
     height: 1920,
     platform: 'ios',
-    description: '1080 x 1920'
+    description: '886 x 1920'
+  },
+  {
+    id: 'appstore-landscape',
+    name: 'Appstore Landscape',
+    width: 1920,
+    height: 886,
+    platform: 'ios',
+    description: '1920 x 886'
   },
   {
     id: 'google-play-portrait',
@@ -42,11 +50,11 @@ export const STORE_PRESETS: StorePreset[] = [
     description: '1080 x 1920'
   },
   {
-    id: 'custom',
-    name: 'Custom Portrait',
-    width: 1080,
-    height: 1920,
-    platform: 'custom',
-    description: 'Custom dimensions'
+    id: 'google-play-landscape',
+    name: 'Google Play Landscape',
+    width: 1920,
+    height: 1080,
+    platform: 'android',
+    description: '1920 x 1080'
   }
 ];

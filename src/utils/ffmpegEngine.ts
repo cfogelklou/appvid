@@ -34,7 +34,7 @@ export async function getFFmpeg(onLog?: (message: string) => void): Promise<FFmp
   }
 
   const ffmpeg = new FFmpeg();
-  
+
   if (onLog) {
     ffmpeg.on('log', ({ message }) => onLog(message));
   }
@@ -109,14 +109,14 @@ export async function processVideo(
 
   try {
     onProgress({ stage: 'Preparing media files', progress: 0.1 });
-    
+
     // 1. Fetch and write input video file
     const videoExt = getExtension(project.video.name) || 'mp4';
     const videoFilename = `input_video.${videoExt}`;
     logCallback(`Fetching source video from Blob URL...`);
     const videoBlobResponse = await fetch(project.video.blobUrl);
     const videoArrayBuffer = await videoBlobResponse.arrayBuffer();
-    
+
     logCallback(`Writing source video to virtual filesystem: ${videoFilename}`);
     await ffmpeg.writeFile(videoFilename, new Uint8Array(videoArrayBuffer));
     cleanupVirtualFiles.push(videoFilename);
@@ -150,15 +150,15 @@ export async function processVideo(
       }
       const audioExt = getExtension(asset.name) || 'mp3';
       const audioFilename = `audio_${assetId}.${audioExt}`;
-      
+
       logCallback(`Fetching audio asset "${asset.name}" from Blob URL...`);
       const audioBlobResponse = await fetch(asset.blobUrl);
       const audioArrayBuffer = await audioBlobResponse.arrayBuffer();
-      
+
       logCallback(`Writing audio asset to virtual filesystem: ${audioFilename}`);
       await ffmpeg.writeFile(audioFilename, new Uint8Array(audioArrayBuffer));
       cleanupVirtualFiles.push(audioFilename);
-      
+
       assetIdToFilename[assetId] = audioFilename;
     }
 
@@ -256,7 +256,7 @@ export async function processVideo(
         audioInputs.push('-i', filename);
         const inputIdx = 1 + idx; // video is 0, so segments start at 1
         const delayMs = Math.round(Math.max(0, segment.startTime) * 1000);
-        
+
         const asset = project.audioAssets.find((a) => a.id === segment.assetId);
         const assetDuration = asset ? asset.duration : 0;
         const duration = segment.duration !== undefined ? segment.duration : assetDuration;
@@ -276,7 +276,7 @@ export async function processVideo(
 
     if (audioLabelList.length === 0) {
       // Generate silence if no audio is selected
-      filterComplex += `;anullsrc=channel_layout=stereo:sample_rate=44100[out_a]`;
+      filterComplex += `;anullsrc=channel_layout=stereo:sample_rate=48000[out_a]`;
     } else if (audioLabelList.length === 1) {
       // Rename single stream to [out_a]
       filterComplex += `;${audioLabelList[0]}anull[out_a]`;
@@ -297,6 +297,8 @@ export async function processVideo(
       '-r', '30',
       '-pix_fmt', 'yuv420p',
       '-c:a', 'aac',
+      '-ac', '2',
+      '-ar', '48000',
       '-b:a', '192k',
       '-movflags', '+faststart',
       '-t', getEditedVideoDuration(project).toFixed(3),
@@ -306,7 +308,7 @@ export async function processVideo(
     logCallback(`Executing FFmpeg command: ffmpeg ${execArgs.join(' ')}`);
 
     onProgress({ stage: 'Encoding high-quality MP4', progress: 0.4 });
-    
+
     // Execute command!
     await ffmpeg.exec(execArgs);
 
@@ -314,10 +316,10 @@ export async function processVideo(
     onProgress({ stage: 'Preparing download', progress: 0.96 });
     logCallback('Reading generated output.mp4 from virtual filesystem...');
     const outData = await ffmpeg.readFile('output.mp4');
-    
+
     logCallback('Export complete! Creating final Blob...');
     const outBlob = new Blob([outData as Uint8Array], { type: 'video/mp4' });
-    
+
     // Cleanup output file
     try {
       await ffmpeg.deleteFile('output.mp4');

@@ -1,5 +1,22 @@
 # Repository Guidelines
 
+## CRITICAL: Take Ownership of Build/Lint/Test Failures
+
+**Never dismiss a local failure as "pre-existing" or "not my fault."** CI builds this app on every push, so if `bun run build` or `bun run lint` fails locally, it is almost always your environment — fix it, don't rationalize it.
+
+The most common trap: **wrong Node version**. Vite 6 and oxlint 1.x require **Node 18+** (see `engines.node` in `package.json`). On Node 16 they fail with misleading errors that look unrelated to your change:
+
+- `bun run build` → `TypeError: crypto.getRandomValues is not a function` (Vite config resolution)
+- `bun run lint` → `ERR_UNKNOWN_FILE_EXTENSION: Unknown file extension "" for .../oxlint/bin/oxlint` (ESM shim)
+
+**Before claiming any failure is environmental, do this:**
+
+1. Check `node --version`. If below 18, switch: `nvm use 24` (or any installed version ≥ 18).
+2. Re-run the failing command on the corrected Node.
+3. Only if it still fails on the correct Node, then investigate further.
+
+`bun run build` and `bun run lint` are expected to pass on Node 18+. They run in CI. A local failure on the wrong Node version is a local problem, not a code defect, and not a reason to skip verification of your own changes. Verify your edits end-to-end on a supported Node before handing off.
+
 ## Project Structure & Module Organization
 
 AppVid is a Vite + React 19 + TypeScript browser application for creating app-store preview videos locally. Application code is in `src/`: reusable UI lives in `src/components/`, project state in `src/context/ProjectContext.tsx`, domain types in `src/types.ts`, constants in `src/constants.ts`, and media/timeline helpers in `src/utils/`. Keep component-specific CSS next to its component; global styles belong in `src/index.css` or `src/App.css`. Static runtime assets, including FFmpeg WASM files, live in `public/`.

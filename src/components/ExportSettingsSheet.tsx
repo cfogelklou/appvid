@@ -46,7 +46,14 @@ export const ExportSettingsSheet: React.FC<ExportSettingsSheetProps> = ({
       );
     }
 
-    // 3. Large file warning (Memory limits risk in browser)
+    // 3. Orientation warning: store previews must be portrait
+    if (video.width > video.height) {
+      warnings.push(
+        'Source video is landscape. App Store and Google Play previews must be portrait.'
+      );
+    }
+
+    // 4. Large file warning (Memory limits risk in browser)
     const mbSize = video.size / (1024 * 1024);
     if (mbSize > 100) {
       warnings.push(
@@ -107,6 +114,7 @@ export const ExportSettingsSheet: React.FC<ExportSettingsSheetProps> = ({
                   {preset.name} ({preset.width}x{preset.height})
                 </option>
               ))}
+              <option value="custom">Custom Dimensions</option>
             </select>
 
             {/* Custom dimensions if 'custom' selected */}

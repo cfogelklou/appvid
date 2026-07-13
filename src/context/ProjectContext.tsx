@@ -62,9 +62,9 @@ const createDefaultProject = (): Project => ({
   audioAssets: [],
   segments: [],
   settings: {
-    presetId: 'ios-6.9',
-    width: 1320,
-    height: 2868,
+    presetId: 'appstore-portrait',
+    width: 886,
+    height: 1920,
     fitMode: 'fit',
     originalAudioMode: 'keep',
     quality: 'high',

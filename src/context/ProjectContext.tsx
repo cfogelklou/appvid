@@ -55,22 +55,27 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 const DRAFT_KEY = 'appvid_project_draft';
 
-const createDefaultProject = (): Project => ({
-  id: crypto.randomUUID(),
-  name: 'Untitled Project',
-  video: null,
-  audioAssets: [],
-  segments: [],
-  settings: {
-    presetId: 'ios-6.9',
-    width: 1320,
-    height: 2868,
-    fitMode: 'fit',
-    originalAudioMode: 'keep',
-    quality: 'high',
-  },
-  updatedAt: Date.now(),
-});
+// Derive the default export settings from the first store preset instead of a
+// hard-coded id, so removing/adding presets never leaves stale dimensions.
+const createDefaultProject = (): Project => {
+  const preset = STORE_PRESETS[0];
+  return {
+    id: crypto.randomUUID(),
+    name: 'Untitled Project',
+    video: null,
+    audioAssets: [],
+    segments: [],
+    settings: {
+      presetId: preset.id,
+      width: preset.width,
+      height: preset.height,
+      fitMode: 'fit',
+      originalAudioMode: 'keep',
+      quality: 'high',
+    },
+    updatedAt: Date.now(),
+  };
+};
 
 export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [project, setProject] = useState<Project>(createDefaultProject);

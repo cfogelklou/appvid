@@ -1,7 +1,12 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { previewPlayer } from '../utils/previewPlayer';
+import { layoutCue, createCanvasMeasurer } from '../text/textLayout';
+import { isIntervalActive } from '../text/types';
+import { PreviewLocaleSelector } from './PreviewLocaleSelector';
+import { AlertTriangle } from 'lucide-react';
 import './VideoPreview.css';
+import './components.css';
 
 export const VideoPreview: React.FC = () => {
   const {
@@ -13,6 +18,7 @@ export const VideoPreview: React.FC = () => {
     setIsPlaying,
     importVideo,
     relinkVideo,
+    text,
   } = useProject();
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -148,6 +154,110 @@ export const VideoPreview: React.FC = () => {
   const isVideoLoaded = project.video && project.video.blobUrl;
   const presetAspectRatio = activePreset.width / activePreset.height;
 
+  // Create canvas measurer for text layout
+  const measureText = useMemo(() => createCanvasMeasurer(), []);
+
+  // Compute active text cues for current playhead
+  const activeCues = useMemo(() => {
+    if (!text.catalogs || !text.cues) return [];
+    return text.cues.filter(cue => {
+      const resolved = { ...cue.base, ...cue.overrides };
+      return isIntervalActive(resolved, playhead);
+    });
+  }, [text.cues, playhead]);
+
+  // Compute laid-out cues for rendering
+  const laidOutCues = useMemo(() => {
+    if (activeCues.length === 0 || !text.previewLocale) return [];
+
+    const catalog = text.catalogs[text.previewLocale];
+    if (!catalog) return [];
+
+    const frame = { width: activePreset.width, height: activePreset.height };
+
+    return activeCues.map(cue => {
+      try {
+        return layoutCue({
+          cue,
+          locale: text.previewLocale!,
+          catalog,
+          frame,
+          measure: measureText
+        });
+      } catch (error) {
+        console.error('Failed to layout cue:', error);
+        return null;
+      }
+    }).filter((cue): cue is NonNullable<typeof cue> => cue !== null);
+  }, [activeCues, text.previewLocale, text.catalogs, activePreset, measureText]);
+
+  // Check for overflow warnings
+  const hasOverflow = laidOutCues.some(cue => cue.overflow);
+
+  // Compute text overlay position based on alignments
+  const getTextOverlayStyle = (cue: any) => {
+    const { safeAreaInset, blockWidth, blockHeight, horizontalAlign, verticalAlign, lineHeight, fontSize, color, fontFamily } = cue;
+
+    // Compute horizontal position
+    let left: number;
+    switch (horizontalAlign) {
+      case 'left':
+        left = safeAreaInset;
+        break;
+      case 'center':
+        left = (activePreset.width - blockWidth) / 2;
+        break;
+      case 'right':
+        left = activePreset.width - safeAreaInset - blockWidth;
+        break;
+      default:
+        left = safeAreaInset;
+    }
+
+    // Clamp to safe area
+    left = Math.max(safeAreaInset, Math.min(left, activePreset.width - safeAreaInset - blockWidth));
+
+    // Compute vertical position
+    let top: number;
+    const availableHeight = activePreset.height - 2 * safeAreaInset;
+    switch (verticalAlign) {
+      case 'top':
+        top = safeAreaInset;
+        break;
+      case 'middle':
+        top = safeAreaInset + (availableHeight - blockHeight) / 2;
+        break;
+      case 'bottom':
+        top = activePreset.height - safeAreaInset - blockHeight;
+        break;
+      default:
+        top = activePreset.height - safeAreaInset - blockHeight;
+    }
+
+    // Clamp to safe area
+    top = Math.max(safeAreaInset, Math.min(top, activePreset.height - safeAreaInset - blockHeight));
+
+    // Font family CSS mapping
+    const fontFamilyCss = fontFamily === 'noto-sans-jp'
+      ? "'Noto Sans JP', sans-serif"
+      : "'Noto Sans', sans-serif";
+
+    return {
+      position: 'absolute' as const,
+      left: `${left}px`,
+      top: `${top}px`,
+      width: `${blockWidth}px`,
+      height: `${blockHeight}px`,
+      fontFamily: fontFamilyCss,
+      fontSize: `${fontSize}px`,
+      lineHeight: `${lineHeight}px`,
+      color: color,
+      textAlign: horizontalAlign,
+      whiteSpace: 'pre-wrap',
+      overflow: 'hidden',
+    };
+  };
+
   return (
     <div
       className='video-preview-wrapper'
@@ -160,6 +270,19 @@ export const VideoPreview: React.FC = () => {
       {project.video && (
         <div className='preset-badge'>
           {activePreset.name} ({project.settings.fitMode.toUpperCase()})
+        </div>
+      )}
+
+      {/* Preview Locale Selector */}
+      {project.video && text.previewLocale && Object.keys(text.catalogs).length > 0 && (
+        <PreviewLocaleSelector />
+      )}
+
+      {/* Overflow Warning Banner */}
+      {hasOverflow && isVideoLoaded && (
+        <div className='text-overflow-warning'>
+          <AlertTriangle size={16} />
+          <span>Text exceeds safe area boundaries</span>
         </div>
       )}
 
@@ -183,6 +306,24 @@ export const VideoPreview: React.FC = () => {
                 playsInline
                 preload='auto'
               />
+              {/* Text Overlay Container */}
+              {laidOutCues.length > 0 && (
+                <div className='text-overlay-container'>
+                  {laidOutCues.map(cue => (
+                    <div
+                      key={cue.id}
+                      className='text-overlay'
+                      style={getTextOverlayStyle(cue)}
+                    >
+                      {cue.lines.map((line, lineIdx) => (
+                        <div key={lineIdx} className='text-overlay-line'>
+                          {line}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
               {/* Optional overlay borders to indicate visual safe area constraints */}
               <div className='safe-area-guide' />
             </>

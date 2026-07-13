@@ -20,6 +20,9 @@ export const EditorWorkspace: React.FC = () => {
     }
   }, [selectedSegmentId]);
 
+  // Determine if we have a selection (audio or text)
+  const hasSelection = selectedSegmentId !== null;
+
   if (!project.video) {
     return null;
   }
@@ -54,8 +57,8 @@ export const EditorWorkspace: React.FC = () => {
               aria-controls="sidebar-panel-content"
               className={`sidebar-tab ${activeTab === 'inspector' ? 'active' : ''}`}
               onClick={() => setActiveTab('inspector')}
-              disabled={!selectedSegmentId}
-              title={!selectedSegmentId ? 'Select an audio segment to inspect' : ''}
+              disabled={!hasSelection}
+              title={!hasSelection ? 'Select a clip to inspect' : ''}
             >
               <Eye size={16} />
               <span>Inspector</span>

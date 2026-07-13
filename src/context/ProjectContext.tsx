@@ -10,6 +10,14 @@ import type {
   ExportSettings,
 } from '../types';
 import { STORE_PRESETS } from '../constants';
+import type {
+  TextCue,
+  TextProjectState,
+  CatalogBatchResult,
+  TimelineImportResult,
+  LocaleCode,
+} from '../text/types';
+import { importTextCatalogs, importTextTimeline } from '../text/importUtils';
 
 export const getEditedVideoDuration = (project: Project): number => {
   if (!project.videoSegments || project.videoSegments.length === 0) {
@@ -49,6 +57,36 @@ interface ProjectContextType {
   splitVideoSegment: (segmentId: string, splitTime: number) => void;
   deleteVideoSegment: (segmentId: string) => void;
   updateVideoSegmentSpeed: (segmentId: string, speed: number) => void;
+
+  // New: text state
+  text: TextProjectState;
+  setTextState: (state: TextProjectState) => void;
+  setPreviewLocale: (locale: LocaleCode | null) => void;
+
+  // New: text cue CRUD
+  addTextCue: (cue: Omit<TextCue, 'id' | 'origin'>) => void;
+  updateTextCue: (
+    id: string,
+    updates: Partial<
+      Pick<
+        TextCue['base'],
+        'startTime' | 'duration' | 'stringKey' | 'horizontalAlign' | 'verticalAlign' | 'color' | 'fontSize'
+      >
+    > & { overridesOnly?: boolean },
+  ) => void;
+  deleteTextCue: (id: string) => void;
+
+  // New: cue selection
+  selectedTextCueId: string | null;
+  setSelectedTextCueId: (id: string | null) => void;
+
+  // New: import functions
+  importTextCatalogs: (files: FileList | File[], signal?: AbortSignal) => Promise<CatalogBatchResult>;
+  importTextTimeline: (file: File, signal?: AbortSignal) => Promise<TimelineImportResult>;
+
+  // New: batch state (managed by Agent E, exposed here)
+  batchItems: Array<{ locale: LocaleCode; status: string; message?: string }>;
+  setBatchItems: (items: Array<{ locale: LocaleCode; status: string; message?: string }>) => void;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -74,8 +112,21 @@ const createDefaultProject = (): Project => {
       quality: 'high',
     },
     updatedAt: Date.now(),
+    draftVersion: 2,
+    text: {
+      catalogs: {},
+      cues: [],
+      previewLocale: null,
+    },
   };
 };
+
+// Default empty text state
+const createDefaultTextState = (): TextProjectState => ({
+  catalogs: {},
+  cues: [],
+  previewLocale: null,
+});
 
 export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [project, setProject] = useState<Project>(createDefaultProject);
@@ -85,6 +136,11 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
   const [selectedVideoSegmentId, setSelectedVideoSegmentId] = useState<string | null>(null);
   const [hasDraft, setHasDraft] = useState<boolean>(false);
+
+  // New: text state
+  const [text, setTextState] = useState<TextProjectState>(createDefaultTextState);
+  const [selectedTextCueId, setSelectedTextCueId] = useState<string | null>(null);
+  const [batchItems, setBatchItems] = useState<Array<{ locale: LocaleCode; status: string; message?: string }>>([]);
 
   // Relinking states are tracked via context and matching metadata
 
@@ -302,7 +358,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const saveDraft = () => {
     // Serialize metadata only (no blob urls or files)
+    // Draft version 2 includes text state
     const draftData = {
+      draftVersion: 2,
       id: project.id,
       name: project.name,
       video: project.video
@@ -326,6 +384,11 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       segments: project.segments,
       settings: project.settings,
       updatedAt: Date.now(),
+      text: {
+        catalogs: text.catalogs,
+        cues: text.cues,
+        previewLocale: text.previewLocale,
+      },
     };
 
     localStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
@@ -338,6 +401,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     try {
       const parsed = JSON.parse(draft);
+      const draftVersion = parsed.draftVersion;
 
       const defaultSegments = parsed.video ? [{
         id: crypto.randomUUID(),
@@ -346,6 +410,26 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         startTime: 0,
         playbackRate: 1.0,
       }] : [];
+
+      // Restore text state based on version
+      let restoredText: TextProjectState;
+      if (draftVersion >= 2) {
+        // Version 2+ has text state
+        if (parsed.text && typeof parsed.text === 'object') {
+          // Validate and sanitize text state
+          restoredText = {
+            catalogs: parsed.text.catalogs || {},
+            cues: Array.isArray(parsed.text.cues) ? parsed.text.cues : [],
+            previewLocale: parsed.text.previewLocale || null,
+          };
+        } else {
+          // Corrupt v2 draft, initialize empty
+          restoredText = createDefaultTextState();
+        }
+      } else {
+        // Unversioned draft, initialize empty text state
+        restoredText = createDefaultTextState();
+      }
 
       // Re-initialize draft project with empty blobUrls (relink required)
       const restoredProject: Project = {
@@ -361,9 +445,12 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         segments: parsed.segments,
         settings: parsed.settings,
         updatedAt: parsed.updatedAt,
+        draftVersion: draftVersion || undefined,
+        text: restoredText,
       };
 
       setProject(restoredProject);
+      setTextState(restoredText);
       setPlayheadState(0);
     } catch (e) {
       console.error('Failed to restore draft', e);
@@ -381,8 +468,10 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     });
 
     setProject(createDefaultProject());
+    setTextState(createDefaultTextState());
     setPlayheadState(0);
     setSelectedSegmentId(null);
+    setSelectedTextCueId(null);
   };
 
   const splitVideoSegment = (segmentId: string, splitTime: number) => {
@@ -565,6 +654,100 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     return false;
   };
 
+  // Text state functions
+
+  const addTextCue = (cue: Omit<TextCue, 'id' | 'origin'>) => {
+    const newCue: TextCue = {
+      id: crypto.randomUUID(),
+      origin: 'manual',
+      base: cue.base,
+      overrides: cue.overrides || {},
+    };
+    setTextState((prev) => ({
+      ...prev,
+      cues: [...prev.cues, newCue],
+    }));
+    setSelectedTextCueId(newCue.id);
+  };
+
+  const updateTextCue = (
+    id: string,
+    updates: Partial<
+      Pick<
+        TextCue['base'],
+        'startTime' | 'duration' | 'stringKey' | 'horizontalAlign' | 'verticalAlign' | 'color' | 'fontSize'
+      >
+    > & { overridesOnly?: boolean },
+  ) => {
+    setTextState((prev) => ({
+      ...prev,
+      cues: prev.cues.map((cue) => {
+        if (cue.id !== id) return cue;
+        if (updates.overridesOnly) {
+          // Update only overrides (user is editing away from imported defaults)
+          return {
+            ...cue,
+            overrides: { ...cue.overrides, ...updates },
+          };
+        } else {
+          // Update base and clear overrides (reset to imported defaults)
+          return {
+            ...cue,
+            base: { ...cue.base, ...updates },
+            overrides: {},
+          };
+        }
+      }),
+    }));
+  };
+
+  const deleteTextCue = (id: string) => {
+    setTextState((prev) => ({
+      ...prev,
+      cues: prev.cues.filter((c) => c.id !== id),
+    }));
+    if (selectedTextCueId === id) {
+      setSelectedTextCueId(null);
+    }
+  };
+
+  const importTextCatalogsHandler = async (
+    files: FileList | File[],
+    signal?: AbortSignal,
+  ): Promise<CatalogBatchResult> => {
+    const { newState, result } = await importTextCatalogs(text, files, signal);
+    setTextState(newState);
+    // Sync text state into project for persistence
+    setProject((prev) => ({
+      ...prev,
+      text: newState,
+      updatedAt: Date.now(),
+    }));
+    return result;
+  };
+
+  const importTextTimelineHandler = async (
+    file: File,
+    signal?: AbortSignal,
+  ): Promise<TimelineImportResult> => {
+    const { newState, result } = await importTextTimeline(text, file, signal);
+    setTextState(newState);
+    // Sync text state into project for persistence
+    setProject((prev) => ({
+      ...prev,
+      text: newState,
+      updatedAt: Date.now(),
+    }));
+    return result;
+  };
+
+  const setPreviewLocale = (locale: LocaleCode | null) => {
+    setTextState((prev) => ({
+      ...prev,
+      previewLocale: locale,
+    }));
+  };
+
   return (
     <ProjectContext.Provider
       value={{
@@ -597,6 +780,18 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         splitVideoSegment,
         deleteVideoSegment,
         updateVideoSegmentSpeed,
+        text,
+        setTextState,
+        setPreviewLocale,
+        addTextCue,
+        updateTextCue,
+        deleteTextCue,
+        selectedTextCueId,
+        setSelectedTextCueId,
+        importTextCatalogs: importTextCatalogsHandler,
+        importTextTimeline: importTextTimelineHandler,
+        batchItems,
+        setBatchItems,
       }}
     >
       {children}

@@ -1,5 +1,119 @@
 /* Components Styling for AppVid */
 
+/* Asset Panel Tabs */
+.asset-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--color-border-subtle);
+  background-color: rgba(9, 9, 11, 0.3);
+}
+
+.asset-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.asset-tab:hover {
+  color: var(--color-text-primary);
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.asset-tab.active {
+  color: var(--color-primary-hover);
+  border-bottom-color: var(--color-primary);
+  background-color: rgba(37, 99, 235, 0.05);
+}
+
+/* Preview Locale Selector */
+.preview-locale-selector {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 6px 12px;
+  border-radius: 20px;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.locale-select {
+  background: transparent;
+  border: none;
+  color: var(--color-text-primary);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+}
+
+.locale-select option {
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
+/* Text Overlay Container */
+.text-overlay-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 6;
+}
+
+/* Individual Text Overlay */
+.text-overlay {
+  position: absolute;
+  pointer-events: none;
+  white-space: pre-wrap;
+  overflow: hidden;
+  line-height: 1;
+}
+
+.text-overlay-line {
+  display: block;
+  width: 100%;
+}
+
+/* Overflow Warning Banner */
+.text-overflow-warning {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(217, 119, 6, 0.9);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+
 /* Theme Variables */
 :root {
   --color-bg-base: #09090b;      /* Zinc 950 */

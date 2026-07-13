@@ -6,23 +6,27 @@ import { Playhead } from './Playhead';
 import { TimelineZoomControls } from './TimelineZoomControls';
 import { timeToX, xToTime } from '../utils/timelineMath';
 import { Video } from 'lucide-react';
+import { assignLanes } from '../utils/intervalUtils';
 import './Timeline.css';
 
 export const Timeline: React.FC = () => {
-  const { 
-    project, 
-    setPlayhead, 
-    zoom, 
-    selectedSegmentId, 
-    setSelectedSegmentId, 
+  const {
+    project,
+    setPlayhead,
+    zoom,
+    selectedSegmentId,
+    setSelectedSegmentId,
     selectedVideoSegmentId,
     setSelectedVideoSegmentId,
-    removeSegment, 
+    removeSegment,
     updateSegment,
     splitVideoSegment,
     deleteVideoSegment,
     updateVideoSegmentSpeed,
-    playhead
+    playhead,
+    text,
+    updateTextCue,
+    deleteTextCue,
   } = useProject();
   
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -93,10 +97,31 @@ export const Timeline: React.FC = () => {
 
       if (!selectedSegmentId) return;
 
+      const step = e.shiftKey ? 1.0 : 0.1;
+
+      // Check if it's a text cue
+      const textCue = text.cues.find(c => c.id === selectedSegmentId);
+      if (textCue) {
+        // Handle text cue keyboard shortcuts
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          const newTime = Math.max(0, textCue.base.startTime - step);
+          updateTextCue(selectedSegmentId, { startTime: newTime });
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          const newTime = textCue.base.startTime + step;
+          updateTextCue(selectedSegmentId, { startTime: newTime });
+        } else if (e.key === 'Delete' || e.key === 'Backspace') {
+          e.preventDefault();
+          deleteTextCue(selectedSegmentId);
+          setSelectedSegmentId(null);
+        }
+        return;
+      }
+
+      // Handle audio segment keyboard shortcuts
       const segment = project.segments.find(s => s.id === selectedSegmentId);
       if (!segment) return;
-
-      const step = e.shiftKey ? 1.0 : 0.1;
 
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
@@ -116,7 +141,7 @@ export const Timeline: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [selectedSegmentId, project.segments, updateSegment, removeSegment]);
+  }, [selectedSegmentId, project.segments, text.cues, updateSegment, removeSegment, updateTextCue, deleteTextCue]);
 
   const handleVideoSegmentContextMenu = (e: React.MouseEvent, segId: string) => {
     e.preventDefault();
@@ -139,7 +164,7 @@ export const Timeline: React.FC = () => {
   return (
     <div className="timeline-container">
       <div className="timeline-toolbar">
-        <span className="timeline-title">Audio Timeline</span>
+        <span className="timeline-title">Timeline</span>
         <TimelineZoomControls />
       </div>
 
@@ -169,12 +194,12 @@ export const Timeline: React.FC = () => {
             {project.video && project.videoSegments && (
               <div className="video-track-lane">
                 {project.videoSegments.map((seg) => (
-                  <div 
+                  <div
                     key={seg.id}
                     className={`video-track-clip ${selectedVideoSegmentId === seg.id ? 'selected' : ''}`}
-                    style={{ 
+                    style={{
                       left: `${timeToX(seg.startTime, zoom)}px`,
-                      width: `${timeToX(seg.duration, zoom)}px` 
+                      width: `${timeToX(seg.duration, zoom)}px`
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -190,6 +215,72 @@ export const Timeline: React.FC = () => {
                     <span className="video-clip-duration">({seg.duration.toFixed(1)}s)</span>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* Text Track Lane */}
+            {text.cues.length > 0 && (
+              <div className="text-track-container">
+                {(() => {
+                  // Compute lanes for text cues (map to LanedInterval shape for assignLanes)
+                  const lanedIntervals = assignLanes(
+                    text.cues.map(c => ({
+                      id: c.id,
+                      startTime: c.base.startTime,
+                      duration: c.base.duration,
+                    }))
+                  );
+                  const laneCount = Math.max(...lanedIntervals.map(c => c.lane)) + 1;
+                  const laneHeight = 28; // Same as audio lane height
+
+                  // Map back to original cues for rendering (access .base properties)
+                  const cuesByLane = new Map(
+                    lanedIntervals.map(li => [
+                      li.id,
+                      { ...li, cue: text.cues.find(c => c.id === li.id)! }
+                    ])
+                  );
+
+                  return (
+                    <>
+                      {Array.from({ length: laneCount }).map((_, laneIdx) => (
+                        <div
+                          key={`text-lane-${laneIdx}`}
+                          className="text-track-lane"
+                          style={{
+                            top: `${laneIdx * laneHeight}px`,
+                            height: `${laneHeight - 4}px`,
+                          }}
+                        />
+                      ))}
+                      {Array.from(cuesByLane.values()).map(({ lane, cue }) => (
+                        <div
+                          key={cue.id}
+                          className={`text-track-clip interval-clip ${selectedSegmentId === cue.id ? 'selected' : ''}`}
+                          style={{
+                            left: `${timeToX(cue.base.startTime, zoom)}px`,
+                            width: `${timeToX(cue.base.duration, zoom)}px`,
+                            top: `${lane * laneHeight}px`,
+                            height: `${laneHeight - 6}px`,
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedSegmentId(cue.id);
+                            setSelectedVideoSegmentId(null);
+                          }}
+                          title={`${cue.base.stringKey}: ${cue.base.startTime.toFixed(1)}s - ${(cue.base.startTime + cue.base.duration).toFixed(1)}s`}
+                        >
+                          <div className="interval-clip-content">
+                            <div className="interval-clip-label">{cue.base.stringKey}</div>
+                            <div className="interval-clip-timecode">
+                              {cue.base.startTime.toFixed(1)}s - {(cue.base.startTime + cue.base.duration).toFixed(1)}s
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  );
+                })()}
               </div>
             )}
 

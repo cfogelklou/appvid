@@ -46,14 +46,7 @@ export const ExportSettingsSheet: React.FC<ExportSettingsSheetProps> = ({
       );
     }
 
-    // 3. Orientation warning: store previews must be portrait
-    if (video.width > video.height) {
-      warnings.push(
-        'Source video is landscape. App Store and Google Play previews must be portrait.'
-      );
-    }
-
-    // 4. Large file warning (Memory limits risk in browser)
+    // 3. Large file warning (Memory limits risk in browser)
     const mbSize = video.size / (1024 * 1024);
     if (mbSize > 100) {
       warnings.push(
@@ -101,9 +94,9 @@ export const ExportSettingsSheet: React.FC<ExportSettingsSheetProps> = ({
         </div>
 
         <div className="sheet-body">
-          {/* Preset Selector */}
+          {/* Orientation / Preset Selector */}
           <div className="sheet-section">
-            <span className="sheet-section-title">Output Store Preset</span>
+            <span className="sheet-section-title">Output Orientation & Size</span>
             <select
               className="form-select"
               value={settings.presetId}
@@ -227,7 +220,7 @@ export const ExportSettingsSheet: React.FC<ExportSettingsSheetProps> = ({
                 ))}
               </ul>
               <div className="warning-note">
-                This export may not meet App Store / Google Play preview requirements, but you can still export it.
+                This export may not meet store preview requirements, but you can still export it.
               </div>
             </div>
           )}

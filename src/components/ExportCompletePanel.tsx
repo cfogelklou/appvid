@@ -1,23 +1,148 @@
-import React, { useEffect, useState } from 'react';
-import { useProject } from '../context/ProjectContext';
-import { Check, Download, Share2, ArrowLeft, ShieldCheck } from 'lucide-react';
+import React from 'react';
+import { Check, X, AlertTriangle, Download, RotateCcw, ArrowLeft, Share2, ShieldCheck } from 'lucide-react';
+import type { BatchRecoveryItem } from '../text/types';
 import './components.css';
 
 interface ExportCompletePanelProps {
-  outputBlob: Blob;
-  onClose: () => void;
+  // For single video export (existing behavior)
+  outputBlob?: Blob;
+  onSingleClose?: () => void;
+
+  // For batch export (new behavior)
+  batchItems?: BatchRecoveryItem[];
+  onDownloadSingle?: (locale: string) => void;
+  onDownloadAll?: () => void;
+  onExportMore?: () => void;
+  projectFileName?: string;
 }
+
+const statusConfig = {
+  queued: { label: 'Queued', color: '#6b7280', icon: null },
+  blocked: { label: 'Blocked', color: '#f59e0b', icon: AlertTriangle },
+  rendering: { label: 'Rendering', color: '#3b82f6', icon: null },
+  writing: { label: 'Writing', color: '#3b82f6', icon: null },
+  completed: { label: 'Completed', color: '#10b981', icon: Check },
+  failed: { label: 'Failed', color: '#ef4444', icon: X },
+  cancelled: { label: 'Cancelled', color: '#6b7280', icon: null },
+};
 
 export const ExportCompletePanel: React.FC<ExportCompletePanelProps> = ({
   outputBlob,
-  onClose
+  onSingleClose,
+  batchItems,
+  onDownloadSingle,
+  onDownloadAll,
+  onExportMore,
+  projectFileName: _projectFileName,
 }) => {
-  const { project, activePreset } = useProject();
-  const [blobUrl, setBlobUrl] = useState<string>('');
-  const [canShare, setCanShare] = useState<boolean>(false);
+  // Determine which mode to render
+  const isBatchMode = batchItems && batchItems.length > 0;
+
+  // Single export mode (existing behavior)
+  if (!isBatchMode && outputBlob) {
+    return <SingleExportComplete outputBlob={outputBlob} onClose={onSingleClose || (() => {})} />;
+  }
+
+  // Batch export mode (new behavior)
+  if (isBatchMode && batchItems) {
+    const completedCount = batchItems.filter(i => i.status === 'completed').length;
+    const failedCount = batchItems.filter(i => i.status === 'failed').length;
+    const totalCount = batchItems.length;
+    const allComplete = totalCount > 0 && completedCount + failedCount === totalCount;
+
+    return (
+      <div className="export-complete-container">
+        <div className="export-complete-header">
+          <h2>Export Complete</h2>
+          <p className="export-complete-subtitle">
+            {completedCount} of {totalCount} locale{totalCount > 1 ? 's' : ''} exported successfully
+            {failedCount > 0 && ` (${failedCount} failed)`}
+          </p>
+        </div>
+
+        {/* Results Table */}
+        <div className="export-results-table">
+          <table className="export-table">
+            <thead>
+              <tr>
+                <th>Locale</th>
+                <th>Status</th>
+                <th>Message</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {batchItems.map(item => {
+                const config = statusConfig[item.status as keyof typeof statusConfig];
+                const StatusIcon = config.icon;
+
+                return (
+                  <tr key={item.locale}>
+                    <td className="locale-cell">{item.locale}</td>
+                    <td className="status-cell">
+                      <span
+                        className="status-badge"
+                        style={{ backgroundColor: `${config.color}20`, color: config.color }}
+                      >
+                        {StatusIcon && <StatusIcon size={14} />}
+                        {config.label}
+                      </span>
+                    </td>
+                    <td className="message-cell">
+                      {item.message || '-'}
+                    </td>
+                    <td className="action-cell">
+                      {item.status === 'completed' && onDownloadSingle && (
+                        <button
+                          className="btn-download-single"
+                          onClick={() => onDownloadSingle(item.locale)}
+                          title={`Download ${item.locale}`}
+                        >
+                          <Download size={16} />
+                          <span>Download</span>
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Footer Actions */}
+        <div className="export-complete-footer">
+          {onDownloadAll && allComplete && completedCount > 1 && (
+            <button className="btn-primary" onClick={onDownloadAll}>
+              <Download size={18} />
+              Download All as ZIP
+            </button>
+          )}
+
+          {onExportMore && (
+            <button className="btn-secondary" onClick={onExportMore}>
+              <RotateCcw size={18} />
+              Export More
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+};
+
+// Single export completion component (existing behavior preserved)
+const SingleExportComplete: React.FC<{ outputBlob: Blob; onClose: () => void }> = ({
+  outputBlob,
+  onClose,
+}) => {
+  const [blobUrl, setBlobUrl] = React.useState<string>('');
+  const [canShare, setCanShare] = React.useState<boolean>(false);
 
   // Generate Blob URL and clean up on unmount
-  useEffect(() => {
+  React.useEffect(() => {
     if (!outputBlob) return;
     const url = URL.createObjectURL(outputBlob);
     setBlobUrl(url);
@@ -36,13 +161,7 @@ export const ExportCompletePanel: React.FC<ExportCompletePanelProps> = ({
     if (!blobUrl) return;
     const a = document.createElement('a');
     a.href = blobUrl;
-    
-    // Construct friendly filename
-    const baseName = project.video
-      ? project.video.name.replace(/\.[^/.]+$/, '')
-      : 'export';
-    a.download = `${baseName}_preview.mp4`;
-    
+    a.download = `export_preview.mp4`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -52,10 +171,7 @@ export const ExportCompletePanel: React.FC<ExportCompletePanelProps> = ({
   const handleShare = async () => {
     if (!outputBlob) return;
     try {
-      const baseName = project.video
-        ? project.video.name.replace(/\.[^/.]+$/, '')
-        : 'export';
-      const file = new File([outputBlob], `${baseName}_preview.mp4`, { type: 'video/mp4' });
+      const file = new File([outputBlob], `export_preview.mp4`, { type: 'video/mp4' });
       await navigator.share({
         files: [file],
         title: 'App Preview Video',
@@ -103,16 +219,8 @@ export const ExportCompletePanel: React.FC<ExportCompletePanelProps> = ({
           <div className="info-layout">
             <div className="stats-grid">
               <div className="stat-card">
-                <span className="stat-label">Resolution</span>
-                <span className="stat-value">{project.settings.width} × {project.settings.height}</span>
-              </div>
-              <div className="stat-card">
                 <span className="stat-label">File Size</span>
                 <span className="stat-value">{formatSize(outputBlob.size)}</span>
-              </div>
-              <div className="stat-card" style={{ gridColumn: 'span 2' }}>
-                <span className="stat-label">Target Preset</span>
-                <span className="stat-value">{activePreset.name}</span>
               </div>
             </div>
 
@@ -147,4 +255,5 @@ export const ExportCompletePanel: React.FC<ExportCompletePanelProps> = ({
     </div>
   );
 };
+
 export default ExportCompletePanel;

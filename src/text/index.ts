@@ -7,3 +7,4 @@ export * from './localeValidation';
 export * from './textPackage';
 export * from './textLayout';
 export * from './exportFilename';
+export * from './batchUtils';

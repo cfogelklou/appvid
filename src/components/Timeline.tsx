@@ -8,6 +8,7 @@ import { TimelineZoomControls } from './TimelineZoomControls';
 import { timeToX, xToTime } from '../utils/timelineMath';
 import { Video } from 'lucide-react';
 import { assignLanes } from '../utils/intervalUtils';
+import { resolveTextCue } from '../text/types';
 import './Timeline.css';
 
 export const Timeline: React.FC = () => {
@@ -229,13 +230,14 @@ export const Timeline: React.FC = () => {
             {text.cues.length > 0 && (
               <div className='text-track-container'>
                 {(() => {
-                  // Compute lanes for text cues (map to LanedInterval shape for assignLanes)
+                  // Compute lanes for text cues (map to LanedInterval shape for assignLanes).
+                  // Use the RESOLVED cue (base ∪ overrides) so the clip reflects the
+                  // cue's effective position, matching VideoPreview and ClipInspector.
                   const lanedIntervals = assignLanes(
-                    text.cues.map((c) => ({
-                      id: c.id,
-                      startTime: c.base.startTime,
-                      duration: c.base.duration,
-                    })),
+                    text.cues.map((c) => {
+                      const r = resolveTextCue(c);
+                      return { id: c.id, startTime: r.startTime, duration: r.duration };
+                    }),
                   );
                   const laneCount = Math.max(...lanedIntervals.map((c) => c.lane)) + 1;
                   const laneHeight = 28; // Same as audio lane height
@@ -261,20 +263,22 @@ export const Timeline: React.FC = () => {
                         />
                       ))}
                       {Array.from(cuesByLane.values()).map(({ lane, cue }) => {
+                        const resolved = resolveTextCue(cue);
+                        const stringKey = resolved.stringKey;
                         const previewValue = text.previewLocale
-                          ? text.catalogs[text.previewLocale]?.strings[cue.base.stringKey]
+                          ? text.catalogs[text.previewLocale]?.strings[stringKey]
                           : undefined;
                         const label =
                           previewValue && previewValue.trim()
                             ? previewValue.replace(/\s+/g, ' ').slice(0, 24)
-                            : cue.base.stringKey;
+                            : stringKey;
                         return (
                           <IntervalClip
                             key={cue.id}
                             id={cue.id}
                             interval={{
-                              startTime: cue.base.startTime,
-                              duration: cue.base.duration,
+                              startTime: resolved.startTime,
+                              duration: resolved.duration,
                             }}
                             label={label}
                             selected={selectedSegmentId === cue.id}

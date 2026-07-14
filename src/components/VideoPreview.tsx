@@ -259,13 +259,15 @@ export const VideoPreview: React.FC = () => {
 
     return {
       position: 'absolute' as const,
-      left: `${left}px`,
-      top: `${top}px`,
-      width: `${blockWidth}px`,
-      height: `${blockHeight}px`,
+      // Position/size in % of the device-screen, font in cqh, so the overlay
+      // scales with the rendered preview (which is CSS-sized, not preset-sized).
+      left: `${(left / activePreset.width) * 100}%`,
+      top: `${(top / activePreset.height) * 100}%`,
+      width: `${(blockWidth / activePreset.width) * 100}%`,
+      height: `${(blockHeight / activePreset.height) * 100}%`,
       fontFamily: fontFamilyCss,
-      fontSize: `${fontSize}px`,
-      lineHeight: `${lineHeight}px`,
+      fontSize: `${(fontSize / activePreset.height) * 100}cqh`,
+      lineHeight: `${(lineHeight / activePreset.height) * 100}cqh`,
       color: color,
       textAlign: horizontalAlign,
       whiteSpace: 'pre-wrap',

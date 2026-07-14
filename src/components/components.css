@@ -819,7 +819,11 @@
 .app-shell {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100dvh;
+  /* Hard cap: #root is display:flex and would otherwise stretch this to content
+     height, overflowing the viewport and clipping the timeline. max-height beats
+     flex stretch, so the editor always fits the browser window. */
+  max-height: 100dvh;
   width: 100vw;
   overflow: hidden;
 }

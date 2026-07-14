@@ -126,6 +126,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Establish a container so text-overlay font sizes (cqh) and positions (%)
+     scale with the rendered preview size, not the preset pixel space. */
+  container-type: size;
+}
+
+/* Text overlays fill the device-screen; children are positioned in %/cqh. */
+.text-overlay-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* Lines stack vertically inside an overlay block. */
+.text-overlay-line {
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 /* Video element rendering modes */

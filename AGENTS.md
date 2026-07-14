@@ -21,6 +21,18 @@ The most common trap: **wrong Node version**. Vite 6 and oxlint 1.x require **No
 
 AppVid is a Vite + React 19 + TypeScript browser application for creating app-store preview videos locally. Application code is in `src/`: reusable UI lives in `src/components/`, project state in `src/context/ProjectContext.tsx`, domain types in `src/types.ts`, constants in `src/constants.ts`, and media/timeline helpers in `src/utils/`. Keep component-specific CSS next to its component; global styles belong in `src/index.css` or `src/App.css`. Static runtime assets, including FFmpeg WASM files, live in `public/`.
 
+## Repository Scripts and TypeScript Guidelines
+
+Use the standard checks in `scripts/`:
+
+```sh
+bash scripts/lintall.sh
+bash scripts/testall.sh
+bash scripts/sanity_checks.sh
+```
+
+These cover AppVid linting, type checking, formatting, tests, and the production build. Follow [`docs/guidelines-typescript.md`](./docs/guidelines-typescript.md) for TypeScript and code-quality conventions.
+
 Unit tests are in `tests/unit/`; the manual browser workflow is in `tests/e2e/test_appvid.ts`. Design notes are kept at the repository root.
 
 ## Build, Test, and Development Commands

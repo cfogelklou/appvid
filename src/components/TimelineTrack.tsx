@@ -13,11 +13,11 @@ export const TimelineTrack: React.FC = () => {
 
   // Sort and assign lanes to segments to handle overlap / collision stacking
   const sorted = [...project.segments]
-    .map(s => {
-      const asset = project.audioAssets.find(a => a.id === s.assetId);
+    .map((s) => {
+      const asset = project.audioAssets.find((a) => a.id === s.assetId);
       return {
         ...s,
-        duration: s.duration !== undefined ? s.duration : (asset ? asset.duration : 0)
+        duration: s.duration !== undefined ? s.duration : asset ? asset.duration : 0,
       };
     })
     .sort((a, b) => a.startTime - b.startTime);
@@ -36,7 +36,7 @@ export const TimelineTrack: React.FC = () => {
     lanes[laneIndex] = s.startTime + s.duration;
     positioned.push({
       ...s,
-      lane: laneIndex
+      lane: laneIndex,
     });
   }
 
@@ -45,24 +45,21 @@ export const TimelineTrack: React.FC = () => {
   const trackHeight = laneCount * laneHeight;
 
   return (
-    <div 
-      className="timeline-track-container"
-      style={{ height: `${trackHeight}px` }}
-    >
+    <div className='timeline-track-container' style={{ height: `${trackHeight}px` }}>
       {/* Background track lanes for visual guidance */}
       {Array.from({ length: laneCount }).map((_, index) => (
-        <div 
-          key={`lane-bg-${index}`} 
-          className="track-lane-bg"
-          style={{ 
+        <div
+          key={`lane-bg-${index}`}
+          className='track-lane-bg'
+          style={{
             top: `${index * laneHeight}px`,
-            height: `${laneHeight}px` 
+            height: `${laneHeight}px`,
           }}
         />
       ))}
 
       {/* Place segments */}
-      {positioned.map(seg => (
+      {positioned.map((seg) => (
         <AudioSegment
           key={seg.id}
           segment={seg}
@@ -74,7 +71,7 @@ export const TimelineTrack: React.FC = () => {
 
       {/* Empty State */}
       {project.segments.length === 0 && (
-        <div className="timeline-empty-message">
+        <div className='timeline-empty-message'>
           No audio clips placed. Add audio clips from the asset panel to start.
         </div>
       )}

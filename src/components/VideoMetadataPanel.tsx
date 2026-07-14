@@ -233,13 +233,26 @@ export const VideoMetadataPanel: React.FC<VideoMetadataPanelProps> = ({
       )}
 
       {isNewFile && (
-        <div className='metadata-actions' style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+        <div
+          className='metadata-actions'
+          style={{ display: 'flex', gap: '12px', marginTop: '24px' }}
+        >
           {onCancel && (
-            <button className='btn-secondary' type='button' onClick={onCancel} style={{ flex: 1, padding: '10px 16px', fontSize: '0.9rem', width: 'auto' }}>
+            <button
+              className='btn-secondary'
+              type='button'
+              onClick={onCancel}
+              style={{ flex: 1, padding: '10px 16px', fontSize: '0.9rem', width: 'auto' }}
+            >
               Cancel
             </button>
           )}
-          <button className='btn-primary' type='button' onClick={handleConfirmImport} style={{ flex: 1.5, padding: '10px 16px', fontSize: '0.9rem', width: 'auto' }}>
+          <button
+            className='btn-primary'
+            type='button'
+            onClick={handleConfirmImport}
+            style={{ flex: 1.5, padding: '10px 16px', fontSize: '0.9rem', width: 'auto' }}
+          >
             Confirm & Import Video
           </button>
         </div>

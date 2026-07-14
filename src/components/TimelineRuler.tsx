@@ -32,7 +32,7 @@ export const TimelineRuler: React.FC<TimelineRulerProps> = ({ duration }) => {
   const minorInterval = interval / subdivisions;
   for (let t = 0; t <= duration; t += minorInterval) {
     // Avoid overlap with major ticks
-    const isMajor = majorTicks.some(mt => Math.abs(mt - t) < 0.001);
+    const isMajor = majorTicks.some((mt) => Math.abs(mt - t) < 0.001);
     if (!isMajor) {
       minorTicks.push(t);
     }
@@ -57,20 +57,20 @@ export const TimelineRuler: React.FC<TimelineRulerProps> = ({ duration }) => {
   };
 
   return (
-    <div className="timeline-ruler">
-      {majorTicks.map(time => (
+    <div className='timeline-ruler'>
+      {majorTicks.map((time) => (
         <div
           key={`major-${time}`}
-          className="ruler-tick major"
+          className='ruler-tick major'
           style={{ left: `${timeToX(time, zoom)}px` }}
         >
-          <span className="tick-label">{formatTickLabel(time, duration)}</span>
+          <span className='tick-label'>{formatTickLabel(time, duration)}</span>
         </div>
       ))}
-      {minorTicks.map(time => (
+      {minorTicks.map((time) => (
         <div
           key={`minor-${time}`}
-          className="ruler-tick minor"
+          className='ruler-tick minor'
           style={{ left: `${timeToX(time, zoom)}px` }}
         />
       ))}

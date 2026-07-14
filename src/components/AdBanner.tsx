@@ -80,12 +80,12 @@ export function AdBanner(p: AdBannerProps): React.ReactElement {
       : { width: p.width, height: '100%', maxHeight: '100%' };
 
   return (
-    <div style={{ ...rootStyle, ...sizeStyle }} aria-label="Advertisement">
+    <div style={{ ...rootStyle, ...sizeStyle }} aria-label='Advertisement'>
       <span style={labelStyle}>Ad</span>
       <div style={{ width: '100%', height: '100%' }}>
         <ins
           ref={insRef}
-          className="adsbygoogle"
+          className='adsbygoogle'
           style={{
             display: 'block',
             width: '100%',

@@ -53,3 +53,28 @@ bun run test
 ```bash
 bun run build
 ```
+
+### Lint
+```bash
+bun run lint
+```
+
+Runs [oxlint](https://oxc.rs/docs/guide/usage/linter). Vendored files (`public/ffmpeg-core.js`, `public/ffmpeg-core.wasm`) and build output (`dist/`) are excluded via `.eslintignore`, which oxlint reads by default.
+
+---
+
+## Troubleshooting
+
+### `bun run lint` crashes with `ERR_UNKNOWN_FILE_EXTENSION` / `Unknown file extension ""`
+
+**Cause:** Node 16 or older is active. oxlint's bin is an ESM shim with no file extension (`import "../dist/cli.js"`); Node 16's ESM loader rejects extensionless files. oxlint 1.x requires **Node 18+** (see `engines.node` in `package.json`).
+
+**Fix:** Switch to Node 18 or newer via nvm:
+
+```bash
+nvm use 24   # or any installed version >= 18
+bun run lint
+```
+
+To check your active version: `node --version`. The monorepo's root `.nvmrc` pins the intended major version.
+

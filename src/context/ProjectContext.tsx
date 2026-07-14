@@ -164,6 +164,11 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const importVideo = (videoData: Omit<VideoAssetMetadata, 'blobUrl'> & { file: File }) => {
     const blobUrl = URL.createObjectURL(videoData.file);
+    // Autodetect orientation from source dimensions so the editor frame and
+    // export default match the video (portrait vs landscape).
+    const orientedPreset =
+      STORE_PRESETS.find((p) => p.id === (videoData.width > videoData.height ? 'landscape' : 'portrait')) ||
+      STORE_PRESETS[0];
     setProject((prev) => {
       const defaultSegment: VideoSegment = {
         id: crypto.randomUUID(),
@@ -185,6 +190,12 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
           blobUrl,
         },
         videoSegments: [defaultSegment],
+        settings: {
+          ...prev.settings,
+          presetId: orientedPreset.id,
+          width: orientedPreset.width,
+          height: orientedPreset.height,
+        },
         updatedAt: Date.now(),
       };
       return updated;

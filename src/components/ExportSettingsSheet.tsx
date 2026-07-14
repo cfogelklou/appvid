@@ -274,9 +274,9 @@ export const ExportSettingsSheet: React.FC<ExportSettingsSheetProps> = ({
             </div>
           )}
 
-          {/* Preset Selector */}
+          {/* Orientation / Preset Selector */}
           <div className="sheet-section">
-            <span className="sheet-section-title">Output Store Preset</span>
+            <span className="sheet-section-title">Output Orientation & Size</span>
             <select
               className="form-select"
               value={settings.presetId}
@@ -287,6 +287,7 @@ export const ExportSettingsSheet: React.FC<ExportSettingsSheetProps> = ({
                   {preset.name} ({preset.width}x{preset.height})
                 </option>
               ))}
+              <option value="custom">Custom Dimensions</option>
             </select>
 
             {/* Custom dimensions if 'custom' selected */}
@@ -399,7 +400,7 @@ export const ExportSettingsSheet: React.FC<ExportSettingsSheetProps> = ({
                 ))}
               </ul>
               <div className="warning-note">
-                This export may not meet App Store / Google Play preview requirements, but you can still export it.
+                This export may not meet store preview requirements, but you can still export it.
               </div>
             </div>
           )}

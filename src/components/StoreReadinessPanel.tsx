@@ -54,14 +54,7 @@ export const StoreReadinessPanel: React.FC = () => {
     );
   }
 
-  // 4. Orientation Validation
-  if (video.width > video.height) {
-    warnings.push(
-      'Orientation: Source video is landscape. App Store and Google Play previews must be portrait.',
-    );
-  }
-
-  // 5. File Size Risk
+  // 4. File Size Risk
   if (video.size > 100 * 1024 * 1024) {
     warnings.push(
       `File Size: Recording is large (${formatSize(video.size)}). Mobile browsers may encounter memory limits during local export.`,
@@ -96,8 +89,7 @@ export const StoreReadinessPanel: React.FC = () => {
       <div className='readiness-banner'>
         <span className='readiness-banner-icon'>ℹ</span>
         <span>
-          This export may not meet App Store / Google Play preview requirements, but you can still
-          export it.
+          This export may not meet store preview requirements, but you can still export it.
         </span>
       </div>
     </div>

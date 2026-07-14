@@ -4,7 +4,6 @@ import { TopBar } from './TopBar';
 import { EditorWorkspace } from './EditorWorkspace';
 import { VideoImportCard } from './VideoImportCard';
 import { VideoMetadataPanel } from './VideoMetadataPanel';
-import { StorePresetSelector } from './StorePresetSelector';
 import { ExportSettingsSheet } from './ExportSettingsSheet';
 import { ProcessingOverlay } from './ProcessingOverlay';
 import { ExportCompletePanel } from './ExportCompletePanel';
@@ -293,10 +292,7 @@ export const AppShell: React.FC = () => {
                   />
                 ) : (
                   <>
-                    <h2 className="card-section-title">1. Choose Output Layout Preset</h2>
-                    <StorePresetSelector />
-
-                    <h2 className="card-section-title" style={{ marginTop: '24px' }}>2. Import Screen Recording</h2>
+                    <h2 className="card-section-title">1. Import Screen Recording</h2>
                     <VideoImportCard onFileSelected={(file) => setSelectedFile(file)} />
                   </>
                 )}

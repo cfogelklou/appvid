@@ -1,0 +1,10 @@
+# Vendored FFmpeg WASM build — not our code, generates thousands of warnings
+public/ffmpeg-core.js
+public/ffmpeg-core.wasm
+
+# Build output
+dist/
+dist-ssr/
+
+# Dependencies
+node_modules/

@@ -339,7 +339,8 @@ export const AppShell: React.FC = () => {
     <div className='app-shell zinc-theme'>
       <TopBar onOpenExportSettings={handleStartExport} />
 
-      <main className='app-content'>
+      <div className='app-main-layout'>
+        <main className='app-content'>
         {!project.video ? (
           // Landing & Entry Screen
           <div className='landing-screen'>
@@ -419,7 +420,17 @@ export const AppShell: React.FC = () => {
             <EditorWorkspace />
           </>
         )}
-      </main>
+        </main>
+
+        <aside className='ad-banner-wrapper' aria-label='Advertisement'>
+          <div className='ad-banner-mobile'>
+            <AdBanner orientation='portrait' height={90} width={1200} />
+          </div>
+          <div className='ad-banner-desktop'>
+            <AdBanner orientation='landscape' height={0} width={160} />
+          </div>
+        </aside>
+      </div>
 
       {/* Export Settings Dialog */}
       <ExportSettingsSheet
@@ -444,10 +455,6 @@ export const AppShell: React.FC = () => {
         <ExportCompletePanel outputBlob={exportBlob} onSingleClose={() => setExportBlob(null)} />
       )}
 
-      {/* Manual AdSense Banner */}
-      <div className='ad-banner-wrapper'>
-        <AdBanner orientation='portrait' height={90} width={1200} />
-      </div>
     </div>
   );
 };

@@ -16,6 +16,9 @@
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.12",
     "@ffmpeg/util": "^0.12.2",
+    "@fontsource/noto-sans": "^5.2.10",
+    "@fontsource/noto-sans-jp": "^5.2.9",
+    "esbuild": "^0.28.1",
     "lucide-react": "^0.475.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

@@ -1,5 +1,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
 
+/*
+ * Bundled Noto fonts for the multilingual text feature. Served from /appvid/fonts
+ * (matches vite.config.ts base). drawtext export reads the TTFs via FFmpeg's
+ * virtual filesystem; the DOM preview renders with these @font-face families.
+ * Fetched lazily — only when a cue actually uses the family.
+ */
+@font-face {
+  font-family: 'Noto Sans';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: block;
+  src: url('/appvid/fonts/NotoSans-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Noto Sans JP';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: block;
+  src: url('/appvid/fonts/NotoSansJP-Regular.ttf') format('truetype');
+}
+
 :root {
   color-scheme: dark;
 

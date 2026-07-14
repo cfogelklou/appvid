@@ -53,6 +53,7 @@ export interface Project {
   segments: AudioSegment[];
   settings: ExportSettings;
   updatedAt: number;
+  draftVersion?: number; // persistence format version (undefined = unversioned, 2 = includes text state)
 }
 
 export interface StorePreset {

@@ -345,6 +345,11 @@ export const AppShell: React.FC = () => {
           // Landing & Entry Screen
           <div className='landing-screen'>
             <div className='landing-hero'>
+              <img
+                className='landing-product-image'
+                src='/appvid/images/appvid-feature.png'
+                alt='AppVid preview editor with a smartphone mockup and video timeline'
+              />
               <div className='hero-badge'>
                 <Sparkles size={14} />
                 <span>100% Local Browser Engine</span>

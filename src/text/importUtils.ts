@@ -68,7 +68,8 @@ export const importTextCatalogs = async (
   // Determine new preview locale
   const allLocales = Object.keys(newCatalogs) as LocaleCode[];
   const browserLocale = typeof navigator !== 'undefined' ? navigator.language : undefined;
-  const newPreviewLocale = currentState.previewLocale || defaultPreviewLocale(allLocales, browserLocale);
+  const newPreviewLocale =
+    currentState.previewLocale || defaultPreviewLocale(allLocales, browserLocale);
 
   const newState: TextProjectState = {
     ...currentState,

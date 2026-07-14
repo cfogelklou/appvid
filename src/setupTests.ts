@@ -11,8 +11,8 @@ if (!globalThis.crypto?.getRandomValues) {
     },
     randomUUID: () => {
       return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
         return v.toString(16);
       });
     },
@@ -21,7 +21,7 @@ if (!globalThis.crypto?.getRandomValues) {
 
 // Polyfill File.text() method for jsdom
 if (File.prototype.text === undefined) {
-  File.prototype.text = async function(this: File) {
+  File.prototype.text = async function (this: File) {
     const text = await this.arrayBuffer();
     const decoder = new TextDecoder();
     return decoder.decode(text);
@@ -41,22 +41,22 @@ const localStorageMock = (() => {
     },
     clear: () => {
       store = {};
-    }
+    },
   };
 })();
 
 Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,
-  writable: true
+  writable: true,
 });
 
 // Mock URL.createObjectURL and URL.revokeObjectURL
 Object.defineProperty(window.URL, 'createObjectURL', {
   value: () => 'mock-blob-url',
-  writable: true
+  writable: true,
 });
 
 Object.defineProperty(window.URL, 'revokeObjectURL', {
   value: () => {},
-  writable: true
+  writable: true,
 });

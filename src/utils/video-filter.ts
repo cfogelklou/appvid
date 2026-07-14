@@ -5,6 +5,19 @@
 
 import type { LaidOutTextCue } from '../text/types';
 
+const ensureDirectory = async (
+  ffmpeg: { createDir: (path: string) => Promise<unknown> },
+  path: string,
+) => {
+  try {
+    await ffmpeg.createDir(path);
+  } catch (error) {
+    // Directories remain in the shared FFmpeg instance between batch items.
+    // A second create therefore legitimately reports that the path exists.
+    if (!String(error).includes('File exists')) throw error;
+  }
+};
+
 /**
  * Position text block within safe area using horizontal alignment.
  */
@@ -58,7 +71,7 @@ const buildDrawtextFilter = (
   outputLabel: string,
 ): string => {
   // Line position within the block
-  const lineY = blockY + (lineIndex * cue.lineHeight);
+  const lineY = blockY + lineIndex * cue.lineHeight;
 
   // Sanitize color: remove # prefix for drawtext
   const color = cue.color.slice(1);
@@ -153,17 +166,21 @@ export const getRequiredTextFiles = (textOverlays: LaidOutTextCue[]): string[] =
  * Write text files for all overlay lines to FFmpeg virtual filesystem.
  */
 export const writeTextFiles = async (
-  ffmpeg: any,
+  ffmpeg: {
+    createDir: (path: string) => Promise<unknown>;
+    writeFile: (path: string, data: Uint8Array) => Promise<unknown>;
+  },
   textOverlays: LaidOutTextCue[],
 ): Promise<string[]> => {
   const writtenFiles: string[] = [];
+
+  await ensureDirectory(ffmpeg, 'text');
 
   for (const cue of textOverlays) {
     for (let lineIndex = 0; lineIndex < cue.lines.length; lineIndex++) {
       const filename = `text/line_${cue.id}_${lineIndex}.txt`;
       const content = cue.lines[lineIndex];
 
-      // Ensure text directory exists (FFmpeg WASM creates parent dirs automatically)
       await ffmpeg.writeFile(filename, new TextEncoder().encode(content));
       writtenFiles.push(filename);
     }
@@ -189,13 +206,18 @@ export const getRequiredFontFiles = (textOverlays: LaidOutTextCue[]): Set<string
  * Copy font files from public/fonts to FFmpeg virtual filesystem.
  */
 export const stageFontFiles = async (
-  ffmpeg: any,
+  ffmpeg: {
+    createDir: (path: string) => Promise<unknown>;
+    writeFile: (path: string, data: Uint8Array) => Promise<unknown>;
+  },
   fontFiles: Set<string>,
 ): Promise<string[]> => {
   const stagedFiles: string[] = [];
 
+  await ensureDirectory(ffmpeg, 'fonts');
+
   for (const fontFileName of fontFiles) {
-    const sourcePath = `/fonts/${fontFileName}`;
+    const sourcePath = `${import.meta.env.BASE_URL}fonts/${fontFileName}`;
     const destPath = `fonts/${fontFileName}`;
 
     try {

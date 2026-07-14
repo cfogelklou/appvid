@@ -7,10 +7,11 @@ import { VideoMetadataPanel } from './VideoMetadataPanel';
 import { ExportSettingsSheet } from './ExportSettingsSheet';
 import { ProcessingOverlay } from './ProcessingOverlay';
 import { ExportCompletePanel } from './ExportCompletePanel';
-import { processVideo, type ProcessLog } from '../utils/ffmpegEngine';
+import { processVideo, renderVideo, type ProcessLog } from '../utils/ffmpegEngine';
 import { Sparkles, Shield, MonitorPlay, Save, RotateCcw } from 'lucide-react';
 import { AdBanner } from './AdBanner';
-import type { BatchItemStatus } from '../text/types';
+import type { BatchItemStatus, LaidOutTextCue, LocaleCode } from '../text/types';
+import { layoutCue, createCanvasMeasurer } from '../text/textLayout';
 import {
   executeBatch,
   requestDirectoryHandle,
@@ -22,7 +23,7 @@ import {
 import './components.css';
 
 export const AppShell: React.FC = () => {
-  const { project, hasDraft, restoreDraft, batchItems, setBatchItems } = useProject();
+  const { project, hasDraft, restoreDraft, batchItems, setBatchItems, text } = useProject();
 
   // Dialog / overlay states
   const [isExportSettingsOpen, setIsExportSettingsOpen] = useState(false);
@@ -53,14 +54,14 @@ export const AppShell: React.FC = () => {
     const recoveryItems = loadBatchRecovery();
     if (recoveryItems.length > 0) {
       const hasIncomplete = recoveryItems.some(
-        item => item.status === 'failed' || item.status === 'cancelled'
+        (item) => item.status === 'failed' || item.status === 'cancelled',
       );
       if (hasIncomplete) {
-        // Show recovery UI if there are incomplete items
-        console.log('Found incomplete batch export:', recoveryItems);
+        batchItemsRef.current = recoveryItems;
+        setBatchItems(recoveryItems);
       }
     }
-  }, []);
+  }, [setBatchItems]);
 
   // Persist batch items on each change
   useEffect(() => {
@@ -96,9 +97,9 @@ export const AppShell: React.FC = () => {
           console.log(`[FFmpeg Log] ${log.message}`);
           setExportLogs((prev) => [...prev, log]);
         },
-        controller.signal
+        controller.signal,
       );
-      
+
       setExportBlob(output);
     } catch (e: any) {
       if (e.message !== 'Export cancelled by user') {
@@ -119,11 +120,47 @@ export const AppShell: React.FC = () => {
     setIsBatchProcessing(false);
   };
 
-  const handleStartBatchExport = async (
-    batchInput: {
-      items: Array<{ locale: string; cueLayouts: any[] }>;
+  const handleStartSingleTextExport = async (item: {
+    locale: string;
+    cueLayouts: LaidOutTextCue[];
+  }) => {
+    setIsExportSettingsOpen(false);
+    setIsProcessing(true);
+    setExportProgress(0);
+    setExportStage('Initializing');
+    setExportLogs([]);
+    setExportBlob(null);
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    try {
+      const output = await renderVideo(
+        project,
+        { locale: item.locale, textOverlays: item.cueLayouts, signal: controller.signal },
+        {
+          onProgress: ({ stage, progress }) => {
+            setExportStage(stage);
+            setExportProgress(progress);
+          },
+          onLog: (log) => setExportLogs((previous) => [...previous, log]),
+        },
+      );
+      setExportBlob(output);
+    } catch (error: unknown) {
+      if (!(error instanceof Error) || error.message !== 'Export cancelled by user') {
+        console.error('Text export failed:', error);
+        alert(`Export failed: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    } finally {
+      setIsProcessing(false);
+      abortControllerRef.current = null;
     }
-  ) => {
+  };
+
+  const handleStartBatchExport = async (batchInput: {
+    items: Array<{ locale: string; cueLayouts: LaidOutTextCue[] }>;
+  }) => {
     setIsExportSettingsOpen(false);
     setIsBatchProcessing(true);
     setExportProgress(0);
@@ -146,10 +183,11 @@ export const AppShell: React.FC = () => {
       setExportStage('Starting batch export...');
 
       // Initialize batch items
-      const initialItems = batchInput.items.map(item => ({
+      const initialItems = batchInput.items.map((item) => ({
         locale: item.locale,
         status: 'queued' as BatchItemStatus,
       }));
+      batchItemsRef.current = initialItems;
       setBatchItems(initialItems);
 
       const output = await executeBatch({
@@ -159,9 +197,11 @@ export const AppShell: React.FC = () => {
         callbacks: {
           onProgress: (locale, status, message) => {
             console.log(`[Batch] ${locale}: ${status} - ${message || ''}`);
-            setBatchItems(batchItemsRef.current.map(i =>
-              i.locale === locale ? { locale, status, message } : i
-            ));
+            const nextItems = batchItemsRef.current.map((i) =>
+              i.locale === locale ? { locale, status, message } : i,
+            );
+            batchItemsRef.current = nextItems;
+            setBatchItems(nextItems);
 
             // Update overall stage based on first active item
             if (status === 'rendering' || status === 'writing') {
@@ -183,7 +223,6 @@ export const AppShell: React.FC = () => {
         clearBatchRecovery();
         setBatchItems([]);
       }
-
     } catch (e: any) {
       if (e.message !== 'Export cancelled by user') {
         console.error('Batch export failed:', e);
@@ -223,7 +262,7 @@ export const AppShell: React.FC = () => {
 
       // Filter to only retry failed/cancelled items
       const retryItems = recoveryItems.filter(
-        item => item.status === 'failed' || item.status === 'cancelled'
+        (item) => item.status === 'failed' || item.status === 'cancelled',
       );
 
       if (retryItems.length === 0) {
@@ -235,20 +274,55 @@ export const AppShell: React.FC = () => {
       console.log('Resuming batch with items:', retryItems);
 
       // Update batch items to queued for retry
-      const queuedItems = retryItems.map(item => ({
+      const queuedItems = retryItems.map((item) => ({
         ...item,
         status: 'queued' as BatchItemStatus,
         message: undefined,
       }));
+      batchItemsRef.current = queuedItems;
       setBatchItems(queuedItems);
 
-      // Re-execute with retry items
-      // Note: This needs cueLayouts from the original batch - would need to be
-      // persisted or recomputed. For now, this is a simplified implementation.
-      const result = { completed: [] as string[], failed: [] as string[], cancelled: [] as string[] };
+      const frame = { width: project.settings.width, height: project.settings.height };
+      const measure = createCanvasMeasurer();
+      const items = retryItems.map(({ locale }) => {
+        const catalog = text.catalogs[locale];
+        if (!catalog) {
+          throw new Error(
+            `Cannot resume ${locale}: its translation catalog is no longer available.`,
+          );
+        }
+        return {
+          locale: locale as LocaleCode,
+          cueLayouts: text.cues.map((cue) => layoutCue({ cue, locale, catalog, frame, measure })),
+        };
+      });
+
+      const result = await executeBatch({
+        project,
+        items,
+        signal: controller.signal,
+        callbacks: {
+          onProgress: (locale, status, message) => {
+            const nextItems = batchItemsRef.current.map((item) =>
+              item.locale === locale ? { locale, status, message } : item,
+            );
+            batchItemsRef.current = nextItems;
+            setBatchItems(nextItems);
+            if (status === 'rendering' || status === 'writing') {
+              setExportStage(`Processing ${locale}...`);
+            }
+          },
+          onLog: (log) => setExportLogs((previous) => [...previous, log]),
+        },
+        directoryHandle: handle,
+      });
 
       console.log('Batch resume complete:', result);
-
+      if (result.failed.length === 0 && result.cancelled.length === 0) {
+        clearBatchRecovery();
+        batchItemsRef.current = [];
+        setBatchItems([]);
+      }
     } catch (e: any) {
       if (e.message !== 'Export cancelled by user') {
         console.error('Batch resume failed:', e);
@@ -262,28 +336,28 @@ export const AppShell: React.FC = () => {
   };
 
   return (
-    <div className="app-shell zinc-theme">
+    <div className='app-shell zinc-theme'>
       <TopBar onOpenExportSettings={handleStartExport} />
 
-      <main className="app-content">
+      <main className='app-content'>
         {!project.video ? (
           // Landing & Entry Screen
-          <div className="landing-screen">
-            <div className="landing-hero">
-              <div className="hero-badge">
+          <div className='landing-screen'>
+            <div className='landing-hero'>
+              <div className='hero-badge'>
                 <Sparkles size={14} />
                 <span>100% Local Browser Engine</span>
               </div>
-              <h1 className="landing-title">AppVid</h1>
-              <p className="landing-tagline">Create app preview videos locally.</p>
-              <p className="landing-trust-note">
+              <h1 className='landing-title'>AppVid</h1>
+              <p className='landing-tagline'>Create app preview videos locally.</p>
+              <p className='landing-trust-note'>
                 <Shield size={14} />
                 <span>No uploads. No accounts. Your files never leave your browser.</span>
               </p>
             </div>
 
-            <div className="landing-grid">
-              <div className="landing-main-card">
+            <div className='landing-grid'>
+              <div className='landing-main-card'>
                 {selectedFile ? (
                   <VideoMetadataPanel
                     file={selectedFile}
@@ -292,48 +366,35 @@ export const AppShell: React.FC = () => {
                   />
                 ) : (
                   <>
-                    <h2 className="card-section-title">1. Import Screen Recording</h2>
+                    <h2 className='card-section-title'>1. Import Screen Recording</h2>
                     <VideoImportCard onFileSelected={(file) => setSelectedFile(file)} />
                   </>
                 )}
               </div>
 
-              <div className="landing-side-cards">
+              <div className='landing-side-cards'>
                 {hasDraft && (
-                  <div className="landing-side-card restore-card">
-                    <div className="card-icon-header">
+                  <div className='landing-side-card restore-card'>
+                    <div className='card-icon-header'>
                       <Save size={18} />
                       <h3>Restore Draft</h3>
                     </div>
-                    <p>You have a saved project draft in local storage. Click below to reload the timeline.</p>
-                    <button className="btn btn-secondary btn-full" onClick={restoreDraft}>
+                    <p>
+                      You have a saved project draft in local storage. Click below to reload the
+                      timeline.
+                    </p>
+                    <button className='btn btn-secondary btn-full' onClick={restoreDraft}>
                       Restore Last Session
                     </button>
                   </div>
                 )}
 
-                {/* Batch export recovery card */}
-                {batchItems.length > 0 && batchItems.some(
-                  item => item.status === 'failed' || item.status === 'cancelled'
-                ) && (
-                  <div className="landing-side-card restore-card">
-                    <div className="card-icon-header">
-                      <RotateCcw size={18} />
-                      <h3>Resume Interrupted Export</h3>
-                    </div>
-                    <p>You have an incomplete batch export. Click below to resume.</p>
-                    <button className="btn btn-secondary btn-full" onClick={handleResumeBatchExport}>
-                      Resume Export
-                    </button>
-                  </div>
-                )}
-
-                <div className="landing-side-card guidance-card">
-                  <div className="card-icon-header">
+                <div className='landing-side-card guidance-card'>
+                  <div className='card-icon-header'>
                     <MonitorPlay size={18} />
                     <h3>Getting Started</h3>
                   </div>
-                  <ul className="guidance-list">
+                  <ul className='guidance-list'>
                     <li>Supports portrait-mode MP4 or MOV screen recordings.</li>
                     <li>Designed to export exact aspect-ratios for App Store & Play Store.</li>
                     <li>Audio clips can be placed at specific playhead times.</li>
@@ -345,8 +406,18 @@ export const AppShell: React.FC = () => {
             </div>
           </div>
         ) : (
-          // Editor Workspace
-          <EditorWorkspace />
+          <>
+            {batchItems.some((item) => item.status === 'failed' || item.status === 'cancelled') && (
+              <div className='batch-recovery-banner'>
+                <span>An export was interrupted.</span>
+                <button className='btn btn-secondary btn-sm' onClick={handleResumeBatchExport}>
+                  <RotateCcw size={14} />
+                  Resume Export
+                </button>
+              </div>
+            )}
+            <EditorWorkspace />
+          </>
         )}
       </main>
 
@@ -356,6 +427,7 @@ export const AppShell: React.FC = () => {
         onClose={() => setIsExportSettingsOpen(false)}
         onStartExport={handleTriggerTranscode}
         onStartBatchExport={handleStartBatchExport}
+        onStartSingleTextExport={handleStartSingleTextExport}
       />
 
       {/* Processing Transcode Overlay */}
@@ -369,15 +441,12 @@ export const AppShell: React.FC = () => {
 
       {/* Export Complete Overlay */}
       {exportBlob && (
-        <ExportCompletePanel
-          outputBlob={exportBlob}
-          onSingleClose={() => setExportBlob(null)}
-        />
+        <ExportCompletePanel outputBlob={exportBlob} onSingleClose={() => setExportBlob(null)} />
       )}
 
       {/* Manual AdSense Banner */}
-      <div className="ad-banner-wrapper">
-        <AdBanner orientation="portrait" height={90} width={1200} />
+      <div className='ad-banner-wrapper'>
+        <AdBanner orientation='portrait' height={90} width={1200} />
       </div>
     </div>
   );

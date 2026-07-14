@@ -73,7 +73,13 @@ interface ProjectContextType {
     updates: Partial<
       Pick<
         TextCue['base'],
-        'startTime' | 'duration' | 'stringKey' | 'horizontalAlign' | 'verticalAlign' | 'color' | 'fontSize'
+        | 'startTime'
+        | 'duration'
+        | 'stringKey'
+        | 'horizontalAlign'
+        | 'verticalAlign'
+        | 'color'
+        | 'fontSize'
       >
     > & { overridesOnly?: boolean },
   ) => void;
@@ -84,7 +90,10 @@ interface ProjectContextType {
   setSelectedTextCueId: (id: string | null) => void;
 
   // New: import functions
-  importTextCatalogs: (files: FileList | File[], signal?: AbortSignal) => Promise<CatalogBatchResult>;
+  importTextCatalogs: (
+    files: FileList | File[],
+    signal?: AbortSignal,
+  ) => Promise<CatalogBatchResult>;
   importTextTimeline: (file: File, signal?: AbortSignal) => Promise<TimelineImportResult>;
 
   // New: batch state (managed by Agent E, exposed here)
@@ -138,7 +147,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   // New: text state
   const [text, setTextState] = useState<TextProjectState>(createDefaultTextState);
   const [selectedTextCueId, setSelectedTextCueId] = useState<string | null>(null);
-  const [batchItems, setBatchItems] = useState<Array<{ locale: LocaleCode; status: string; message?: string }>>([]);
+  const [batchItems, setBatchItems] = useState<
+    Array<{ locale: LocaleCode; status: string; message?: string }>
+  >([]);
 
   // Relinking states are tracked via context and matching metadata
 
@@ -165,8 +176,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Autodetect orientation from source dimensions so the editor frame and
     // export default match the video (portrait vs landscape).
     const orientedPreset =
-      STORE_PRESETS.find((p) => p.id === (videoData.width > videoData.height ? 'landscape' : 'portrait')) ||
-      STORE_PRESETS[0];
+      STORE_PRESETS.find(
+        (p) => p.id === (videoData.width > videoData.height ? 'landscape' : 'portrait'),
+      ) || STORE_PRESETS[0];
     setProject((prev) => {
       const defaultSegment: VideoSegment = {
         id: crypto.randomUUID(),
@@ -412,13 +424,17 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       const parsed = JSON.parse(draft);
       const draftVersion = parsed.draftVersion;
 
-      const defaultSegments = parsed.video ? [{
-        id: crypto.randomUUID(),
-        clipStart: 0,
-        duration: parsed.video.duration,
-        startTime: 0,
-        playbackRate: 1.0,
-      }] : [];
+      const defaultSegments = parsed.video
+        ? [
+            {
+              id: crypto.randomUUID(),
+              clipStart: 0,
+              duration: parsed.video.duration,
+              startTime: 0,
+              playbackRate: 1.0,
+            },
+          ]
+        : [];
 
       // Restore text state based on version
       let restoredText: TextProjectState;
@@ -490,7 +506,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
       const S = prev.videoSegments[idx];
       // Validation: split time must be strictly within segment bounds
-      if (splitTime - S.startTime < 0.1 || (S.startTime + S.duration) - splitTime < 0.1) {
+      if (splitTime - S.startTime < 0.1 || S.startTime + S.duration - splitTime < 0.1) {
         return prev;
       }
 
@@ -683,25 +699,32 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     updates: Partial<
       Pick<
         TextCue['base'],
-        'startTime' | 'duration' | 'stringKey' | 'horizontalAlign' | 'verticalAlign' | 'color' | 'fontSize'
+        | 'startTime'
+        | 'duration'
+        | 'stringKey'
+        | 'horizontalAlign'
+        | 'verticalAlign'
+        | 'color'
+        | 'fontSize'
       >
     > & { overridesOnly?: boolean },
   ) => {
+    const { overridesOnly = true, ...cueUpdates } = updates;
     setTextState((prev) => ({
       ...prev,
       cues: prev.cues.map((cue) => {
         if (cue.id !== id) return cue;
-        if (updates.overridesOnly) {
+        if (overridesOnly) {
           // Update only overrides (user is editing away from imported defaults)
           return {
             ...cue,
-            overrides: { ...cue.overrides, ...updates },
+            overrides: { ...cue.overrides, ...cueUpdates },
           };
         } else {
           // Update base and clear overrides (reset to imported defaults)
           return {
             ...cue,
-            base: { ...cue.base, ...updates },
+            base: { ...cue.base, ...cueUpdates },
             overrides: {},
           };
         }

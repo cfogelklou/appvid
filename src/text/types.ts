@@ -109,11 +109,7 @@ export interface LaidOutTextCue {
 }
 
 /** Measures rendered text width in output pixels. Injectable for tests. */
-export type MeasureText = (
-  text: string,
-  fontFamily: TextFontFamily,
-  fontSize: number,
-) => number;
+export type MeasureText = (text: string, fontFamily: TextFontFamily, fontSize: number) => number;
 
 /** Frame dimensions for layout. */
 export interface FrameGeometry {
@@ -192,13 +188,7 @@ export interface LocaleKeyValidation {
 }
 
 export type BatchItemStatus =
-  | 'queued'
-  | 'blocked'
-  | 'rendering'
-  | 'writing'
-  | 'completed'
-  | 'failed'
-  | 'cancelled';
+  'queued' | 'blocked' | 'rendering' | 'writing' | 'completed' | 'failed' | 'cancelled';
 
 export interface BatchRecoveryItem {
   locale: LocaleCode;

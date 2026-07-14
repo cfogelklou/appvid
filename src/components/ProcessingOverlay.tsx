@@ -16,7 +16,7 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
   stage,
   progress,
   logs,
-  onCancel
+  onCancel,
 }) => {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [logsExpanded, setLogsExpanded] = useState(false);
@@ -61,7 +61,8 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
   } else if (elapsedSeconds >= 90 && elapsedSeconds < 180) {
     stallMessage = 'Still working. If your device is low on memory, this export may fail.';
   } else if (elapsedSeconds >= 180) {
-    stallMessage = 'Rendering is taking longer than expected. If memory pressure is high, you can try cancelling and using a smaller recording.';
+    stallMessage =
+      'Rendering is taking longer than expected. If memory pressure is high, you can try cancelling and using a smaller recording.';
   }
 
   // Circular Progress calculations
@@ -70,52 +71,50 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
   const strokeDashoffset = circumference - progress * circumference;
 
   return (
-    <div className="processing-backdrop glass-panel">
-      <div className="processing-card glass-panel">
-        <div className="progress-ring-container">
-          <svg className="progress-ring-bg" width="120" height="120">
+    <div className='processing-backdrop glass-panel'>
+      <div className='processing-card glass-panel'>
+        <div className='progress-ring-container'>
+          <svg className='progress-ring-bg' width='120' height='120'>
             {/* Background track circle */}
             <circle
-              stroke="rgba(255,255,255,0.06)"
-              fill="transparent"
-              strokeWidth="8"
+              stroke='rgba(255,255,255,0.06)'
+              fill='transparent'
+              strokeWidth='8'
               r={radius}
-              cx="60"
-              cy="60"
+              cx='60'
+              cy='60'
             />
             {/* Animated progress circle */}
             <circle
-              className="progress-ring-circle"
-              stroke="var(--color-primary)"
-              fill="transparent"
-              strokeWidth="8"
+              className='progress-ring-circle'
+              stroke='var(--color-primary)'
+              fill='transparent'
+              strokeWidth='8'
               strokeDasharray={circumference}
               strokeDashoffset={strokeDashoffset}
-              strokeLinecap="round"
+              strokeLinecap='round'
               r={radius}
-              cx="60"
-              cy="60"
+              cx='60'
+              cy='60'
             />
           </svg>
-          <div className="progress-value-text">{Math.round(progress * 100)}%</div>
+          <div className='progress-value-text'>{Math.round(progress * 100)}%</div>
         </div>
 
         <div>
-          <h4 className="stage-title">{stage}...</h4>
+          <h4 className='stage-title'>{stage}...</h4>
           <div style={{ marginTop: '8px', display: 'flex', justifyContent: 'center' }}>
-            <span className="elapsed-time">Elapsed: {formatTime(elapsedSeconds)}</span>
+            <span className='elapsed-time'>Elapsed: {formatTime(elapsedSeconds)}</span>
           </div>
         </div>
 
-        <div className="stall-message">
-          {stallMessage}
-        </div>
+        <div className='stall-message'>{stallMessage}</div>
 
         {/* Console log accordion */}
-        <div className="log-accordion">
+        <div className='log-accordion'>
           <button
-            type="button"
-            className="log-accordion-trigger"
+            type='button'
+            className='log-accordion-trigger'
             onClick={() => setLogsExpanded(!logsExpanded)}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -124,15 +123,19 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
             </div>
             {logsExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
-          
+
           {logsExpanded && (
-            <div className="log-console">
+            <div className='log-console'>
               {logs.length === 0 ? (
-                <div className="log-line">Initializing console...</div>
+                <div className='log-line'>Initializing console...</div>
               ) : (
                 logs.map((log, index) => (
-                  <div key={index} className="log-line">
-                    [{formatTime(Math.round((log.timestamp - (logs[0]?.timestamp || log.timestamp)) / 1000))}] {log.message}
+                  <div key={index} className='log-line'>
+                    [
+                    {formatTime(
+                      Math.round((log.timestamp - (logs[0]?.timestamp || log.timestamp)) / 1000),
+                    )}
+                    ] {log.message}
                   </div>
                 ))
               )}
@@ -141,15 +144,23 @@ export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({
           )}
         </div>
 
-        <div className="local-warning">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '4px' }}>
+        <div className='local-warning'>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              marginBottom: '4px',
+            }}
+          >
             <Cpu size={14} style={{ color: 'var(--color-text-muted)' }} />
             <span>Browser-Only Processing</span>
           </div>
           Your files are processed locally in your browser. Do not close this tab.
         </div>
 
-        <button type="button" className="cancel-btn" onClick={onCancel}>
+        <button type='button' className='cancel-btn' onClick={onCancel}>
           Cancel Export
         </button>
       </div>

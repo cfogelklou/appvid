@@ -229,7 +229,11 @@ export const parseTimeline = (text: string): TimelineImportResult => {
       warnings.push(`${prefix} (${raw.id}): invalid color "${String(raw.color)}", using default.`);
     }
 
-    const base: TextCueDefinition = createDefaultCueBase(raw.stringKey, raw.startTime, raw.duration);
+    const base: TextCueDefinition = createDefaultCueBase(
+      raw.stringKey,
+      raw.startTime,
+      raw.duration,
+    );
     if (isHorizontalAlign(raw.horizontalAlign)) base.horizontalAlign = raw.horizontalAlign;
     else if (raw.horizontalAlign !== undefined)
       warnings.push(`${prefix} (${raw.id}): invalid horizontalAlign, using default.`);

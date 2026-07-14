@@ -8,12 +8,7 @@
  */
 
 import type { Project } from '../types';
-import type {
-  BatchItemStatus,
-  BatchRecoveryItem,
-  LocaleCode,
-  LaidOutTextCue,
-} from './types';
+import type { BatchItemStatus, BatchRecoveryItem, LocaleCode, LaidOutTextCue } from './types';
 import { buildExportFilename, resolveCollision } from './exportFilename';
 import * as ffmpegEngine from '../utils/ffmpegEngine';
 
@@ -112,9 +107,7 @@ export interface BatchResult {
  *
  * Wake lock prevents sleep; cancellation preserves completed files.
  */
-export async function executeBatch(
-  input: BatchOrchestrationInput,
-): Promise<BatchResult> {
+export async function executeBatch(input: BatchOrchestrationInput): Promise<BatchResult> {
   const { project, items, signal, callbacks, directoryHandle } = input;
   const wakeLock = new WakeLockManager();
   const existingFilenames = new Set<string>();
@@ -166,7 +159,7 @@ export async function executeBatch(
           {
             locale,
             textOverlays: cueLayouts,
-            signal
+            signal,
           },
           {
             onProgress: (data: { stage: string; progress: number }) => {
@@ -206,7 +199,6 @@ export async function executeBatch(
         completed.push(locale);
         callbacks.onProgress(locale, 'completed', `Completed ${locale}`);
         log(`✓ Completed export: ${filename}`);
-
       } catch (error: any) {
         checkAbort(); // Re-throw if this was an abort
 
@@ -221,19 +213,18 @@ export async function executeBatch(
     log(`Batch complete: ${completed.length} succeeded, ${failed.length} failed`);
 
     return { completed, failed, cancelled };
-
   } catch (error: any) {
     // Handle abort - mark remaining as cancelled
     if (error.message === 'Batch cancelled by user' || signal?.aborted) {
       const remaining = items.filter(
-        item => !completed.includes(item.locale) && !failed.includes(item.locale)
+        (item) => !completed.includes(item.locale) && !failed.includes(item.locale),
       );
 
       for (const item of remaining) {
         callbacks.onProgress(item.locale, 'cancelled', 'Cancelled by user');
       }
 
-      cancelled.push(...remaining.map(item => item.locale));
+      cancelled.push(...remaining.map((item) => item.locale));
       log(`Batch cancelled: ${cancelled.length} items cancelled`);
 
       return { completed, failed, cancelled };
@@ -241,7 +232,7 @@ export async function executeBatch(
 
     // Unexpected error - fail all remaining
     const remaining = items.filter(
-      item => !completed.includes(item.locale) && !failed.includes(item.locale)
+      (item) => !completed.includes(item.locale) && !failed.includes(item.locale),
     );
 
     for (const item of remaining) {
@@ -250,7 +241,6 @@ export async function executeBatch(
     }
 
     throw error;
-
   } finally {
     await wakeLock.release();
   }
@@ -261,9 +251,9 @@ export async function executeBatch(
  * Only serializable metadata (no directory handles).
  */
 export const toRecoveryItems = (
-  items: Array<{ locale: LocaleCode; status: BatchItemStatus; message?: string }>
+  items: Array<{ locale: LocaleCode; status: BatchItemStatus; message?: string }>,
 ): BatchRecoveryItem[] => {
-  return items.map(item => ({
+  return items.map((item) => ({
     locale: item.locale,
     status: item.status,
     message: item.message,
@@ -273,10 +263,8 @@ export const toRecoveryItems = (
 /**
  * Build initial batch recovery items for a new export.
  */
-export const buildInitialRecoveryItems = (
-  locales: LocaleCode[]
-): BatchRecoveryItem[] => {
-  return locales.map(locale => ({
+export const buildInitialRecoveryItems = (locales: LocaleCode[]): BatchRecoveryItem[] => {
+  return locales.map((locale) => ({
     locale,
     status: 'queued' as BatchItemStatus,
   }));
@@ -285,16 +273,14 @@ export const buildInitialRecoveryItems = (
 /**
  * Filter batch items to those that need retry (failed or cancelled).
  */
-export const getRetryItems = (
-  items: BatchRecoveryItem[]
-): BatchRecoveryItem[] => {
-  return items.filter(
-    item => item.status === 'failed' || item.status === 'cancelled'
-  ).map(item => ({
-    ...item,
-    status: 'queued' as BatchItemStatus,
-    message: undefined,
-  }));
+export const getRetryItems = (items: BatchRecoveryItem[]): BatchRecoveryItem[] => {
+  return items
+    .filter((item) => item.status === 'failed' || item.status === 'cancelled')
+    .map((item) => ({
+      ...item,
+      status: 'queued' as BatchItemStatus,
+      message: undefined,
+    }));
 };
 
 /**

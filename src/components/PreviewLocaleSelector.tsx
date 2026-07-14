@@ -14,14 +14,14 @@ export const PreviewLocaleSelector: React.FC = () => {
   };
 
   return (
-    <div className="preview-locale-selector">
+    <div className='preview-locale-selector'>
       <Languages size={14} />
       <select
         value={text.previewLocale || ''}
         onChange={handleLocaleChange}
-        className="locale-select"
+        className='locale-select'
       >
-        {locales.map(locale => (
+        {locales.map((locale) => (
           <option key={locale} value={locale}>
             {locale}
           </option>

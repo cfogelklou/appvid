@@ -3,8 +3,13 @@ import { useProject, getEditedVideoDuration } from '../context/ProjectContext';
 import { Trash2, Anchor, Sparkles } from 'lucide-react';
 import { parseTimecode, formatTimecode, formatStopLabel } from '../utils/timecode';
 import { normalizeColor } from '../utils/colorUtils';
-import type { ProjectSelection } from '../text/types';
-import { DEFAULT_HORIZONTAL_ALIGN, DEFAULT_VERTICAL_ALIGN, DEFAULT_TEXT_COLOR, DEFAULT_FONT_SIZE } from '../text/constants';
+import { resolveTextCue, type ProjectSelection } from '../text/types';
+import {
+  DEFAULT_HORIZONTAL_ALIGN,
+  DEFAULT_VERTICAL_ALIGN,
+  DEFAULT_TEXT_COLOR,
+  DEFAULT_FONT_SIZE,
+} from '../text/constants';
 import type { HorizontalTextAlign, VerticalTextAlign } from '../text/types';
 import './ClipInspector.css';
 
@@ -22,23 +27,21 @@ export const ClipInspector: React.FC = () => {
 
   // Determine selection kind (audio vs text)
   const selection: ProjectSelection = selectedSegmentId
-    ? (text.cues.find(c => c.id === selectedSegmentId)
-        ? { kind: 'text', id: selectedSegmentId }
-        : { kind: 'audio', id: selectedSegmentId })
+    ? text.cues.find((c) => c.id === selectedSegmentId)
+      ? { kind: 'text', id: selectedSegmentId }
+      : { kind: 'audio', id: selectedSegmentId }
     : null;
 
   // Find the selected segment and its asset (audio only)
-  const selectedSegment = selection?.kind === 'audio'
-    ? project.segments.find((s) => s.id === selection.id)
-    : null;
+  const selectedSegment =
+    selection?.kind === 'audio' ? project.segments.find((s) => s.id === selection.id) : null;
   const asset = selectedSegment
     ? project.audioAssets.find((a) => a.id === selectedSegment.assetId)
     : null;
 
   // Find selected text cue (text only)
-  const selectedTextCue = selection?.kind === 'text'
-    ? text.cues.find((c) => c.id === selection.id)
-    : null;
+  const selectedTextCue =
+    selection?.kind === 'text' ? text.cues.find((c) => c.id === selection.id) : null;
 
   // Local state for start time input to allow smooth typing without lag
   const [startTimeInput, setStartTimeInput] = useState('');
@@ -49,25 +52,28 @@ export const ClipInspector: React.FC = () => {
   const [textDurationInput, setTextDurationInput] = useState('');
   const [textColorInput, setTextColorInput] = useState('');
   const [textFontSizeInput, setTextFontSizeInput] = useState('');
-  const [textHorizontalAlign, setTextHorizontalAlign] = useState<HorizontalTextAlign>(DEFAULT_HORIZONTAL_ALIGN);
-  const [textVerticalAlign, setTextVerticalAlign] = useState<VerticalTextAlign>(DEFAULT_VERTICAL_ALIGN);
+  const [textHorizontalAlign, setTextHorizontalAlign] =
+    useState<HorizontalTextAlign>(DEFAULT_HORIZONTAL_ALIGN);
+  const [textVerticalAlign, setTextVerticalAlign] =
+    useState<VerticalTextAlign>(DEFAULT_VERTICAL_ALIGN);
 
   // Get all catalog keys for dropdown
-  const catalogKeys = Object.keys(text.catalogs).length > 0
-    ? Object.values(text.catalogs).flatMap(c => Object.keys(c.strings))
-    : [];
+  const catalogKeys =
+    Object.keys(text.catalogs).length > 0
+      ? Object.values(text.catalogs).flatMap((c) => Object.keys(c.strings))
+      : [];
 
   // Update text cue inputs when text cue selection changes
   useEffect(() => {
     if (selectedTextCue) {
-      const resolved = selectedTextCue; // Use the resolved cue (base merged with overrides)
-      setTextStringKeyInput(resolved.base.stringKey || '');
-      setTextStartTimeInput(formatTimecode(resolved.base.startTime));
-      setTextDurationInput(resolved.base.duration.toString());
-      setTextColorInput(resolved.base.color || DEFAULT_TEXT_COLOR);
-      setTextFontSizeInput(resolved.base.fontSize.toString());
-      setTextHorizontalAlign(resolved.base.horizontalAlign || DEFAULT_HORIZONTAL_ALIGN);
-      setTextVerticalAlign(resolved.base.verticalAlign || DEFAULT_VERTICAL_ALIGN);
+      const resolved = resolveTextCue(selectedTextCue);
+      setTextStringKeyInput(resolved.stringKey || '');
+      setTextStartTimeInput(formatTimecode(resolved.startTime));
+      setTextDurationInput(resolved.duration.toString());
+      setTextColorInput(resolved.color || DEFAULT_TEXT_COLOR);
+      setTextFontSizeInput(resolved.fontSize.toString());
+      setTextHorizontalAlign(resolved.horizontalAlign || DEFAULT_HORIZONTAL_ALIGN);
+      setTextVerticalAlign(resolved.verticalAlign || DEFAULT_VERTICAL_ALIGN);
     } else {
       setTextStringKeyInput('');
       setTextStartTimeInput('');
@@ -152,7 +158,7 @@ export const ClipInspector: React.FC = () => {
       setTextStartTimeInput(formatTimecode(finalTime));
     } else {
       // Revert if invalid
-      setTextStartTimeInput(formatTimecode(selectedTextCue.base.startTime));
+      setTextStartTimeInput(formatTimecode(resolveTextCue(selectedTextCue).startTime));
     }
   };
 
@@ -171,7 +177,7 @@ export const ClipInspector: React.FC = () => {
       setTextDurationInput(parsed.toString());
     } else {
       // Revert if invalid
-      setTextDurationInput(selectedTextCue.base.duration.toString());
+      setTextDurationInput(resolveTextCue(selectedTextCue).duration.toString());
     }
   };
 
@@ -210,7 +216,7 @@ export const ClipInspector: React.FC = () => {
   const handleResetToDefaults = () => {
     if (!selectedTextCue) return;
     // Reset to imported defaults by clearing overrides (pass base as updates, overridesOnly=false)
-    updateTextCue(selectedTextCue.id, { ...selectedTextCue.base, overridesOnly: false as any });
+    updateTextCue(selectedTextCue.id, { overridesOnly: false });
   };
 
   const handleDeleteTextCue = () => {
@@ -220,8 +226,8 @@ export const ClipInspector: React.FC = () => {
 
   // Render text inspector
   if (selection.kind === 'text' && selectedTextCue) {
-    const resolved = selectedTextCue;
-    const stopTime = resolved.base.startTime + resolved.base.duration;
+    const resolved = resolveTextCue(selectedTextCue);
+    const stopTime = resolved.startTime + resolved.duration;
 
     return (
       <div className='clip-inspector-panel'>
@@ -242,7 +248,7 @@ export const ClipInspector: React.FC = () => {
               placeholder='Enter translation key'
             />
             <datalist id='catalog-keys'>
-              {catalogKeys.map(key => (
+              {catalogKeys.map((key) => (
                 <option key={key} value={key} />
               ))}
             </datalist>
@@ -308,7 +314,10 @@ export const ClipInspector: React.FC = () => {
                   onClick={() => {
                     setTextHorizontalAlign(hAlign);
                     setTextVerticalAlign('top');
-                    updateTextCue(selectedTextCue.id, { horizontalAlign: hAlign, verticalAlign: 'top' });
+                    updateTextCue(selectedTextCue.id, {
+                      horizontalAlign: hAlign,
+                      verticalAlign: 'top',
+                    });
                   }}
                   title={`Top ${hAlign}`}
                 />
@@ -323,7 +332,10 @@ export const ClipInspector: React.FC = () => {
                   onClick={() => {
                     setTextHorizontalAlign(hAlign);
                     setTextVerticalAlign('middle');
-                    updateTextCue(selectedTextCue.id, { horizontalAlign: hAlign, verticalAlign: 'middle' });
+                    updateTextCue(selectedTextCue.id, {
+                      horizontalAlign: hAlign,
+                      verticalAlign: 'middle',
+                    });
                   }}
                   title={`Middle ${hAlign}`}
                 />
@@ -338,7 +350,10 @@ export const ClipInspector: React.FC = () => {
                   onClick={() => {
                     setTextHorizontalAlign(hAlign);
                     setTextVerticalAlign('bottom');
-                    updateTextCue(selectedTextCue.id, { horizontalAlign: hAlign, verticalAlign: 'bottom' });
+                    updateTextCue(selectedTextCue.id, {
+                      horizontalAlign: hAlign,
+                      verticalAlign: 'bottom',
+                    });
                   }}
                   title={`Bottom ${hAlign}`}
                 />
@@ -403,11 +418,7 @@ export const ClipInspector: React.FC = () => {
           >
             <span>Reset to Defaults</span>
           </button>
-          <button
-            type='button'
-            className='delete-clip-btn'
-            onClick={handleDeleteTextCue}
-          >
+          <button type='button' className='delete-clip-btn' onClick={handleDeleteTextCue}>
             <Trash2 size={16} />
             <span>Delete Cue</span>
           </button>
@@ -520,20 +531,79 @@ export const ClipInspector: React.FC = () => {
         </button>
       </div>
 
-      <div className="nudge-help-guide" style={{ marginTop: '20px', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
-        <span className="section-label" style={{ fontSize: '10px', opacity: 0.6, letterSpacing: '0.05em', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Keyboard Shortcuts</span>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '11px', color: 'var(--color-text-secondary)' }}>
+      <div
+        className='nudge-help-guide'
+        style={{ marginTop: '20px', borderTop: '1px solid var(--border)', paddingTop: '16px' }}
+      >
+        <span
+          className='section-label'
+          style={{
+            fontSize: '10px',
+            opacity: 0.6,
+            letterSpacing: '0.05em',
+            textTransform: 'uppercase',
+            display: 'block',
+            marginBottom: '8px',
+          }}
+        >
+          Keyboard Shortcuts
+        </span>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            fontSize: '11px',
+            color: 'var(--color-text-secondary)',
+          }}
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>Nudge Clip (0.1s)</span>
-            <kbd style={{ background: 'var(--color-bg-card)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border)', color: 'var(--color-text-primary)', fontFamily: 'var(--mono)', fontSize: '10px' }}>← / →</kbd>
+            <kbd
+              style={{
+                background: 'var(--color-bg-card)',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                border: '1px solid var(--border)',
+                color: 'var(--color-text-primary)',
+                fontFamily: 'var(--mono)',
+                fontSize: '10px',
+              }}
+            >
+              ← / →
+            </kbd>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>Fast Nudge (1.0s)</span>
-            <kbd style={{ background: 'var(--color-bg-card)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border)', color: 'var(--color-text-primary)', fontFamily: 'var(--mono)', fontSize: '10px' }}>Shift + ← / →</kbd>
+            <kbd
+              style={{
+                background: 'var(--color-bg-card)',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                border: '1px solid var(--border)',
+                color: 'var(--color-text-primary)',
+                fontFamily: 'var(--mono)',
+                fontSize: '10px',
+              }}
+            >
+              Shift + ← / →
+            </kbd>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>Delete Clip</span>
-            <kbd style={{ background: 'var(--color-bg-card)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border)', color: 'var(--color-text-primary)', fontFamily: 'var(--mono)', fontSize: '10px' }}>Del / Backspace</kbd>
+            <kbd
+              style={{
+                background: 'var(--color-bg-card)',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                border: '1px solid var(--border)',
+                color: 'var(--color-text-primary)',
+                fontFamily: 'var(--mono)',
+                fontSize: '10px',
+              }}
+            >
+              Del / Backspace
+            </kbd>
           </div>
         </div>
       </div>

@@ -47,10 +47,8 @@ export const localeFromFile = (fileName: string): LocaleCode | null => {
 };
 
 /** Is this locale one of the built-in initial locales? */
-export const isBuiltInLocale = (
-  locale: LocaleCode,
-  builtIns: LocaleCode[],
-): boolean => builtIns.some((b) => b === locale);
+export const isBuiltInLocale = (locale: LocaleCode, builtIns: LocaleCode[]): boolean =>
+  builtIns.some((b) => b === locale);
 
 /**
  * Validate the raw JSON value of a catalog file. Accepts a top-level object of
@@ -66,7 +64,10 @@ export const validateCatalogValue = (
   const reasons: string[] = [];
   if (value == null || typeof value !== 'object' || Array.isArray(value)) {
     reasons.push('Top level must be an object of string values.');
-    return { strings: null, summary: { fileName, locale: null, accepted: false, stringCount: 0, reasons } };
+    return {
+      strings: null,
+      summary: { fileName, locale: null, accepted: false, stringCount: 0, reasons },
+    };
   }
   const obj = value as Record<string, unknown>;
   const strings: Record<string, string> = {};

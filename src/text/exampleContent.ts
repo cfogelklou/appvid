@@ -41,7 +41,7 @@ export const EXAMPLE_CATALOGS: Record<string, Record<string, string>> = {
     subtitle_tagline: 'Deine Geschichten, überall',
   },
   fr: {
-    welcome_title: 'Créez quelque chose\nd\'incroyable',
+    welcome_title: "Créez quelque chose\nd'incroyable",
     feature_export: 'Exporter localement',
     subtitle_tagline: 'Vos histoires, partout',
   },

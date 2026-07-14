@@ -62,7 +62,7 @@ export class PreviewPlayer {
     }
     // Find segment covering t
     const seg = this.project.videoSegments.find(
-      (s) => t >= s.startTime && t <= s.startTime + s.duration
+      (s) => t >= s.startTime && t <= s.startTime + s.duration,
     );
     if (!seg) {
       const lastSeg = this.project.videoSegments[this.project.videoSegments.length - 1];
@@ -77,7 +77,7 @@ export class PreviewPlayer {
     }
     // Find segment covering srcTime
     const seg = this.project.videoSegments.find(
-      (s) => srcTime >= s.clipStart && srcTime <= s.clipStart + s.duration * s.playbackRate
+      (s) => srcTime >= s.clipStart && srcTime <= s.clipStart + s.duration * s.playbackRate,
     );
     if (!seg) {
       const lastSeg = this.project.videoSegments[this.project.videoSegments.length - 1];
@@ -113,7 +113,7 @@ export class PreviewPlayer {
     }
     const vTime = this.sourceTimeToTimelineTime(this.video.currentTime);
     const seg = this.project.videoSegments.find(
-      (s) => vTime >= s.startTime && vTime <= s.startTime + s.duration
+      (s) => vTime >= s.startTime && vTime <= s.startTime + s.duration,
     );
     const segmentRate = seg ? seg.playbackRate : 1.0;
     return segmentRate * this.globalRate;
@@ -122,7 +122,7 @@ export class PreviewPlayer {
   private syncPlaybackRate() {
     if (!this.video) return;
     const targetRate = this.getTargetPlaybackRate();
-    
+
     // Mute the video element if playing at a high speed to bypass Safari's 2.0x cap
     const originalAudioMode = this.project?.settings.originalAudioMode;
     const shouldMuteVideoElement = targetRate > 2.0 || originalAudioMode === 'mute';
@@ -181,7 +181,7 @@ export class PreviewPlayer {
     if (this.project && this.project.videoSegments && this.project.videoSegments.length > 0) {
       const vTime = this.sourceTimeToTimelineTime(this.video.currentTime);
       const segIndex = this.project.videoSegments.findIndex(
-        (s) => vTime >= s.startTime && vTime <= s.startTime + s.duration
+        (s) => vTime >= s.startTime && vTime <= s.startTime + s.duration,
       );
 
       if (segIndex !== -1) {
@@ -259,7 +259,7 @@ export class PreviewPlayer {
 
       if (vTime >= start && vTime < end) {
         activeSegmentIds.add(seg.id);
-        const targetAudioTime = (vTime - start) + clipStart;
+        const targetAudioTime = vTime - start + clipStart;
 
         let audio = this.audioPool.get(seg.id);
         if (!audio) {

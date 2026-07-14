@@ -96,20 +96,24 @@ export const IntervalClip: React.FC<IntervalClipProps> = ({
     const dt = xToTime(dx, zoom);
 
     // Get video duration for bounds
-    const maxEnd = project.video ?
-      (project.videoSegments && project.videoSegments.length > 0
+    const maxEnd = project.video
+      ? project.videoSegments && project.videoSegments.length > 0
         ? project.videoSegments.reduce((max, seg) => Math.max(max, seg.startTime + seg.duration), 0)
-        : project.video.duration)
+        : project.video.duration
       : null;
 
     // Compute new start time with clamping
     const rawTime = dragState.initialStartTime + dt;
     const clampedTime = clampStartTime(rawTime, interval.duration, { maxEnd });
 
-    setDragState(prev => prev ? {
-      ...prev,
-      previewTime: clampedTime,
-    } : null);
+    setDragState((prev) =>
+      prev
+        ? {
+            ...prev,
+            previewTime: clampedTime,
+          }
+        : null,
+    );
   };
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -143,20 +147,26 @@ export const IntervalClip: React.FC<IntervalClipProps> = ({
 
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        const maxEnd = project.video ?
-          (project.videoSegments && project.videoSegments.length > 0
-            ? project.videoSegments.reduce((max, seg) => Math.max(max, seg.startTime + seg.duration), 0)
-            : project.video.duration)
+        const maxEnd = project.video
+          ? project.videoSegments && project.videoSegments.length > 0
+            ? project.videoSegments.reduce(
+                (max, seg) => Math.max(max, seg.startTime + seg.duration),
+                0,
+              )
+            : project.video.duration
           : null;
 
         const nudged = nudgeInterval(interval, -step, { maxEnd });
         onUpdate(id, { startTime: nudged.startTime });
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
-        const maxEnd = project.video ?
-          (project.videoSegments && project.videoSegments.length > 0
-            ? project.videoSegments.reduce((max, seg) => Math.max(max, seg.startTime + seg.duration), 0)
-            : project.video.duration)
+        const maxEnd = project.video
+          ? project.videoSegments && project.videoSegments.length > 0
+            ? project.videoSegments.reduce(
+                (max, seg) => Math.max(max, seg.startTime + seg.duration),
+                0,
+              )
+            : project.video.duration
           : null;
 
         const nudged = nudgeInterval(interval, step, { maxEnd });
@@ -179,7 +189,7 @@ export const IntervalClip: React.FC<IntervalClipProps> = ({
         height: `${laneHeight - 6}px`,
         ...(color ? { backgroundColor: color, borderColor: color } : {}),
       }}
-      role="button"
+      role='button'
       tabIndex={0}
       aria-label={`${label}: ${formatTime(currentStartTime)} - ${formatTime(currentStartTime + interval.duration)}`}
       onPointerDown={handlePointerDown}
@@ -187,18 +197,16 @@ export const IntervalClip: React.FC<IntervalClipProps> = ({
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
     >
-      <div className="interval-clip-content">
-        <div className="interval-clip-label">{label}</div>
-        <div className="interval-clip-timecode">
+      <div className='interval-clip-content'>
+        <div className='interval-clip-label'>{label}</div>
+        <div className='interval-clip-timecode'>
           {formatTime(currentStartTime)} - {formatTime(currentStartTime + interval.duration)}
         </div>
       </div>
 
       {/* Snap time overlay bubble (shown during drag) */}
       {isDragging && (
-        <div className="interval-clip-drag-bubble">
-          {formatTime(dragState.previewTime)}
-        </div>
+        <div className='interval-clip-drag-bubble'>{formatTime(dragState.previewTime)}</div>
       )}
     </div>
   );

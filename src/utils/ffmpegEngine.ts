@@ -70,7 +70,7 @@ export async function processVideo(
   project: Project,
   onProgress: (data: ProgressData) => void,
   onLog: (log: ProcessLog) => void,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<Blob> {
   if (!project.video) {
     throw new Error('No video imported in project');
@@ -107,7 +107,7 @@ export async function processVideo(
     onProgress({
       stage: 'Encoding high-quality MP4',
       progress: Math.min(0.95, Math.max(0.4, scaledProgress)),
-      message: `${Math.round(progress * 100)}% encoded`
+      message: `${Math.round(progress * 100)}% encoded`,
     });
   };
   ffmpeg.on('progress', progressCallback);
@@ -147,11 +147,11 @@ export async function processVideo(
 
     // 3. Fetch and write unique audio files
     onProgress({ stage: 'Preparing media files', progress: 0.25 });
-    const uniqueAssetIds = Array.from(new Set(project.segments.map(s => s.assetId)));
+    const uniqueAssetIds = Array.from(new Set(project.segments.map((s) => s.assetId)));
     const assetIdToFilename: Record<string, string> = {};
 
     for (const assetId of uniqueAssetIds) {
-      const asset = project.audioAssets.find(a => a.id === assetId);
+      const asset = project.audioAssets.find((a) => a.id === assetId);
       if (!asset) {
         throw new Error(`Audio asset not found: ${assetId}`);
       }
@@ -183,13 +183,17 @@ export async function processVideo(
     if (segments.length === 1) {
       const S = segments[0];
       const clipEnd = S.clipStart + S.duration * S.playbackRate;
-      videoFilters.push(`[0:v]trim=start=${S.clipStart.toFixed(3)}:end=${clipEnd.toFixed(3)},setpts=(PTS-STARTPTS)/${S.playbackRate.toFixed(3)}[trimmed_v]`);
+      videoFilters.push(
+        `[0:v]trim=start=${S.clipStart.toFixed(3)}:end=${clipEnd.toFixed(3)},setpts=(PTS-STARTPTS)/${S.playbackRate.toFixed(3)}[trimmed_v]`,
+      );
       videoSourceLabel = '[trimmed_v]';
     } else if (segments.length > 1) {
       const concatLabels: string[] = [];
       segments.forEach((S, idx) => {
         const clipEnd = S.clipStart + S.duration * S.playbackRate;
-        videoFilters.push(`[0:v]trim=start=${S.clipStart.toFixed(3)}:end=${clipEnd.toFixed(3)},setpts=(PTS-STARTPTS)/${S.playbackRate.toFixed(3)}[v_seg_${idx}]`);
+        videoFilters.push(
+          `[0:v]trim=start=${S.clipStart.toFixed(3)}:end=${clipEnd.toFixed(3)},setpts=(PTS-STARTPTS)/${S.playbackRate.toFixed(3)}[v_seg_${idx}]`,
+        );
         concatLabels.push(`[v_seg_${idx}]`);
       });
       videoFilters.push(`${concatLabels.join('')}concat=n=${segments.length}:v=1:a=0[trimmed_v]`);
@@ -235,7 +239,9 @@ export async function processVideo(
         const clipEnd = S.clipStart + S.duration * S.playbackRate;
         const tempo = buildAudioTempoFilter(S.playbackRate);
         const tempoStr = tempo ? `,${tempo}` : '';
-        audioFilters.push(`[0:a]atrim=start=${S.clipStart.toFixed(3)}:end=${clipEnd.toFixed(3)},asetpts=PTS-STARTPTS${tempoStr}[trimmed_a]`);
+        audioFilters.push(
+          `[0:a]atrim=start=${S.clipStart.toFixed(3)}:end=${clipEnd.toFixed(3)},asetpts=PTS-STARTPTS${tempoStr}[trimmed_a]`,
+        );
         origAudioLabel = '[trimmed_a]';
       } else if (segments.length > 1) {
         const concatLabels: string[] = [];
@@ -243,7 +249,9 @@ export async function processVideo(
           const clipEnd = S.clipStart + S.duration * S.playbackRate;
           const tempo = buildAudioTempoFilter(S.playbackRate);
           const tempoStr = tempo ? `,${tempo}` : '';
-          audioFilters.push(`[0:a]atrim=start=${S.clipStart.toFixed(3)}:end=${clipEnd.toFixed(3)},asetpts=PTS-STARTPTS${tempoStr}[a_seg_${idx}]`);
+          audioFilters.push(
+            `[0:a]atrim=start=${S.clipStart.toFixed(3)}:end=${clipEnd.toFixed(3)},asetpts=PTS-STARTPTS${tempoStr}[a_seg_${idx}]`,
+          );
           concatLabels.push(`[a_seg_${idx}]`);
         });
         audioFilters.push(`${concatLabels.join('')}concat=n=${segments.length}:v=0:a=1[trimmed_a]`);
@@ -293,23 +301,38 @@ export async function processVideo(
     }
 
     const execArgs = [
-      '-i', videoFilename,
+      '-i',
+      videoFilename,
       ...audioInputs,
-      '-filter_complex', filterComplex,
-      '-map', '[out_v]',
-      '-map', '[out_a]',
-      '-c:v', 'libx264',
-      '-preset', 'superfast',
-      '-crf', '22',
-      '-r', '30',
-      '-pix_fmt', 'yuv420p',
-      '-c:a', 'aac',
-      '-ac', '2',
-      '-ar', '48000',
-      '-b:a', '192k',
-      '-movflags', '+faststart',
-      '-t', getEditedVideoDuration(project).toFixed(3),
-      'output.mp4'
+      '-filter_complex',
+      filterComplex,
+      '-map',
+      '[out_v]',
+      '-map',
+      '[out_a]',
+      '-c:v',
+      'libx264',
+      '-preset',
+      'superfast',
+      '-crf',
+      '22',
+      '-r',
+      '30',
+      '-pix_fmt',
+      'yuv420p',
+      '-c:a',
+      'aac',
+      '-ac',
+      '2',
+      '-ar',
+      '48000',
+      '-b:a',
+      '192k',
+      '-movflags',
+      '+faststart',
+      '-t',
+      getEditedVideoDuration(project).toFixed(3),
+      'output.mp4',
     ];
 
     logCallback(`Executing FFmpeg command: ffmpeg ${execArgs.join(' ')}`);
@@ -337,7 +360,6 @@ export async function processVideo(
 
     onProgress({ stage: 'Export Complete', progress: 1.0 });
     return outBlob;
-
   } catch (error: any) {
     logCallback(`ERROR: ${error.message || error}`);
     if (signal?.aborted) {
@@ -432,7 +454,7 @@ export async function renderVideo(
     onProgress({
       stage: 'Encoding high-quality MP4',
       progress: Math.min(0.95, Math.max(0.4, scaledProgress)),
-      message: `${Math.round(progress * 100)}% encoded`
+      message: `${Math.round(progress * 100)}% encoded`,
     });
   };
   ffmpeg.on('progress', progressCallback);
@@ -472,11 +494,11 @@ export async function renderVideo(
 
     // 3. Fetch and write unique audio files
     onProgress({ stage: 'Preparing media files', progress: 0.25 });
-    const uniqueAssetIds = Array.from(new Set(project.segments.map(s => s.assetId)));
+    const uniqueAssetIds = Array.from(new Set(project.segments.map((s) => s.assetId)));
     const assetIdToFilename: Record<string, string> = {};
 
     for (const assetId of uniqueAssetIds) {
-      const asset = project.audioAssets.find(a => a.id === assetId);
+      const asset = project.audioAssets.find((a) => a.id === assetId);
       if (!asset) {
         throw new Error(`Audio asset not found: ${assetId}`);
       }
@@ -497,7 +519,9 @@ export async function renderVideo(
     // 4. Stage font files for text rendering
     onProgress({ stage: 'Staging fonts for text rendering', progress: 0.3 });
     const requiredFonts = getRequiredFontFiles(textOverlays);
-    logCallback(`Staging ${requiredFonts.size} font files: ${Array.from(requiredFonts).join(', ')}`);
+    logCallback(
+      `Staging ${requiredFonts.size} font files: ${Array.from(requiredFonts).join(', ')}`,
+    );
     const stagedFontFiles = await stageFontFiles(ffmpeg, requiredFonts);
     cleanupVirtualFiles.push(...stagedFontFiles);
 
@@ -521,13 +545,17 @@ export async function renderVideo(
     if (segments.length === 1) {
       const S = segments[0];
       const clipEnd = S.clipStart + S.duration * S.playbackRate;
-      videoFilters.push(`[0:v]trim=start=${S.clipStart.toFixed(3)}:end=${clipEnd.toFixed(3)},setpts=(PTS-STARTPTS)/${S.playbackRate.toFixed(3)}[trimmed_v]`);
+      videoFilters.push(
+        `[0:v]trim=start=${S.clipStart.toFixed(3)}:end=${clipEnd.toFixed(3)},setpts=(PTS-STARTPTS)/${S.playbackRate.toFixed(3)}[trimmed_v]`,
+      );
       videoSourceLabel = '[trimmed_v]';
     } else if (segments.length > 1) {
       const concatLabels: string[] = [];
       segments.forEach((S, idx) => {
         const clipEnd = S.clipStart + S.duration * S.playbackRate;
-        videoFilters.push(`[0:v]trim=start=${S.clipStart.toFixed(3)}:end=${clipEnd.toFixed(3)},setpts=(PTS-STARTPTS)/${S.playbackRate.toFixed(3)}[v_seg_${idx}]`);
+        videoFilters.push(
+          `[0:v]trim=start=${S.clipStart.toFixed(3)}:end=${clipEnd.toFixed(3)},setpts=(PTS-STARTPTS)/${S.playbackRate.toFixed(3)}[v_seg_${idx}]`,
+        );
         concatLabels.push(`[v_seg_${idx}]`);
       });
       videoFilters.push(`${concatLabels.join('')}concat=n=${segments.length}:v=1:a=0[trimmed_v]`);
@@ -548,12 +576,7 @@ export async function renderVideo(
     }
 
     // Add text overlay filters to the chain
-    const videoFilter = buildTextOverlayFilterChain(
-      baseVideoFilter,
-      textOverlays,
-      tw,
-      th,
-    );
+    const videoFilter = buildTextOverlayFilterChain(baseVideoFilter, textOverlays, tw, th);
 
     // Audio Inputs and Filter Chains
     const audioInputs: string[] = [];
@@ -581,7 +604,9 @@ export async function renderVideo(
         const clipEnd = S.clipStart + S.duration * S.playbackRate;
         const tempo = buildAudioTempoFilter(S.playbackRate);
         const tempoStr = tempo ? `,${tempo}` : '';
-        audioFilters.push(`[0:a]atrim=start=${S.clipStart.toFixed(3)}:end=${clipEnd.toFixed(3)},asetpts=PTS-STARTPTS${tempoStr}[trimmed_a]`);
+        audioFilters.push(
+          `[0:a]atrim=start=${S.clipStart.toFixed(3)}:end=${clipEnd.toFixed(3)},asetpts=PTS-STARTPTS${tempoStr}[trimmed_a]`,
+        );
         origAudioLabel = '[trimmed_a]';
       } else if (segments.length > 1) {
         const concatLabels: string[] = [];
@@ -589,7 +614,9 @@ export async function renderVideo(
           const clipEnd = S.clipStart + S.duration * S.playbackRate;
           const tempo = buildAudioTempoFilter(S.playbackRate);
           const tempoStr = tempo ? `,${tempo}` : '';
-          audioFilters.push(`[0:a]atrim=start=${S.clipStart.toFixed(3)}:end=${clipEnd.toFixed(3)},asetpts=PTS-STARTPTS${tempoStr}[a_seg_${idx}]`);
+          audioFilters.push(
+            `[0:a]atrim=start=${S.clipStart.toFixed(3)}:end=${clipEnd.toFixed(3)},asetpts=PTS-STARTPTS${tempoStr}[a_seg_${idx}]`,
+          );
           concatLabels.push(`[a_seg_${idx}]`);
         });
         audioFilters.push(`${concatLabels.join('')}concat=n=${segments.length}:v=0:a=1[trimmed_a]`);
@@ -639,23 +666,38 @@ export async function renderVideo(
     }
 
     const execArgs = [
-      '-i', videoFilename,
+      '-i',
+      videoFilename,
       ...audioInputs,
-      '-filter_complex', filterComplex,
-      '-map', '[vout]',
-      '-map', '[out_a]',
-      '-c:v', 'libx264',
-      '-preset', 'superfast',
-      '-crf', '22',
-      '-r', '30',
-      '-pix_fmt', 'yuv420p',
-      '-c:a', 'aac',
-      '-ac', '2',
-      '-ar', '48000',
-      '-b:a', '192k',
-      '-movflags', '+faststart',
-      '-t', getEditedVideoDuration(project).toFixed(3),
-      'output.mp4'
+      '-filter_complex',
+      filterComplex,
+      '-map',
+      '[vout]',
+      '-map',
+      '[out_a]',
+      '-c:v',
+      'libx264',
+      '-preset',
+      'superfast',
+      '-crf',
+      '22',
+      '-r',
+      '30',
+      '-pix_fmt',
+      'yuv420p',
+      '-c:a',
+      'aac',
+      '-ac',
+      '2',
+      '-ar',
+      '48000',
+      '-b:a',
+      '192k',
+      '-movflags',
+      '+faststart',
+      '-t',
+      getEditedVideoDuration(project).toFixed(3),
+      'output.mp4',
     ];
 
     logCallback(`Executing FFmpeg command with text overlays: ffmpeg ${execArgs.join(' ')}`);
@@ -683,7 +725,6 @@ export async function renderVideo(
 
     onProgress({ stage: 'Export Complete', progress: 1.0 });
     return outBlob;
-
   } catch (error: any) {
     logCallback(`ERROR: ${error.message || error}`);
     if (signal?.aborted) {

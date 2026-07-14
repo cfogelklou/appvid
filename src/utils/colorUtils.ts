@@ -29,7 +29,7 @@ export const normalizeColor = (input: string): string => {
   if (color.startsWith('RGB(') || color.startsWith('RGBA(')) {
     const isRgba = color.startsWith('RGBA(');
     const content = color.slice(isRgba ? 5 : 4, -1);
-    const parts = content.split(',').map(p => parseFloat(p.trim()));
+    const parts = content.split(',').map((p) => parseFloat(p.trim()));
     if (parts.length >= 3) {
       const r = Math.min(255, Math.max(0, Math.round(parts[0] || 0)));
       const g = Math.min(255, Math.max(0, Math.round(parts[1] || 0)));
@@ -63,9 +63,11 @@ export const normalizeColor = (input: string): string => {
 export const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
   const normalized = normalizeColor(hex);
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(normalized);
-  return result ? {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16)
-  } : null;
+  return result
+    ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+      }
+    : null;
 };

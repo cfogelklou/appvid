@@ -161,7 +161,7 @@ export const VideoPreview: React.FC = () => {
   // Compute active text cues for current playhead
   const activeCues = useMemo(() => {
     if (!text.catalogs || !text.cues) return [];
-    return text.cues.filter(cue => {
+    return text.cues.filter((cue) => {
       const resolved = { ...cue.base, ...cue.overrides };
       return isIntervalActive(resolved, playhead);
     });
@@ -176,28 +176,40 @@ export const VideoPreview: React.FC = () => {
 
     const frame = { width: activePreset.width, height: activePreset.height };
 
-    return activeCues.map(cue => {
-      try {
-        return layoutCue({
-          cue,
-          locale: text.previewLocale!,
-          catalog,
-          frame,
-          measure: measureText
-        });
-      } catch (error) {
-        console.error('Failed to layout cue:', error);
-        return null;
-      }
-    }).filter((cue): cue is NonNullable<typeof cue> => cue !== null);
+    return activeCues
+      .map((cue) => {
+        try {
+          return layoutCue({
+            cue,
+            locale: text.previewLocale!,
+            catalog,
+            frame,
+            measure: measureText,
+          });
+        } catch (error) {
+          console.error('Failed to layout cue:', error);
+          return null;
+        }
+      })
+      .filter((cue): cue is NonNullable<typeof cue> => cue !== null);
   }, [activeCues, text.previewLocale, text.catalogs, activePreset, measureText]);
 
   // Check for overflow warnings
-  const hasOverflow = laidOutCues.some(cue => cue.overflow);
+  const hasOverflow = laidOutCues.some((cue) => cue.overflow);
 
   // Compute text overlay position based on alignments
   const getTextOverlayStyle = (cue: any) => {
-    const { safeAreaInset, blockWidth, blockHeight, horizontalAlign, verticalAlign, lineHeight, fontSize, color, fontFamily } = cue;
+    const {
+      safeAreaInset,
+      blockWidth,
+      blockHeight,
+      horizontalAlign,
+      verticalAlign,
+      lineHeight,
+      fontSize,
+      color,
+      fontFamily,
+    } = cue;
 
     // Compute horizontal position
     let left: number;
@@ -220,23 +232,27 @@ export const VideoPreview: React.FC = () => {
 
     // Compute vertical position
     let top: number;
-    const availableHeight = activePreset.height - 2 * safeAreaInset;
+    const verticalSafeAreaInset = activePreset.height * 0.05;
+    const availableHeight = activePreset.height - 2 * verticalSafeAreaInset;
     switch (verticalAlign) {
       case 'top':
-        top = safeAreaInset;
+        top = verticalSafeAreaInset;
         break;
       case 'middle':
-        top = safeAreaInset + (availableHeight - blockHeight) / 2;
+        top = verticalSafeAreaInset + (availableHeight - blockHeight) / 2;
         break;
       case 'bottom':
-        top = activePreset.height - safeAreaInset - blockHeight;
+        top = activePreset.height - verticalSafeAreaInset - blockHeight;
         break;
       default:
-        top = activePreset.height - safeAreaInset - blockHeight;
+        top = activePreset.height - verticalSafeAreaInset - blockHeight;
     }
 
     // Clamp to safe area
-    top = Math.max(safeAreaInset, Math.min(top, activePreset.height - safeAreaInset - blockHeight));
+    top = Math.max(
+      verticalSafeAreaInset,
+      Math.min(top, activePreset.height - verticalSafeAreaInset - blockHeight),
+    );
 
     // Font family CSS mapping (data-driven via FONT_ASSET)
     const fontFamilyCss = FONT_ASSET[fontFamily].cssFamily;
@@ -309,12 +325,8 @@ export const VideoPreview: React.FC = () => {
               {/* Text Overlay Container */}
               {laidOutCues.length > 0 && (
                 <div className='text-overlay-container'>
-                  {laidOutCues.map(cue => (
-                    <div
-                      key={cue.id}
-                      className='text-overlay'
-                      style={getTextOverlayStyle(cue)}
-                    >
+                  {laidOutCues.map((cue) => (
+                    <div key={cue.id} className='text-overlay' style={getTextOverlayStyle(cue)}>
                       {cue.lines.map((line, lineIdx) => (
                         <div key={lineIdx} className='text-overlay-line'>
                           {line}

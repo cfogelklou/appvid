@@ -28,8 +28,7 @@ import type {
 import { resolveTextCue, stopTimeOf } from './types';
 
 /** Pick the font family for a locale (rule lives in fontFamilyForLocale). */
-export const fontForLocale = (locale: LocaleCode): TextFontFamily =>
-  fontFamilyForLocale(locale);
+export const fontForLocale = (locale: LocaleCode): TextFontFamily => fontFamilyForLocale(locale);
 
 /** Segment text into grapheme clusters (works for Japanese, emoji, etc.). */
 export const segmentGraphemes = (text: string): string[] => {
@@ -165,13 +164,8 @@ export const layoutCue = (input: LayoutCueInput): LaidOutTextCue => {
 
   const overflowH = blockWidth > contentWidth;
   const overflowV = blockHeight > contentHeight;
-  const overflowAxis: LaidOutTextCue['overflowAxis'] = overflowH && overflowV
-    ? 'both'
-    : overflowH
-      ? 'horizontal'
-      : overflowV
-        ? 'vertical'
-        : 'none';
+  const overflowAxis: LaidOutTextCue['overflowAxis'] =
+    overflowH && overflowV ? 'both' : overflowH ? 'horizontal' : overflowV ? 'vertical' : 'none';
 
   return {
     id: input.cue.id,

@@ -16,8 +16,10 @@ import type {
   CatalogBatchResult,
   TimelineImportResult,
   LocaleCode,
+  TranslationCatalog,
 } from '../text/types';
 import { importTextCatalogs, importTextTimeline } from '../text/importUtils';
+import { parseCatalogBatch } from '../text/textPackage';
 
 export const getEditedVideoDuration = (project: Project): number => {
   if (!project.videoSegments || project.videoSegments.length === 0) {
@@ -62,6 +64,7 @@ interface ProjectContextType {
   text: TextProjectState;
   setTextState: (state: TextProjectState) => void;
   setPreviewLocale: (locale: LocaleCode | null) => void;
+  injectCatalogEntry: (locale: LocaleCode, key: string, value: string) => boolean;
 
   // New: text cue CRUD
   addTextCue: (cue: Omit<TextCue, 'id' | 'origin'>) => void;
@@ -113,11 +116,6 @@ const createDefaultProject = (): Project => {
     },
     updatedAt: Date.now(),
     draftVersion: 2,
-    text: {
-      catalogs: {},
-      cues: [],
-      previewLocale: null,
-    },
   };
 };
 
@@ -457,7 +455,6 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         settings: parsed.settings,
         updatedAt: parsed.updatedAt,
         draftVersion: draftVersion || undefined,
-        text: restoredText,
       };
 
       setProject(restoredProject);
@@ -728,12 +725,6 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   ): Promise<CatalogBatchResult> => {
     const { newState, result } = await importTextCatalogs(text, files, signal);
     setTextState(newState);
-    // Sync text state into project for persistence
-    setProject((prev) => ({
-      ...prev,
-      text: newState,
-      updatedAt: Date.now(),
-    }));
     return result;
   };
 
@@ -743,12 +734,6 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   ): Promise<TimelineImportResult> => {
     const { newState, result } = await importTextTimeline(text, file, signal);
     setTextState(newState);
-    // Sync text state into project for persistence
-    setProject((prev) => ({
-      ...prev,
-      text: newState,
-      updatedAt: Date.now(),
-    }));
     return result;
   };
 
@@ -757,6 +742,31 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       ...prev,
       previewLocale: locale,
     }));
+  };
+
+  // Add a single key/value to a locale catalog without going through JSON files.
+  // Validates the candidate via the same parser as JSON import, then MERGES the
+  // validated key into the existing locale bucket (non-destructive to other keys).
+  const injectCatalogEntry = (locale: LocaleCode, key: string, value: string): boolean => {
+    if (!key || !value) return false;
+    const batch = parseCatalogBatch([
+      { fileName: `${locale}.json`, text: JSON.stringify({ [key]: value }) },
+    ]);
+    const accepted = batch.accepted[locale];
+    if (!accepted) return false; // validation rejected the key/value
+
+    setTextState((prev) => {
+      const existing = prev.catalogs[locale];
+      const merged: TranslationCatalog = {
+        locale,
+        sourceFileName: existing?.sourceFileName ?? `${locale}.json`,
+        strings: { ...(existing?.strings ?? {}), ...accepted.strings },
+      };
+      const catalogs = { ...prev.catalogs, [locale]: merged };
+      const previewLocale = prev.previewLocale ?? locale;
+      return { ...prev, catalogs, previewLocale };
+    });
+    return true;
   };
 
   return (
@@ -794,6 +804,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         text,
         setTextState,
         setPreviewLocale,
+        injectCatalogEntry,
         addTextCue,
         updateTextCue,
         deleteTextCue,

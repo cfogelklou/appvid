@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useProject, getEditedVideoDuration } from '../context/ProjectContext';
 import { TimelineRuler } from './TimelineRuler';
 import { TimelineTrack } from './TimelineTrack';
+import { IntervalClip } from './IntervalClip';
 import { Playhead } from './Playhead';
 import { TimelineZoomControls } from './TimelineZoomControls';
 import { timeToX, xToTime } from '../utils/timelineMath';
@@ -102,16 +103,9 @@ export const Timeline: React.FC = () => {
       // Check if it's a text cue
       const textCue = text.cues.find(c => c.id === selectedSegmentId);
       if (textCue) {
-        // Handle text cue keyboard shortcuts
-        if (e.key === 'ArrowLeft') {
-          e.preventDefault();
-          const newTime = Math.max(0, textCue.base.startTime - step);
-          updateTextCue(selectedSegmentId, { startTime: newTime });
-        } else if (e.key === 'ArrowRight') {
-          e.preventDefault();
-          const newTime = textCue.base.startTime + step;
-          updateTextCue(selectedSegmentId, { startTime: newTime });
-        } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        // Arrow-key nudge + drag for text cues is handled by <IntervalClip>.
+        // Only delete is handled here.
+        if (e.key === 'Delete' || e.key === 'Backspace') {
           e.preventDefault();
           deleteTextCue(selectedSegmentId);
           setSelectedSegmentId(null);
@@ -253,31 +247,36 @@ export const Timeline: React.FC = () => {
                           }}
                         />
                       ))}
-                      {Array.from(cuesByLane.values()).map(({ lane, cue }) => (
-                        <div
-                          key={cue.id}
-                          className={`text-track-clip interval-clip ${selectedSegmentId === cue.id ? 'selected' : ''}`}
-                          style={{
-                            left: `${timeToX(cue.base.startTime, zoom)}px`,
-                            width: `${timeToX(cue.base.duration, zoom)}px`,
-                            top: `${lane * laneHeight}px`,
-                            height: `${laneHeight - 6}px`,
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedSegmentId(cue.id);
-                            setSelectedVideoSegmentId(null);
-                          }}
-                          title={`${cue.base.stringKey}: ${cue.base.startTime.toFixed(1)}s - ${(cue.base.startTime + cue.base.duration).toFixed(1)}s`}
-                        >
-                          <div className="interval-clip-content">
-                            <div className="interval-clip-label">{cue.base.stringKey}</div>
-                            <div className="interval-clip-timecode">
-                              {cue.base.startTime.toFixed(1)}s - {(cue.base.startTime + cue.base.duration).toFixed(1)}s
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                      {Array.from(cuesByLane.values()).map(({ lane, cue }) => {
+                        const previewValue = text.previewLocale
+                          ? text.catalogs[text.previewLocale]?.strings[cue.base.stringKey]
+                          : undefined;
+                        const label = previewValue && previewValue.trim()
+                          ? previewValue.replace(/\s+/g, ' ').slice(0, 24)
+                          : cue.base.stringKey;
+                        return (
+                          <IntervalClip
+                            key={cue.id}
+                            id={cue.id}
+                            interval={{ startTime: cue.base.startTime, duration: cue.base.duration }}
+                            label={label}
+                            selected={selectedSegmentId === cue.id}
+                            selection={{ kind: 'text', id: cue.id }}
+                            className="text-track-clip"
+                            onSelect={(sel) => {
+                              setSelectedSegmentId(sel.id);
+                              setSelectedVideoSegmentId(null);
+                            }}
+                            onUpdate={(clipId, updates) => {
+                              if (updates.startTime !== undefined) {
+                                updateTextCue(clipId, { startTime: updates.startTime });
+                              }
+                            }}
+                            lane={lane}
+                            laneHeight={laneHeight}
+                          />
+                        );
+                      })}
                     </>
                   );
                 })()}

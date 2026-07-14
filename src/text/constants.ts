@@ -61,6 +61,18 @@ export const FONT_ASSET: Record<TextFontFamily, { fileName: string; cssFamily: s
 };
 
 /**
+ * Locale → font family, data-driven. Add a language prefix here (and a matching
+ * entry in FONT_ASSET above) to support a new script. Falls back to Noto Sans.
+ */
+const LOCALE_LANGUAGE_FONT: Partial<Record<string, TextFontFamily>> = {
+  ja: 'noto-sans-jp',
+};
+const LOCALE_FONT_FAMILY_DEFAULT: TextFontFamily = 'noto-sans';
+
+export const fontFamilyForLocale = (locale: LocaleCode): TextFontFamily =>
+  LOCALE_LANGUAGE_FONT[locale.split('-')[0]] ?? LOCALE_FONT_FAMILY_DEFAULT;
+
+/**
  * Build a cue base definition using frozen defaults. Wave 0/agents use this so
  * the default cue stays consistent everywhere (timeline.json defaults match
  * manual placement defaults match inspector reset).
@@ -78,3 +90,19 @@ export const createDefaultCueBase = (
   color: DEFAULT_TEXT_COLOR,
   fontSize: DEFAULT_FONT_SIZE,
 });
+
+/**
+ * Derive a stable catalog key from free-form display text: lowercase, collapse
+ * non-alphanumeric runs to a single dash. Returns `text` as a fallback for
+ * punctuation-only or non-Latin input (e.g. Japanese) so the key is never empty
+ * (catalog validation rejects empty keys). Callers handle collision suffixing.
+ * Intentionally separate from exportFilename.sanitizeName (filename semantics).
+ */
+export const slugifyForKey = (text: string): string => {
+  const slug = text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return slug || 'text';
+};

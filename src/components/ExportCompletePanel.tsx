@@ -1,6 +1,7 @@
 import React from 'react';
 import { Check, X, AlertTriangle, Download, RotateCcw, ArrowLeft, Share2, ShieldCheck } from 'lucide-react';
 import type { BatchRecoveryItem } from '../text/types';
+import { useProject } from '../context/ProjectContext';
 import './components.css';
 
 interface ExportCompletePanelProps {
@@ -138,6 +139,11 @@ const SingleExportComplete: React.FC<{ outputBlob: Blob; onClose: () => void }> 
   outputBlob,
   onClose,
 }) => {
+  const { activePreset } = useProject();
+  // The exported video is rendered at the preset dimensions, so mirror that
+  // aspect ratio onto the preview container to avoid letterboxing/collapse.
+  const presetAspectRatio = activePreset.width / activePreset.height;
+
   const [blobUrl, setBlobUrl] = React.useState<string>('');
   const [canShare, setCanShare] = React.useState<boolean>(false);
 
@@ -201,7 +207,11 @@ const SingleExportComplete: React.FC<{ outputBlob: Blob; onClose: () => void }> 
 
         <div className="preview-layout">
           {/* Native video preview */}
-          <div className="output-preview-container">
+          <div
+            className="output-preview-container"
+            data-orientation={presetAspectRatio >= 1 ? 'landscape' : 'portrait'}
+            style={{ '--preset-aspect-ratio': presetAspectRatio } as React.CSSProperties}
+          >
             {blobUrl && (
               <video
                 className="output-preview-video"

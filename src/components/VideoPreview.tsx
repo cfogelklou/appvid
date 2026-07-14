@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { previewPlayer } from '../utils/previewPlayer';
 import { layoutCue, createCanvasMeasurer } from '../text/textLayout';
+import { FONT_ASSET } from '../text/constants';
 import { isIntervalActive } from '../text/types';
 import { PreviewLocaleSelector } from './PreviewLocaleSelector';
 import { AlertTriangle } from 'lucide-react';
@@ -237,10 +238,8 @@ export const VideoPreview: React.FC = () => {
     // Clamp to safe area
     top = Math.max(safeAreaInset, Math.min(top, activePreset.height - safeAreaInset - blockHeight));
 
-    // Font family CSS mapping
-    const fontFamilyCss = fontFamily === 'noto-sans-jp'
-      ? "'Noto Sans JP', sans-serif"
-      : "'Noto Sans', sans-serif";
+    // Font family CSS mapping (data-driven via FONT_ASSET)
+    const fontFamilyCss = FONT_ASSET[fontFamily].cssFamily;
 
     return {
       position: 'absolute' as const,
@@ -289,6 +288,7 @@ export const VideoPreview: React.FC = () => {
       {/* Main Viewport Mock Device Frame */}
       <div
         className='device-frame'
+        data-orientation={presetAspectRatio >= 1 ? 'landscape' : 'portrait'}
         style={{ '--preset-aspect-ratio': presetAspectRatio } as React.CSSProperties}
       >
         {/* Device elements */}

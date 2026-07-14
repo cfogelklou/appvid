@@ -44,8 +44,6 @@ export interface ExportSettings {
   quality: 'high';
 }
 
-import type { TextProjectState } from './text/types';
-
 export interface Project {
   id: string;
   name: string;
@@ -55,7 +53,6 @@ export interface Project {
   segments: AudioSegment[];
   settings: ExportSettings;
   updatedAt: number;
-  text?: TextProjectState; // optional for backward compatibility with unversioned drafts
   draftVersion?: number; // persistence format version (undefined = unversioned, 2 = includes text state)
 }
 

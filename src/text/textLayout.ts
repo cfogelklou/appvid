@@ -13,6 +13,7 @@
  */
 import {
   FONT_ASSET,
+  fontFamilyForLocale,
   LINE_HEIGHT_MULTIPLIER,
   SAFE_AREA_INSET_FRACTION,
 } from './constants';
@@ -26,9 +27,9 @@ import type {
 } from './types';
 import { resolveTextCue, stopTimeOf } from './types';
 
-/** Pick the font family for a locale: Japanese uses Noto Sans JP, else Noto Sans. */
+/** Pick the font family for a locale (rule lives in fontFamilyForLocale). */
 export const fontForLocale = (locale: LocaleCode): TextFontFamily =>
-  locale.split('-')[0] === 'ja' ? 'noto-sans-jp' : 'noto-sans';
+  fontFamilyForLocale(locale);
 
 /** Segment text into grapheme clusters (works for Japanese, emoji, etc.). */
 export const segmentGraphemes = (text: string): string[] => {

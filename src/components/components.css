@@ -940,10 +940,13 @@
 .preview-container-wrapper {
   flex: 1;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 0;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: stretch;
+  min-height: 360px;
   padding: 24px;
+  container-type: size;
+  --preview-padding: 48px;
 }
 
 .sidebar-section {
@@ -1688,5 +1691,30 @@
   .export-complete-footer .btn-secondary {
     width: auto;
     flex: 1;
+  }
+}
+
+/* Responsive Timeline Height for short screens */
+@media (max-height: 700px) {
+  .workspace-lower {
+    height: 180px;
+  }
+}
+
+/* Responsive Padding to maximize video preview dimensions */
+@media (max-width: 768px), (max-height: 700px) {
+  .preview-container-wrapper {
+    padding: 12px;
+    min-height: 380px;
+    --preview-padding: 24px;
+  }
+  .video-preview-wrapper {
+    padding: 12px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .preview-container-wrapper {
+    min-height: 400px;
   }
 }

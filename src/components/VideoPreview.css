@@ -11,7 +11,6 @@
   position: relative;
   overflow: hidden;
   user-select: none;
-  container-type: size;
 }
 
 /* Background ambient glow */
@@ -34,8 +33,8 @@
   z-index: 1;
   /* Dynamically size the frame to fit inside the parent container 
      preserving the aspect ratio of the preset (portrait or landscape). */
-  width: min(calc(100cqw - 48px), calc((100cqh - 48px) * var(--preset-aspect-ratio, 0.46)));
-  height: min(calc(100cqh - 48px), calc((100cqw - 48px) / var(--preset-aspect-ratio, 0.46)));
+  width: min(calc(100cqw - var(--preview-padding, 96px)), calc((100cqh - var(--preview-padding, 96px)) * var(--preset-aspect-ratio, 0.46)));
+  height: auto;
   aspect-ratio: var(--preset-aspect-ratio, 0.46);
   background-color: #141416;
   border-radius: 40px;

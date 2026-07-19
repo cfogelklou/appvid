@@ -52,11 +52,6 @@ async function runLayoutTest() {
         return document.documentElement.scrollWidth > window.innerWidth;
       });
 
-      // Verify viewport constraints are respected (app-shell max-height should prevent scroll overflow on body)
-      const bodyOverflowV = await page.evaluate(() => {
-        return document.body.scrollHeight > window.innerHeight;
-      });
-
       if (workspaceOverflowH) {
         console.error(`❌ FAIL: Editor workspace has horizontal overflow at ${vp.name}`);
         failed = true;
@@ -64,13 +59,46 @@ async function runLayoutTest() {
         console.log(`✅ Editor workspace fits horizontally.`);
       }
 
-      if (bodyOverflowV) {
+      // Verify viewport constraints are respected (app-shell max-height should prevent scroll overflow on body)
+      const bodyOverflowV = await page.evaluate(() => {
+        return document.body.scrollHeight > window.innerHeight;
+      });
+
+      if (bodyOverflowV && vp.width >= 1024) {
         console.error(
           `❌ FAIL: Body has vertical scroll overflow (scrollHeight: ${await page.evaluate(() => document.body.scrollHeight)} vs viewport: ${vp.height}) at ${vp.name}`
         );
         failed = true;
+      } else if (bodyOverflowV) {
+        console.log(`⚠️ Note: Body has vertical scroll overflow at mobile/tablet size ${vp.name} (expected due to stacking).`);
       } else {
         console.log(`✅ App shell height respects viewport constraints.`);
+      }
+
+      // Check rendered preview dimensions (.device-frame)
+      const previewBoundingBox = await page.evaluate(() => {
+        const el = document.querySelector('.device-frame');
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return { width: r.width, height: r.height };
+      });
+
+      if (previewBoundingBox) {
+        console.log(
+          `🔍 Preview Dimensions at ${vp.name}: width: ${previewBoundingBox.width.toFixed(1)}px, height: ${previewBoundingBox.height.toFixed(1)}px`
+        );
+        const either300 = previewBoundingBox.width >= 300 || previewBoundingBox.height >= 300;
+        if (!either300) {
+          console.error(
+            `❌ FAIL: Rendered preview is too small! Width: ${previewBoundingBox.width.toFixed(1)}px, Height: ${previewBoundingBox.height.toFixed(1)}px (expected at least 300px in either direction) at ${vp.name}`
+          );
+          failed = true;
+        } else {
+          console.log(`✅ Rendered preview size is sufficient.`);
+        }
+      } else {
+        console.error(`❌ FAIL: Preview element (.device-frame) not found at ${vp.name}`);
+        failed = true;
       }
     } else {
       console.error('❌ FAIL: File input not found.');

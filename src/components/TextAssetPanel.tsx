@@ -29,7 +29,16 @@ export const TextAssetPanel: React.FC = () => {
   const [importSummaries, setImportSummaries] = useState<ImportSummary[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [newTextValue, setNewTextValue] = useState('');
+  const [newLocaleValue, setNewLocaleValue] = useState('');
   const [isExporting, setIsExporting] = useState(false);
+
+  // Initialize 'en' locale if catalogs are empty on mount to make manual insertion first-class
+  useEffect(() => {
+    if (Object.keys(text.catalogs).length === 0) {
+      injectCatalogEntry('en' as LocaleCode, '', '');
+      setPreviewLocale('en' as LocaleCode);
+    }
+  }, [text.catalogs, injectCatalogEntry, setPreviewLocale]);
 
   // Initialize preview locale on first import/injection
   useEffect(() => {
@@ -42,6 +51,22 @@ export const TextAssetPanel: React.FC = () => {
       }
     }
   }, [text.catalogs, text.previewLocale, setPreviewLocale]);
+
+  const handleAddLocale = (e: React.FormEvent) => {
+    e.preventDefault();
+    const val = newLocaleValue.trim().toLowerCase();
+    if (!val) return;
+    try {
+      const [canonical] = Intl.getCanonicalLocales(val);
+      if (canonical) {
+        injectCatalogEntry(canonical as LocaleCode, '', '');
+        setPreviewLocale(canonical as LocaleCode);
+        setNewLocaleValue('');
+      }
+    } catch {
+      alert(`Invalid BCP 47 locale tag: "${val}"`);
+    }
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -307,6 +332,36 @@ export const TextAssetPanel: React.FC = () => {
               );
             })}
           </div>
+          {/* Form to add a new BCP 47 locale manually */}
+          <form
+            onSubmit={handleAddLocale}
+            style={{ display: 'flex', gap: '8px', marginTop: '12px' }}
+          >
+            <input
+              type='text'
+              placeholder='Add locale (e.g. sv, es, fr)…'
+              value={newLocaleValue}
+              onChange={(e) => setNewLocaleValue(e.target.value)}
+              style={{
+                flex: 1,
+                background: 'var(--color-bg-card)',
+                border: '1px solid var(--color-border)',
+                color: 'var(--color-text-primary)',
+                padding: '6px 8px',
+                borderRadius: '6px',
+                fontSize: '11px',
+                fontFamily: 'var(--font-sans)',
+              }}
+            />
+            <button
+              type='submit'
+              className='btn btn-secondary btn-sm'
+              style={{ padding: '6px 10px', fontSize: '11px', whiteSpace: 'nowrap' }}
+            >
+              <Plus size={12} />
+              <span>Add Locale</span>
+            </button>
+          </form>
         </div>
       )}
 
@@ -398,7 +453,8 @@ export const TextAssetPanel: React.FC = () => {
                             fontWeight: 500,
                             color: 'var(--color-text-primary)',
                             whiteSpace: 'pre-wrap',
-                            wordBreak: 'break-word',
+                            wordBreak: 'normal',
+                            overflowWrap: 'break-word',
                           }}
                         >
                           {previewValue}

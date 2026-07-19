@@ -914,7 +914,8 @@
 }
 
 .preview-section {
-  flex: 3;
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   background-color: #0b0b0c;
@@ -932,9 +933,8 @@
 }
 
 .sidebar-section {
-  flex: 1.2;
-  min-width: 320px;
-  max-width: 400px;
+  width: 360px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   background-color: var(--color-bg-surface);
@@ -989,7 +989,7 @@
 
 .workspace-lower {
   height: 280px;
-  min-height: 240px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   background-color: var(--color-bg-surface);

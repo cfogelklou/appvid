@@ -179,6 +179,24 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         (p) => p.id === (videoData.width > videoData.height ? 'landscape' : 'portrait'),
       ) || STORE_PRESETS[0];
     setProject((prev) => {
+      // Clean up previous video URL to avoid memory leaks
+      if (prev.video) {
+        URL.revokeObjectURL(prev.video.blobUrl);
+      }
+
+      // Revoke any previous original-audio asset URLs and filter them out
+      prev.audioAssets.forEach((a) => {
+        if (a.name === 'original-audio') {
+          URL.revokeObjectURL(a.blobUrl);
+        }
+      });
+
+      const cleanAssets = prev.audioAssets.filter((a) => a.name !== 'original-audio');
+      const originalAudioAssetIds = prev.audioAssets
+        .filter((a) => a.name === 'original-audio')
+        .map((a) => a.id);
+      const cleanSegments = prev.segments.filter((s) => !originalAudioAssetIds.includes(s.assetId));
+
       const defaultSegment: VideoSegment = {
         id: crypto.randomUUID(),
         clipStart: 0,
@@ -199,6 +217,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
           blobUrl,
         },
         videoSegments: [defaultSegment],
+        audioAssets: cleanAssets,
+        segments: cleanSegments,
         settings: {
           ...prev.settings,
           presetId: orientedPreset.id,
@@ -220,6 +240,16 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const audioBlobUrl = URL.createObjectURL(audioFile);
 
         setProject((prev) => {
+          // Verify that the video is still the same one we started extracting from
+          if (
+            !prev.video ||
+            prev.video.name !== videoData.name ||
+            prev.video.size !== videoData.size
+          ) {
+            URL.revokeObjectURL(audioBlobUrl);
+            return prev;
+          }
+
           const newAsset: AudioAssetMetadata = {
             id: assetId,
             name: 'original-audio',

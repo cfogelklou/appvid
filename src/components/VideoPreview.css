@@ -35,6 +35,7 @@
      preserving the aspect ratio of the preset (portrait or landscape). */
   width: min(calc(100cqw - var(--preview-padding, 96px)), calc((100cqh - var(--preview-padding, 96px)) * var(--preset-aspect-ratio, 0.46)));
   height: auto;
+  min-height: 280px;
   aspect-ratio: var(--preset-aspect-ratio, 0.46);
   background-color: #141416;
   border-radius: 40px;

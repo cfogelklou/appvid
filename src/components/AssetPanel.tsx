@@ -135,7 +135,7 @@ export const AssetPanel: React.FC = () => {
                 {project.audioAssets.map((asset) => (
                   <div key={asset.id} className='asset-card'>
                     <div className='asset-card-main'>
-                      <FileAudio className='asset-icon' size={20} />
+                      <FileAudio className='asset-icon' size={18} />
                       <div className='asset-info'>
                         <div className='asset-name' title={asset.name}>
                           {asset.name}
@@ -148,10 +148,7 @@ export const AssetPanel: React.FC = () => {
                       </div>
                     </div>
 
-                    <div
-                      className='asset-card-actions'
-                      style={{ display: 'flex', gap: '8px', marginTop: '10px', width: '100%' }}
-                    >
+                    <div className='asset-card-actions'>
                       {asset.duration === 0 && (
                         <span
                           className='warning-badge'
@@ -164,48 +161,20 @@ export const AssetPanel: React.FC = () => {
                         <span
                           className='placed-badge'
                           title={`Placed ${asset.placedCount} times`}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            height: '28px',
-                            padding: '0 8px',
-                            fontSize: '11px',
-                            background: 'var(--color-bg-card)',
-                            border: '1px solid var(--border)',
-                            borderRadius: '4px',
-                          }}
                         >
                           x{asset.placedCount}
                         </span>
                       )}
                       <button
-                        className='btn btn-primary btn-sm'
-                        style={{
-                          flex: 1,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '6px',
-                          height: '28px',
-                          fontSize: '11px',
-                        }}
+                        className='btn btn-primary btn-sm asset-place-btn'
                         onClick={() => addSegment(asset.id)}
                         title='Place at playhead'
                       >
                         <Plus size={12} />
-                        <span>Place at Playhead</span>
+                        <span>Place</span>
                       </button>
                       <button
-                        className='btn-icon btn-danger-light'
-                        style={{
-                          width: '28px',
-                          height: '28px',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0,
-                          padding: 0,
-                        }}
+                        className='btn-icon btn-danger-light asset-delete-btn'
                         onClick={() => removeAudio(asset.id)}
                         title='Remove asset'
                       >

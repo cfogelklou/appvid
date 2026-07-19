@@ -908,9 +908,16 @@
 
 .workspace-upper {
   display: flex;
+  flex-direction: column;
   flex: 1;
   min-height: 0; /* Allows content panels to shrink & scroll internally */
   border-bottom: 1px solid var(--color-border);
+}
+
+@media (min-width: 1024px) {
+  .workspace-upper {
+    flex-direction: row;
+  }
 }
 
 .preview-section {
@@ -919,8 +926,15 @@
   display: flex;
   flex-direction: column;
   background-color: #0b0b0c;
-  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
   min-height: 0;
+}
+
+@media (min-width: 1024px) {
+  .preview-section {
+    border-right: 1px solid var(--color-border);
+    border-bottom: none;
+  }
 }
 
 .preview-container-wrapper {
@@ -933,12 +947,18 @@
 }
 
 .sidebar-section {
-  width: 360px;
+  width: 100%;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   background-color: var(--color-bg-surface);
   min-height: 0;
+}
+
+@media (min-width: 1024px) {
+  .sidebar-section {
+    width: 360px;
+  }
 }
 
 .sidebar-tabs {

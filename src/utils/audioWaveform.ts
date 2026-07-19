@@ -102,3 +102,140 @@ export const getWavDuration = async (file: File): Promise<number | null> => {
     return null;
   }
 };
+
+/**
+ * Converts an AudioBuffer to a WAV Blob.
+ */
+function audioBufferToWav(buffer: AudioBuffer): Blob {
+  const numOfChan = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const format = 1; // 1 = raw PCM
+  const bitDepth = 16;
+
+  let result;
+  if (numOfChan === 2) {
+    result = interleave(buffer.getChannelData(0), buffer.getChannelData(1));
+  } else {
+    result = buffer.getChannelData(0);
+  }
+
+  const bufferArr = new ArrayBuffer(44 + result.length * 2);
+  const view = new DataView(bufferArr);
+
+  /* RIFF identifier */
+  writeString(view, 0, 'RIFF');
+  /* file length */
+  view.setUint32(4, 36 + result.length * 2, true);
+  /* RIFF type */
+  writeString(view, 8, 'WAVE');
+  /* format chunk identifier */
+  writeString(view, 12, 'fmt ');
+  /* format chunk length */
+  view.setUint32(16, 16, true);
+  /* sample format (raw) */
+  view.setUint16(20, format, true);
+  /* channel count */
+  view.setUint16(22, numOfChan, true);
+  /* sample rate */
+  view.setUint32(24, sampleRate, true);
+  /* byte rate (sample rate * block align) */
+  view.setUint32(28, sampleRate * numOfChan * 2, true);
+  /* block align (channel count * bytes per sample) */
+  view.setUint16(32, numOfChan * 2, true);
+  /* bits per sample */
+  view.setUint16(34, bitDepth, true);
+  /* data chunk identifier */
+  writeString(view, 36, 'data');
+  /* data chunk length */
+  view.setUint32(40, result.length * 2, true);
+
+  floatTo16BitPCM(view, 44, result);
+
+  return new Blob([view], { type: 'audio/wav' });
+}
+
+function interleave(inputL: Float32Array, inputR: Float32Array): Float32Array {
+  const length = inputL.length + inputR.length;
+  const result = new Float32Array(length);
+
+  let index = 0;
+  let inputIndex = 0;
+
+  while (index < length) {
+    result[index++] = inputL[inputIndex];
+    result[index++] = inputR[inputIndex];
+    inputIndex++;
+  }
+  return result;
+}
+
+function floatTo16BitPCM(output: DataView, offset: number, input: Float32Array) {
+  for (let i = 0; i < input.length; i++, offset += 2) {
+    const s = Math.max(-1, Math.min(1, input[i]));
+    output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+  }
+}
+
+function writeString(view: DataView, offset: number, string: string) {
+  for (let i = 0; i < string.length; i++) {
+    view.setUint8(offset + i, string.charCodeAt(i));
+  }
+}
+
+/**
+ * Extracts the audio track from a video File if it exists, converting it to a WAV File
+ * and computing its waveform peaks.
+ */
+export const extractAudioTrack = async (
+  videoFile: File,
+): Promise<{ file: File; duration: number; peaks: number[] } | null> => {
+  try {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) {
+      return null;
+    }
+    const audioCtx = new AudioContextClass();
+    const arrayBuffer = await videoFile.arrayBuffer();
+
+    const audioBuffer = await new Promise<AudioBuffer>((resolve, reject) => {
+      audioCtx.decodeAudioData(arrayBuffer, resolve, reject);
+    });
+
+    if (audioBuffer.numberOfChannels === 0 || audioBuffer.duration === 0) {
+      return null;
+    }
+
+    // Convert audioBuffer to WAV
+    const wavBlob = audioBufferToWav(audioBuffer);
+    const wavFile = new File([wavBlob], 'original-audio.wav', { type: 'audio/wav' });
+
+    // Generate peaks for waveform rendering
+    const sampleCount = 80;
+    const channelData = audioBuffer.getChannelData(0);
+    const step = Math.ceil(channelData.length / sampleCount);
+    const peaks: number[] = [];
+
+    for (let i = 0; i < sampleCount; i++) {
+      let max = 0;
+      const start = i * step;
+      const end = Math.min(start + step, channelData.length);
+      for (let j = start; j < end; j++) {
+        const val = Math.abs(channelData[j]);
+        if (val > max) max = val;
+      }
+      peaks.push(max);
+    }
+
+    const maxPeak = Math.max(...peaks, 0.01);
+    const normalizedPeaks = peaks.map((p) => Math.max(0.05, p / maxPeak));
+
+    return {
+      file: wavFile,
+      duration: audioBuffer.duration,
+      peaks: normalizedPeaks,
+    };
+  } catch (err) {
+    console.warn('No audio track extracted or failed decoding:', err);
+    return null;
+  }
+};

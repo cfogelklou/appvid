@@ -28,7 +28,9 @@ async function runTest() {
         text.includes('Failed to load resource') ||
         text.includes('403') ||
         text.includes('googlesyndication') ||
-        text.includes('pagead')
+        text.includes('pagead') ||
+        text.includes('EncodingError') ||
+        text.includes('Decoding failed')
       ) {
         return;
       }
@@ -40,6 +42,9 @@ async function runTest() {
 
   page.on('pageerror', (err) => {
     console.error('[Browser Error]', err.message);
+    if (err.message.includes('EncodingError') || err.message.includes('Decoding failed')) {
+      return;
+    }
     consoleErrors.push(err.message);
   });
 

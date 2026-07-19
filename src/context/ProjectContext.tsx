@@ -19,6 +19,7 @@ import type {
   TranslationCatalog,
 } from '../text/types';
 import { importTextCatalogs, importTextTimeline } from '../text/importUtils';
+import { extractAudioTrack } from '../utils/audioWaveform';
 export const getEditedVideoDuration = (project: Project): number => {
   if (!project.videoSegments || project.videoSegments.length === 0) {
     return project.video ? project.video.duration : 0;
@@ -209,6 +210,46 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       return updated;
     });
     setPlayheadState(0);
+
+    // Asynchronously extract original audio track if it exists
+    extractAudioTrack(videoData.file)
+      .then((extracted) => {
+        if (!extracted) return;
+        const { file: audioFile, duration: audioDuration, peaks } = extracted;
+        const assetId = crypto.randomUUID();
+        const audioBlobUrl = URL.createObjectURL(audioFile);
+
+        setProject((prev) => {
+          const newAsset: AudioAssetMetadata = {
+            id: assetId,
+            name: 'original-audio',
+            size: audioFile.size,
+            duration: audioDuration,
+            blobUrl: audioBlobUrl,
+            placedCount: 1,
+            peaks,
+          };
+
+          const newSegment: AudioSegment = {
+            id: crypto.randomUUID(),
+            assetId,
+            startTime: 0,
+            volume: 1.0,
+            clipStart: 0,
+            duration: audioDuration,
+          };
+
+          return {
+            ...prev,
+            audioAssets: [...prev.audioAssets, newAsset],
+            segments: [...prev.segments, newSegment],
+            updatedAt: Date.now(),
+          };
+        });
+      })
+      .catch((err) => {
+        console.warn('Failed to extract original audio track:', err);
+      });
   };
 
   const importAudio = (file: File, duration: number, peaks?: number[]) => {

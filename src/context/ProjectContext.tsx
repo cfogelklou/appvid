@@ -273,6 +273,10 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             ...prev,
             audioAssets: [...prev.audioAssets, newAsset],
             segments: [...prev.segments, newSegment],
+            settings: {
+              ...prev.settings,
+              originalAudioMode: 'mute',
+            },
             updatedAt: Date.now(),
           };
         });
@@ -437,8 +441,29 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         settings.height = preset.height;
       }
 
+      let segments = prev.segments;
+      if (settingsUpdates.originalAudioMode !== undefined) {
+        const mode = settingsUpdates.originalAudioMode;
+        const originalAudioAssetIds = prev.audioAssets
+          .filter((a) => a.name === 'original-audio')
+          .map((a) => a.id);
+
+        if (originalAudioAssetIds.length > 0) {
+          segments = prev.segments.map((s) => {
+            if (originalAudioAssetIds.includes(s.assetId)) {
+              return {
+                ...s,
+                volume: mode === 'keep' ? 0.0 : 1.0,
+              };
+            }
+            return s;
+          });
+        }
+      }
+
       const updated = {
         ...prev,
+        segments,
         settings,
         updatedAt: Date.now(),
       };

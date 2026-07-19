@@ -9,12 +9,16 @@ export const getAudioPeaks = async (file: File, sampleCount = 80): Promise<numbe
       throw new Error('AudioContext not supported in this browser');
     }
     const audioCtx = new AudioContextClass();
-    const arrayBuffer = await file.arrayBuffer();
-
-    // decodeAudioData might not return a promise in older browsers, so wrap it
-    const audioBuffer = await new Promise<AudioBuffer>((resolve, reject) => {
-      audioCtx.decodeAudioData(arrayBuffer, resolve, reject);
-    });
+    let audioBuffer: AudioBuffer;
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      // decodeAudioData might not return a promise in older browsers, so wrap it
+      audioBuffer = await new Promise<AudioBuffer>((resolve, reject) => {
+        audioCtx.decodeAudioData(arrayBuffer, resolve, reject);
+      });
+    } finally {
+      audioCtx.close();
+    }
 
     const channelData = audioBuffer.getChannelData(0);
     const step = Math.ceil(channelData.length / sampleCount);
@@ -195,11 +199,15 @@ export const extractAudioTrack = async (
       return null;
     }
     const audioCtx = new AudioContextClass();
-    const arrayBuffer = await videoFile.arrayBuffer();
-
-    const audioBuffer = await new Promise<AudioBuffer>((resolve, reject) => {
-      audioCtx.decodeAudioData(arrayBuffer, resolve, reject);
-    });
+    let audioBuffer: AudioBuffer;
+    try {
+      const arrayBuffer = await videoFile.arrayBuffer();
+      audioBuffer = await new Promise<AudioBuffer>((resolve, reject) => {
+        audioCtx.decodeAudioData(arrayBuffer, resolve, reject);
+      });
+    } finally {
+      audioCtx.close();
+    }
 
     if (audioBuffer.numberOfChannels === 0 || audioBuffer.duration === 0) {
       return null;

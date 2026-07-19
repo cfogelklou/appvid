@@ -53,11 +53,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
+  padding: 6px 10px;
   background-color: var(--color-bg-card);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
-  gap: 12px;
+  gap: 8px;
   transition: border-color 0.2s, background-color 0.2s;
 }
 
@@ -69,7 +69,7 @@
 .asset-card-main {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
   flex: 1;
 }
@@ -1087,7 +1087,7 @@
 
 @media (min-width: 1024px) {
   .sidebar-section {
-    width: 360px;
+    width: 300px;
   }
 }
 

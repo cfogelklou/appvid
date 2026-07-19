@@ -11,6 +11,7 @@
   position: relative;
   overflow: hidden;
   user-select: none;
+  container-type: size;
 }
 
 /* Background ambient glow */
@@ -31,14 +32,10 @@
 .device-frame {
   position: relative;
   z-index: 1;
-  /* Height-driven contain-fit: portrait presets fill the holder's height
-     while preserving the preset aspect ratio. Landscape presets flip to
-     width-driven (see [data-orientation='landscape']) so wide frames span
-     the holder instead of collapsing into a short sliver. */
-  height: 100%;
-  width: auto;
-  max-height: 700px;
-  max-width: 700px;
+  /* Dynamically size the frame to fit inside the parent container 
+     preserving the aspect ratio of the preset (portrait or landscape). */
+  width: min(calc(100cqw - 48px), calc((100cqh - 48px) * var(--preset-aspect-ratio, 0.46)));
+  height: min(calc(100cqh - 48px), calc((100cqw - 48px) / var(--preset-aspect-ratio, 0.46)));
   aspect-ratio: var(--preset-aspect-ratio, 0.46);
   background-color: #141416;
   border-radius: 40px;
@@ -52,13 +49,6 @@
   justify-content: center;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-
-/* Landscape presets: drive sizing from width so the wide frame fills the
-   holder rather than being height-capped into a tiny sliver. */
-.device-frame[data-orientation='landscape'] {
-  height: auto;
-  width: 100%;
 }
 
 .device-frame:hover {

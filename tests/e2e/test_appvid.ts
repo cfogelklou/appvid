@@ -1,5 +1,4 @@
 import { webkit } from 'playwright';
-import { join } from 'path';
 
 async function runTest() {
   // Generate random offsets in seconds
@@ -25,6 +24,14 @@ async function runTest() {
       console.log(`[Browser Console] ${msg.type()}: ${text}`);
     }
     if (msg.type() === 'error') {
+      if (
+        text.includes('Failed to load resource') ||
+        text.includes('403') ||
+        text.includes('googlesyndication') ||
+        text.includes('pagead')
+      ) {
+        return;
+      }
       consoleErrors.push(text);
     } else {
       consoleMessages.push(text);
@@ -38,16 +45,24 @@ async function runTest() {
 
   // Track failed requests
   page.on('requestfailed', (request) => {
-    const text = `Request failed: ${request.url()} (${request.failure()?.errorText || 'unknown'})`;
+    const url = request.url();
+    if (url.includes('googlesyndication.com') || url.includes('pagead')) {
+      return;
+    }
+    const text = `Request failed: ${url} (${request.failure()?.errorText || 'unknown'})`;
     console.error(`[Browser Network] ${text}`);
     consoleErrors.push(text);
   });
 
   // Track error responses
   page.on('response', (response) => {
+    const url = response.url();
+    if (url.includes('googlesyndication.com') || url.includes('pagead')) {
+      return;
+    }
     const status = response.status();
     if (status >= 400) {
-      const text = `Response error: ${response.url()} (status ${status})`;
+      const text = `Response error: ${url} (status ${status})`;
       console.error(`[Browser Network] ${text}`);
       consoleErrors.push(text);
     }

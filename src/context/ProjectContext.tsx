@@ -19,8 +19,6 @@ import type {
   TranslationCatalog,
 } from '../text/types';
 import { importTextCatalogs, importTextTimeline } from '../text/importUtils';
-import { parseCatalogBatch } from '../text/textPackage';
-
 export const getEditedVideoDuration = (project: Project): number => {
   if (!project.videoSegments || project.videoSegments.length === 0) {
     return project.video ? project.video.duration : 0;
@@ -767,23 +765,19 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     }));
   };
 
-  // Add a single key/value to a locale catalog without going through JSON files.
-  // Validates the candidate via the same parser as JSON import, then MERGES the
-  // validated key into the existing locale bucket (non-destructive to other keys).
   const injectCatalogEntry = (locale: LocaleCode, key: string, value: string): boolean => {
-    if (!key || !value) return false;
-    const batch = parseCatalogBatch([
-      { fileName: `${locale}.json`, text: JSON.stringify({ [key]: value }) },
-    ]);
-    const accepted = batch.accepted[locale];
-    if (!accepted) return false; // validation rejected the key/value
+    if (!locale) return false;
 
     setTextState((prev) => {
       const existing = prev.catalogs[locale];
+      const newStrings = { ...(existing?.strings ?? {}) };
+      if (key) {
+        newStrings[key] = value;
+      }
       const merged: TranslationCatalog = {
         locale,
         sourceFileName: existing?.sourceFileName ?? `${locale}.json`,
-        strings: { ...(existing?.strings ?? {}), ...accepted.strings },
+        strings: newStrings,
       };
       const catalogs = { ...prev.catalogs, [locale]: merged };
       const previewLocale = prev.previewLocale ?? locale;

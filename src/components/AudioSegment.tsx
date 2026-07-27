@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useProject, getEditedVideoDuration } from '../context/ProjectContext';
-import { timeToX, xToTime, getSnappedTime } from '../utils/timelineMath';
-import type { AudioSegment as AudioSegmentType } from '../types';
-import { AlertTriangle, Link } from 'lucide-react';
-import { getAudioPeaks } from '../utils/audioWaveform';
+import React, { useState, useRef, useEffect } from "react";
+import { useProject, getEditedVideoDuration } from "../context/ProjectContext";
+import { timeToX, xToTime, getSnappedTime } from "../utils/timelineMath";
+import type { AudioSegment as AudioSegmentType } from "../types";
+import { AlertTriangle, Link } from "lucide-react";
+import { getAudioPeaks } from "../utils/audioWaveform";
 
 interface AudioSegmentProps {
   segment: AudioSegmentType;
@@ -32,13 +32,17 @@ export const AudioSegment: React.FC<AudioSegmentProps> = ({
 
   // Find asset metadata
   const asset = project.audioAssets.find((a) => a.id === segment.assetId);
-  const name = asset ? asset.name : 'Unknown Audio';
+  const name = asset ? asset.name : "Unknown Audio";
 
   // Warnings
   const editedDuration = getEditedVideoDuration(project);
-  const needsRelink = !asset || asset.blobUrl === '';
-  const extendsPastVideo = project.video ? segment.startTime + duration > editedDuration : false;
-  const startsAfterVideo = project.video ? segment.startTime >= editedDuration : false;
+  const needsRelink = !asset || asset.blobUrl === "";
+  const extendsPastVideo = project.video
+    ? segment.startTime + duration > editedDuration
+    : false;
+  const startsAfterVideo = project.video
+    ? segment.startTime >= editedDuration
+    : false;
   const hasWarning = needsRelink || extendsPastVideo || startsAfterVideo;
 
   // Local drag state
@@ -50,7 +54,9 @@ export const AudioSegment: React.FC<AudioSegmentProps> = ({
 
   // Compute active position
   const isDragging = dragState !== null;
-  const currentStartTime = isDragging ? dragState.previewTime : segment.startTime;
+  const currentStartTime = isDragging
+    ? dragState.previewTime
+    : segment.startTime;
 
   const left = timeToX(currentStartTime, zoom);
   const width = timeToX(duration, zoom);
@@ -61,7 +67,7 @@ export const AudioSegment: React.FC<AudioSegmentProps> = ({
     const m = Math.floor(time / 60);
     const s = Math.floor(time % 60);
     const ms = Math.floor((time % 1) * 10);
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${ms}`;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}.${ms}`;
   };
 
   const [peaks, setPeaks] = useState<number[]>(asset?.peaks || []);
@@ -84,7 +90,7 @@ export const AudioSegment: React.FC<AudioSegmentProps> = ({
           setPeaks(generatedPeaks);
           updateAudioPeaks(asset.id, generatedPeaks);
         } catch (e) {
-          console.warn('Failed to load peaks dynamically:', e);
+          console.warn("Failed to load peaks dynamically:", e);
         }
       };
       loadPeaks();
@@ -94,11 +100,11 @@ export const AudioSegment: React.FC<AudioSegmentProps> = ({
   const renderWaveform = () => {
     if (!peaks || peaks.length === 0) return null;
     return (
-      <div className='audio-segment-waveform'>
+      <div className="audio-segment-waveform">
         {peaks.map((peak, idx) => (
           <div
             key={idx}
-            className='waveform-bar'
+            className="waveform-bar"
             style={{
               height: `${peak * 100}%`,
             }}
@@ -148,7 +154,9 @@ export const AudioSegment: React.FC<AudioSegmentProps> = ({
     // Add other segments start and end times
     project.segments.forEach((other) => {
       if (other.id !== segment.id) {
-        const otherAsset = project.audioAssets.find((a) => a.id === other.assetId);
+        const otherAsset = project.audioAssets.find(
+          (a) => a.id === other.assetId,
+        );
         const otherDur = otherAsset
           ? other.duration !== undefined
             ? other.duration
@@ -196,26 +204,26 @@ export const AudioSegment: React.FC<AudioSegmentProps> = ({
   };
 
   // Warning Message String
-  let warningMessage = '';
+  let warningMessage = "";
   if (needsRelink) {
-    warningMessage = 'Re-link audio file required';
+    warningMessage = "Re-link audio file required";
   } else if (startsAfterVideo) {
-    warningMessage = 'Starts after video ends (clip will not play)';
+    warningMessage = "Starts after video ends (clip will not play)";
   } else if (extendsPastVideo) {
-    warningMessage = 'Extends past video end (will be truncated)';
+    warningMessage = "Extends past video end (will be truncated)";
   }
 
   return (
     <div
       ref={segmentRef}
-      className={`audio-segment-card ${isSelected ? 'selected' : ''} ${hasWarning ? 'warning' : ''} ${isDragging ? 'dragging' : ''}`}
+      className={`audio-segment-card ${isSelected ? "selected" : ""} ${hasWarning ? "warning" : ""} ${isDragging ? "dragging" : ""}`}
       style={{
         left: `${left}px`,
         width: `${width}px`,
         top: `${lane * laneHeight}px`,
         height: `${laneHeight - 6}px`, // slightly smaller than lane height for spacing
       }}
-      role='button'
+      role="button"
       tabIndex={0}
       aria-label={`Audio segment: ${name}`}
       onPointerDown={handlePointerDown}
@@ -225,27 +233,30 @@ export const AudioSegment: React.FC<AudioSegmentProps> = ({
     >
       {renderWaveform()}
 
-      <div className='audio-segment-content'>
-        <div className='audio-segment-title-bar'>
-          <span className='audio-segment-name'>{name}</span>
-          <div className='audio-segment-icons'>
-            {needsRelink && <Link size={14} className='icon-link' />}
+      <div className="audio-segment-content">
+        <div className="audio-segment-title-bar">
+          <span className="audio-segment-name">{name}</span>
+          <div className="audio-segment-icons">
+            {needsRelink && <Link size={14} className="icon-link" />}
             {hasWarning && (
-              <span className='warning-tooltip-trigger' title={warningMessage}>
-                <AlertTriangle size={14} className='icon-warning' />
+              <span className="warning-tooltip-trigger" title={warningMessage}>
+                <AlertTriangle size={14} className="icon-warning" />
               </span>
             )}
           </div>
         </div>
 
-        <div className='audio-segment-timecode'>
-          {formatTime(currentStartTime)} - {formatTime(currentStartTime + duration)}
+        <div className="audio-segment-timecode">
+          {formatTime(currentStartTime)} -{" "}
+          {formatTime(currentStartTime + duration)}
         </div>
       </div>
 
       {/* Snap time overlay bubble (shown during drag) */}
       {isDragging && (
-        <div className='audio-segment-drag-bubble'>{formatTime(dragState.previewTime)}</div>
+        <div className="audio-segment-drag-bubble">
+          {formatTime(dragState.previewTime)}
+        </div>
       )}
     </div>
   );

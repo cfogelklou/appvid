@@ -16,7 +16,7 @@ import {
   fontFamilyForLocale,
   LINE_HEIGHT_MULTIPLIER,
   SAFE_AREA_INSET_FRACTION,
-} from './constants';
+} from "./constants";
 import type {
   FrameGeometry,
   LaidOutTextCue,
@@ -24,15 +24,16 @@ import type {
   MeasureText,
   TextCue,
   TextFontFamily,
-} from './types';
-import { resolveTextCue, stopTimeOf } from './types';
+} from "./types";
+import { resolveTextCue, stopTimeOf } from "./types";
 
 /** Pick the font family for a locale (rule lives in fontFamilyForLocale). */
-export const fontForLocale = (locale: LocaleCode): TextFontFamily => fontFamilyForLocale(locale);
+export const fontForLocale = (locale: LocaleCode): TextFontFamily =>
+  fontFamilyForLocale(locale);
 
 /** Segment text into grapheme clusters (works for Japanese, emoji, etc.). */
 export const segmentGraphemes = (text: string): string[] => {
-  const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+  const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
   return Array.from(segmenter.segment(text), (s) => s.segment);
 };
 
@@ -50,9 +51,9 @@ export const breakLongToken = (
 ): string[] => {
   if (maxWidth <= 0) return [token];
   const pieces: string[] = [];
-  let cur = '';
+  let cur = "";
   for (const g of segmentGraphemes(token)) {
-    if (measure(g, fontFamily, fontSize) > maxWidth && cur === '') {
+    if (measure(g, fontFamily, fontSize) > maxWidth && cur === "") {
       // Lone grapheme wider than the available width: emit it standalone.
       pieces.push(g);
       continue;
@@ -65,7 +66,7 @@ export const breakLongToken = (
       cur = g;
     }
   }
-  if (cur !== '' || pieces.length === 0) pieces.push(cur);
+  if (cur !== "" || pieces.length === 0) pieces.push(cur);
   return pieces;
 };
 
@@ -80,35 +81,41 @@ export const wrapParagraph = (
   fontSize: number,
   maxWidth: number,
 ): string[] => {
-  if (paragraph === '') return [''];
+  if (paragraph === "") return [""];
   if (maxWidth <= 0) return [paragraph];
-  if (paragraph.trim() === '') return [''];
+  if (paragraph.trim() === "") return [""];
 
   const words = paragraph.trim().split(/\s+/);
   const lines: string[] = [];
-  let current = '';
+  let current = "";
 
   for (const word of words) {
-    const candidate = current === '' ? word : `${current} ${word}`;
+    const candidate = current === "" ? word : `${current} ${word}`;
     if (measure(candidate, fontFamily, fontSize) <= maxWidth) {
       current = candidate;
       continue;
     }
     // The candidate does not fit. Flush current if any.
-    if (current !== '') {
+    if (current !== "") {
       lines.push(current);
-      current = '';
+      current = "";
     }
     if (measure(word, fontFamily, fontSize) <= maxWidth) {
       current = word;
       continue;
     }
     // Long token: break at grapheme boundaries.
-    const pieces = breakLongToken(word, measure, fontFamily, fontSize, maxWidth);
+    const pieces = breakLongToken(
+      word,
+      measure,
+      fontFamily,
+      fontSize,
+      maxWidth,
+    );
     lines.push(...pieces.slice(0, -1));
-    current = pieces[pieces.length - 1] ?? '';
+    current = pieces[pieces.length - 1] ?? "";
   }
-  if (current !== '' || lines.length === 0) lines.push(current);
+  if (current !== "" || lines.length === 0) lines.push(current);
   return lines;
 };
 
@@ -123,12 +130,12 @@ export const wrapText = (
   fontFamily: TextFontFamily,
   fontSize: number,
 ): string[] => {
-  const paragraphs = text.split('\n');
+  const paragraphs = text.split("\n");
   const out: string[] = [];
   for (const p of paragraphs) {
     out.push(...wrapParagraph(p, measure, fontFamily, fontSize, maxWidth));
   }
-  return out.length === 0 ? [''] : out;
+  return out.length === 0 ? [""] : out;
 };
 
 export interface LayoutCueInput {
@@ -146,26 +153,41 @@ export const layoutCue = (input: LayoutCueInput): LaidOutTextCue => {
   const resolved = resolveTextCue(input.cue);
   const fontFamily = fontForLocale(input.locale);
   const fontFileName = FONT_ASSET[fontFamily].fileName;
-  const text = input.catalog?.strings[resolved.stringKey] ?? '';
+  const text = input.catalog?.strings[resolved.stringKey] ?? "";
 
   const insetX = input.frame.width * SAFE_AREA_INSET_FRACTION;
   const insetY = input.frame.height * SAFE_AREA_INSET_FRACTION;
   const contentWidth = input.frame.width - 2 * insetX;
   const contentHeight = input.frame.height - 2 * insetY;
 
-  const lines = wrapText(text, input.measure, contentWidth, fontFamily, resolved.fontSize);
+  const lines = wrapText(
+    text,
+    input.measure,
+    contentWidth,
+    fontFamily,
+    resolved.fontSize,
+  );
   const lineHeight = resolved.fontSize * LINE_HEIGHT_MULTIPLIER;
 
   let blockWidth = 0;
   for (const line of lines) {
-    blockWidth = Math.max(blockWidth, input.measure(line, fontFamily, resolved.fontSize));
+    blockWidth = Math.max(
+      blockWidth,
+      input.measure(line, fontFamily, resolved.fontSize),
+    );
   }
   const blockHeight = lines.length * lineHeight;
 
   const overflowH = blockWidth > contentWidth;
   const overflowV = blockHeight > contentHeight;
-  const overflowAxis: LaidOutTextCue['overflowAxis'] =
-    overflowH && overflowV ? 'both' : overflowH ? 'horizontal' : overflowV ? 'vertical' : 'none';
+  const overflowAxis: LaidOutTextCue["overflowAxis"] =
+    overflowH && overflowV
+      ? "both"
+      : overflowH
+        ? "horizontal"
+        : overflowV
+          ? "vertical"
+          : "none";
 
   return {
     id: input.cue.id,
@@ -196,10 +218,10 @@ export const layoutCue = (input: LayoutCueInput): LaidOutTextCue => {
 export const createCanvasMeasurer = (): MeasureText => {
   let ctx: CanvasRenderingContext2D | null = null;
   return (text, fontFamily, fontSize) => {
-    if (typeof document === 'undefined') return 0;
+    if (typeof document === "undefined") return 0;
     if (!ctx) {
-      const canvas = document.createElement('canvas');
-      ctx = canvas.getContext('2d');
+      const canvas = document.createElement("canvas");
+      ctx = canvas.getContext("2d");
     }
     if (!ctx) return 0;
     ctx.font = `${fontSize}px ${FONT_ASSET[fontFamily].cssFamily}`;

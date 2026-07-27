@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import type { ReactNode } from "react";
 import type {
   Project,
   StorePreset,
@@ -8,8 +8,8 @@ import type {
   AudioSegment,
   VideoSegment,
   ExportSettings,
-} from '../types';
-import { STORE_PRESETS } from '../constants';
+} from "../types";
+import { STORE_PRESETS } from "../constants";
 import type {
   TextCue,
   TextProjectState,
@@ -17,9 +17,9 @@ import type {
   TimelineImportResult,
   LocaleCode,
   TranslationCatalog,
-} from '../text/types';
-import { importTextCatalogs, importTextTimeline } from '../text/importUtils';
-import { extractAudioTrack } from '../utils/audioWaveform';
+} from "../text/types";
+import { importTextCatalogs, importTextTimeline } from "../text/importUtils";
+import { extractAudioTrack } from "../utils/audioWaveform";
 export const getEditedVideoDuration = (project: Project): number => {
   if (!project.videoSegments || project.videoSegments.length === 0) {
     return project.video ? project.video.duration : 0;
@@ -42,11 +42,16 @@ interface ProjectContextType {
   setZoom: (zoom: number) => void;
   setSelectedSegmentId: (id: string | null) => void;
   setSelectedVideoSegmentId: (id: string | null) => void;
-  importVideo: (video: Omit<VideoAssetMetadata, 'blobUrl'> & { file: File }) => void;
+  importVideo: (
+    video: Omit<VideoAssetMetadata, "blobUrl"> & { file: File },
+  ) => void;
   importAudio: (file: File, duration: number, peaks?: number[]) => void;
   removeAudio: (assetId: string) => void;
   addSegment: (assetId: string) => void;
-  updateSegment: (id: string, updates: Partial<Pick<AudioSegment, 'startTime' | 'volume'>>) => void;
+  updateSegment: (
+    id: string,
+    updates: Partial<Pick<AudioSegment, "startTime" | "volume">>,
+  ) => void;
   removeSegment: (id: string) => void;
   updateSettings: (settings: Partial<ExportSettings>) => void;
   saveDraft: () => void;
@@ -63,22 +68,26 @@ interface ProjectContextType {
   text: TextProjectState;
   setTextState: (state: TextProjectState) => void;
   setPreviewLocale: (locale: LocaleCode | null) => void;
-  injectCatalogEntry: (locale: LocaleCode, key: string, value: string) => boolean;
+  injectCatalogEntry: (
+    locale: LocaleCode,
+    key: string,
+    value: string,
+  ) => boolean;
 
   // New: text cue CRUD
-  addTextCue: (cue: Omit<TextCue, 'id' | 'origin'>) => void;
+  addTextCue: (cue: Omit<TextCue, "id" | "origin">) => void;
   updateTextCue: (
     id: string,
     updates: Partial<
       Pick<
-        TextCue['base'],
-        | 'startTime'
-        | 'duration'
-        | 'stringKey'
-        | 'horizontalAlign'
-        | 'verticalAlign'
-        | 'color'
-        | 'fontSize'
+        TextCue["base"],
+        | "startTime"
+        | "duration"
+        | "stringKey"
+        | "horizontalAlign"
+        | "verticalAlign"
+        | "color"
+        | "fontSize"
       >
     > & { overridesOnly?: boolean },
   ) => void;
@@ -93,16 +102,21 @@ interface ProjectContextType {
     files: FileList | File[],
     signal?: AbortSignal,
   ) => Promise<CatalogBatchResult>;
-  importTextTimeline: (file: File, signal?: AbortSignal) => Promise<TimelineImportResult>;
+  importTextTimeline: (
+    file: File,
+    signal?: AbortSignal,
+  ) => Promise<TimelineImportResult>;
 
   // New: batch state (managed by Agent E, exposed here)
   batchItems: Array<{ locale: LocaleCode; status: string; message?: string }>;
-  setBatchItems: (items: Array<{ locale: LocaleCode; status: string; message?: string }>) => void;
+  setBatchItems: (
+    items: Array<{ locale: LocaleCode; status: string; message?: string }>,
+  ) => void;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
-const DRAFT_KEY = 'appvid_project_draft';
+const DRAFT_KEY = "appvid_project_draft";
 
 // Derive the default export settings from the first store preset instead of a
 // hard-coded id, so removing/adding presets never leaves stale dimensions.
@@ -110,7 +124,7 @@ const createDefaultProject = (): Project => {
   const preset = STORE_PRESETS[0];
   return {
     id: crypto.randomUUID(),
-    name: 'Untitled Project',
+    name: "Untitled Project",
     video: null,
     audioAssets: [],
     segments: [],
@@ -118,9 +132,9 @@ const createDefaultProject = (): Project => {
       presetId: preset.id,
       width: preset.width,
       height: preset.height,
-      fitMode: 'fit',
-      originalAudioMode: 'keep',
-      quality: 'high',
+      fitMode: "fit",
+      originalAudioMode: "keep",
+      quality: "high",
     },
     updatedAt: Date.now(),
     draftVersion: 2,
@@ -134,18 +148,28 @@ const createDefaultTextState = (): TextProjectState => ({
   previewLocale: null,
 });
 
-export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [project, setProject] = useState<Project>(createDefaultProject);
   const [playhead, setPlayheadState] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [zoom, setZoom] = useState<number>(50); // pixels per second
-  const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
-  const [selectedVideoSegmentId, setSelectedVideoSegmentId] = useState<string | null>(null);
+  const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(
+    null,
+  );
+  const [selectedVideoSegmentId, setSelectedVideoSegmentId] = useState<
+    string | null
+  >(null);
   const [hasDraft, setHasDraft] = useState<boolean>(false);
 
   // New: text state
-  const [text, setTextState] = useState<TextProjectState>(createDefaultTextState);
-  const [selectedTextCueId, setSelectedTextCueId] = useState<string | null>(null);
+  const [text, setTextState] = useState<TextProjectState>(
+    createDefaultTextState,
+  );
+  const [selectedTextCueId, setSelectedTextCueId] = useState<string | null>(
+    null,
+  );
   const [batchItems, setBatchItems] = useState<
     Array<{ locale: LocaleCode; status: string; message?: string }>
   >([]);
@@ -159,7 +183,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   }, []);
 
   const activePreset =
-    STORE_PRESETS.find((p) => p.id === project.settings.presetId) || STORE_PRESETS[0];
+    STORE_PRESETS.find((p) => p.id === project.settings.presetId) ||
+    STORE_PRESETS[0];
 
   const setPlayhead = (time: number) => {
     const videoDuration = getEditedVideoDuration(project);
@@ -170,13 +195,17 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
-  const importVideo = (videoData: Omit<VideoAssetMetadata, 'blobUrl'> & { file: File }) => {
+  const importVideo = (
+    videoData: Omit<VideoAssetMetadata, "blobUrl"> & { file: File },
+  ) => {
     const blobUrl = URL.createObjectURL(videoData.file);
     // Autodetect orientation from source dimensions so the editor frame and
     // export default match the video (portrait vs landscape).
     const orientedPreset =
       STORE_PRESETS.find(
-        (p) => p.id === (videoData.width > videoData.height ? 'landscape' : 'portrait'),
+        (p) =>
+          p.id ===
+          (videoData.width > videoData.height ? "landscape" : "portrait"),
       ) || STORE_PRESETS[0];
     setProject((prev) => {
       // Clean up previous video URL to avoid memory leaks
@@ -186,16 +215,20 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
       // Revoke any previous original-audio asset URLs and filter them out
       prev.audioAssets.forEach((a) => {
-        if (a.name === 'original-audio') {
+        if (a.name === "original-audio") {
           URL.revokeObjectURL(a.blobUrl);
         }
       });
 
-      const cleanAssets = prev.audioAssets.filter((a) => a.name !== 'original-audio');
+      const cleanAssets = prev.audioAssets.filter(
+        (a) => a.name !== "original-audio",
+      );
       const originalAudioAssetIds = prev.audioAssets
-        .filter((a) => a.name === 'original-audio')
+        .filter((a) => a.name === "original-audio")
         .map((a) => a.id);
-      const cleanSegments = prev.segments.filter((s) => !originalAudioAssetIds.includes(s.assetId));
+      const cleanSegments = prev.segments.filter(
+        (s) => !originalAudioAssetIds.includes(s.assetId),
+      );
 
       const defaultSegment: VideoSegment = {
         id: crypto.randomUUID(),
@@ -252,7 +285,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
           const newAsset: AudioAssetMetadata = {
             id: assetId,
-            name: 'original-audio',
+            name: "original-audio",
             size: audioFile.size,
             duration: audioDuration,
             blobUrl: audioBlobUrl,
@@ -275,14 +308,14 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             segments: [...prev.segments, newSegment],
             settings: {
               ...prev.settings,
-              originalAudioMode: 'mute',
+              originalAudioMode: "mute",
             },
             updatedAt: Date.now(),
           };
         });
       })
       .catch((err) => {
-        console.warn('Failed to extract original audio track:', err);
+        console.warn("Failed to extract original audio track:", err);
       });
   };
 
@@ -318,13 +351,17 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       }
 
       // Filter out segment instances
-      const remainingSegments = prev.segments.filter((s) => s.assetId !== assetId);
+      const remainingSegments = prev.segments.filter(
+        (s) => s.assetId !== assetId,
+      );
       const remainingAssets = prev.audioAssets.filter((a) => a.id !== assetId);
 
       const updated = {
         ...prev,
         audioAssets: remainingAssets.map((a) => {
-          const count = remainingSegments.filter((s) => s.assetId === a.id).length;
+          const count = remainingSegments.filter(
+            (s) => s.assetId === a.id,
+          ).length;
           return { ...a, placedCount: count };
         }),
         segments: remainingSegments,
@@ -337,7 +374,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     if (selectedSegmentId) {
       const isDeleted =
-        project.segments.find((s) => s.id === selectedSegmentId)?.assetId === assetId;
+        project.segments.find((s) => s.id === selectedSegmentId)?.assetId ===
+        assetId;
       if (isDeleted) setSelectedSegmentId(null);
     }
   };
@@ -346,7 +384,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     setProject((prev) => {
       const updated = {
         ...prev,
-        audioAssets: prev.audioAssets.map((a) => (a.id === assetId ? { ...a, peaks } : a)),
+        audioAssets: prev.audioAssets.map((a) =>
+          a.id === assetId ? { ...a, peaks } : a,
+        ),
         updatedAt: Date.now(),
       };
       return updated;
@@ -381,7 +421,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const updateSegment = (
     id: string,
-    updates: Partial<Pick<AudioSegment, 'startTime' | 'volume'>>,
+    updates: Partial<Pick<AudioSegment, "startTime" | "volume">>,
   ) => {
     setProject((prev) => {
       const updatedSegments = prev.segments.map((s) => {
@@ -397,7 +437,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
           ...s,
           startTime,
           volume:
-            updates.volume !== undefined ? Math.max(0, Math.min(updates.volume, 1.0)) : s.volume,
+            updates.volume !== undefined
+              ? Math.max(0, Math.min(updates.volume, 1.0))
+              : s.volume,
         };
       });
 
@@ -419,7 +461,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         ...prev,
         segments: remainingSegments,
         audioAssets: prev.audioAssets.map((a) =>
-          a.id === segment.assetId ? { ...a, placedCount: Math.max(0, a.placedCount - 1) } : a,
+          a.id === segment.assetId
+            ? { ...a, placedCount: Math.max(0, a.placedCount - 1) }
+            : a,
         ),
         updatedAt: Date.now(),
       };
@@ -436,7 +480,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
       // If preset changed, auto-update dimensions unless custom
       const preset = STORE_PRESETS.find((p) => p.id === settings.presetId);
-      if (preset && preset.id !== 'custom' && settingsUpdates.presetId) {
+      if (preset && preset.id !== "custom" && settingsUpdates.presetId) {
         settings.width = preset.width;
         settings.height = preset.height;
       }
@@ -445,7 +489,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       if (settingsUpdates.originalAudioMode !== undefined) {
         const mode = settingsUpdates.originalAudioMode;
         const originalAudioAssetIds = prev.audioAssets
-          .filter((a) => a.name === 'original-audio')
+          .filter((a) => a.name === "original-audio")
           .map((a) => a.id);
 
         if (originalAudioAssetIds.length > 0) {
@@ -453,7 +497,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             if (originalAudioAssetIds.includes(s.assetId)) {
               return {
                 ...s,
-                volume: mode === 'keep' ? 0.0 : 1.0,
+                volume: mode === "keep" ? 0.0 : 1.0,
               };
             }
             return s;
@@ -534,7 +578,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       let restoredText: TextProjectState;
       if (draftVersion >= 2) {
         // Version 2+ has text state
-        if (parsed.text && typeof parsed.text === 'object') {
+        if (parsed.text && typeof parsed.text === "object") {
           // Validate and sanitize text state
           restoredText = {
             catalogs: parsed.text.catalogs || {},
@@ -554,12 +598,13 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       const restoredProject: Project = {
         id: parsed.id,
         name: parsed.name,
-        video: parsed.video ? { ...parsed.video, blobUrl: '' } : null,
+        video: parsed.video ? { ...parsed.video, blobUrl: "" } : null,
         videoSegments: parsed.videoSegments || defaultSegments,
         audioAssets: parsed.audioAssets.map((a: any) => ({
           ...a,
-          blobUrl: '',
-          placedCount: parsed.segments.filter((s: any) => s.assetId === a.id).length,
+          blobUrl: "",
+          placedCount: parsed.segments.filter((s: any) => s.assetId === a.id)
+            .length,
         })),
         segments: parsed.segments,
         settings: parsed.settings,
@@ -571,7 +616,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       setTextState(restoredText);
       setPlayheadState(0);
     } catch (e) {
-      console.error('Failed to restore draft', e);
+      console.error("Failed to restore draft", e);
     }
   };
 
@@ -600,7 +645,10 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
       const S = prev.videoSegments[idx];
       // Validation: split time must be strictly within segment bounds
-      if (splitTime - S.startTime < 0.1 || S.startTime + S.duration - splitTime < 0.1) {
+      if (
+        splitTime - S.startTime < 0.1 ||
+        S.startTime + S.duration - splitTime < 0.1
+      ) {
         return prev;
       }
 
@@ -640,10 +688,14 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       prev.segments.forEach((A) => {
         const asset = prev.audioAssets.find((a) => a.id === A.assetId);
         const assetDuration = asset ? asset.duration : 0;
-        const currentDuration = A.duration !== undefined ? A.duration : assetDuration;
+        const currentDuration =
+          A.duration !== undefined ? A.duration : assetDuration;
         const currentClipStart = A.clipStart !== undefined ? A.clipStart : 0;
 
-        if (splitTime > A.startTime && splitTime < A.startTime + currentDuration) {
+        if (
+          splitTime > A.startTime &&
+          splitTime < A.startTime + currentDuration
+        ) {
           const duration1 = splitTime - A.startTime;
           const A1: AudioSegment = {
             id: crypto.randomUUID(),
@@ -685,7 +737,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   const deleteVideoSegment = (segmentId: string) => {
     setProject((prev) => {
       if (!prev.videoSegments || prev.videoSegments.length <= 1) return prev;
-      const newVideoSegments = prev.videoSegments.filter((s) => s.id !== segmentId);
+      const newVideoSegments = prev.videoSegments.filter(
+        (s) => s.id !== segmentId,
+      );
 
       // Re-calculate start times magnetically
       let currentStartTime = 0;
@@ -741,7 +795,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     if (!project.video) return false;
     // Basic verification
     const matches =
-      file.name === project.video.name || Math.abs(file.size - project.video.size) < 1024;
+      file.name === project.video.name ||
+      Math.abs(file.size - project.video.size) < 1024;
     if (matches) {
       const blobUrl = URL.createObjectURL(file);
       setProject((prev) => {
@@ -760,12 +815,15 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     const asset = project.audioAssets.find((a) => a.id === assetId);
     if (!asset) return false;
 
-    const matches = file.name === asset.name || Math.abs(file.size - asset.size) < 1024;
+    const matches =
+      file.name === asset.name || Math.abs(file.size - asset.size) < 1024;
     if (matches) {
       const blobUrl = URL.createObjectURL(file);
       setProject((prev) => ({
         ...prev,
-        audioAssets: prev.audioAssets.map((a) => (a.id === assetId ? { ...a, blobUrl } : a)),
+        audioAssets: prev.audioAssets.map((a) =>
+          a.id === assetId ? { ...a, blobUrl } : a,
+        ),
       }));
       return true;
     }
@@ -774,10 +832,10 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // Text state functions
 
-  const addTextCue = (cue: Omit<TextCue, 'id' | 'origin'>) => {
+  const addTextCue = (cue: Omit<TextCue, "id" | "origin">) => {
     const newCue: TextCue = {
       id: crypto.randomUUID(),
-      origin: 'manual',
+      origin: "manual",
       base: cue.base,
       overrides: cue.overrides || {},
     };
@@ -792,14 +850,14 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     id: string,
     updates: Partial<
       Pick<
-        TextCue['base'],
-        | 'startTime'
-        | 'duration'
-        | 'stringKey'
-        | 'horizontalAlign'
-        | 'verticalAlign'
-        | 'color'
-        | 'fontSize'
+        TextCue["base"],
+        | "startTime"
+        | "duration"
+        | "stringKey"
+        | "horizontalAlign"
+        | "verticalAlign"
+        | "color"
+        | "fontSize"
       >
     > & { overridesOnly?: boolean },
   ) => {
@@ -861,7 +919,11 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     }));
   };
 
-  const injectCatalogEntry = (locale: LocaleCode, key: string, value: string): boolean => {
+  const injectCatalogEntry = (
+    locale: LocaleCode,
+    key: string,
+    value: string,
+  ): boolean => {
     if (!locale) return false;
 
     setTextState((prev) => {
@@ -937,7 +999,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 export const useProject = () => {
   const context = useContext(ProjectContext);
   if (context === undefined) {
-    throw new Error('useProject must be used within a ProjectProvider');
+    throw new Error("useProject must be used within a ProjectProvider");
   }
   return context;
 };

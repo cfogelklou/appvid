@@ -1,5 +1,5 @@
-import { ProjectProvider } from './context/ProjectContext';
-import { AppShell } from './components/AppShell';
+import { ProjectProvider } from "./context/ProjectContext";
+import { AppShell } from "./components/AppShell";
 
 function App() {
   return (

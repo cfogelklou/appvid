@@ -322,6 +322,7 @@ export const VideoPreview: React.FC = () => {
                 className='preview-video'
                 src={project.video!.blobUrl}
                 playsInline
+                muted={project.settings.originalAudioMode === 'mute'}
                 preload='auto'
               />
               {/* Text Overlay Container */}

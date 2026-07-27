@@ -398,37 +398,39 @@ export const ExportSettingsSheet: React.FC<ExportSettingsSheetProps> = ({
             </p>
           </div>
 
-          {/* Original Audio Setting */}
-          <div className="sheet-section">
-            <span className="sheet-section-title">Original Video Audio</span>
-            <div className="segmented-control">
-              <button
-                type="button"
-                className={`segment-btn ${settings.originalAudioMode === "keep" ? "active" : ""}`}
-                onClick={() => handleAudioModeChange("keep")}
+          {/* Original Audio Setting (only when audio is embedded in video file) */}
+          {settings.audioSeparationMode === "embedded" && (
+            <div className="sheet-section">
+              <span className="sheet-section-title">Original Video Audio</span>
+              <div className="segmented-control">
+                <button
+                  type="button"
+                  className={`segment-btn ${settings.originalAudioMode === "keep" ? "active" : ""}`}
+                  onClick={() => handleAudioModeChange("keep")}
+                >
+                  Keep Embedded Audio
+                </button>
+                <button
+                  type="button"
+                  className={`segment-btn ${settings.originalAudioMode === "mute" ? "active" : ""}`}
+                  onClick={() => handleAudioModeChange("mute")}
+                >
+                  Mute Embedded Audio
+                </button>
+              </div>
+              <p
+                style={{
+                  margin: "4px 0 0 0",
+                  fontSize: "0.8rem",
+                  color: "var(--color-text-secondary)",
+                }}
               >
-                Keep Original Audio
-              </button>
-              <button
-                type="button"
-                className={`segment-btn ${settings.originalAudioMode === "mute" ? "active" : ""}`}
-                onClick={() => handleAudioModeChange("mute")}
-              >
-                Mute Original Audio
-              </button>
+                {settings.originalAudioMode === "keep"
+                  ? "The original embedded audio in the video file will play in the background."
+                  : "The embedded audio in the video file will be silenced."}
+              </p>
             </div>
-            <p
-              style={{
-                margin: "4px 0 0 0",
-                fontSize: "0.8rem",
-                color: "var(--color-text-secondary)",
-              }}
-            >
-              {settings.originalAudioMode === "keep"
-                ? "The original recording audio will play in the background under placed clips."
-                : "The original audio from the video is silenced. Only placed audio clips will play."}
-            </p>
-          </div>
+          )}
 
           {/* Quality Indicator */}
           <div className="sheet-section">

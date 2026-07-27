@@ -18,6 +18,8 @@ export const VideoMetadataPanel: React.FC<VideoMetadataPanelProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [separateAudio, setSeparateAudio] = useState(true);
+
   // Local metadata parsed from a new file
   const [parsedMetadata, setParsedMetadata] = useState<{
     width: number;
@@ -89,6 +91,7 @@ export const VideoMetadataPanel: React.FC<VideoMetadataPanelProps> = ({
       height: parsedMetadata.height,
       aspectRatio: parsedMetadata.aspectRatio,
       file,
+      separateAudio,
     });
 
     if (onImportComplete) {
@@ -247,39 +250,126 @@ export const VideoMetadataPanel: React.FC<VideoMetadataPanelProps> = ({
       )}
 
       {isNewFile && (
-        <div
-          className="metadata-actions"
-          style={{ display: "flex", gap: "12px", marginTop: "24px" }}
-        >
-          {onCancel && (
-            <button
-              className="btn-secondary"
-              type="button"
-              onClick={onCancel}
+        <>
+          <div
+            className="audio-handling-selector"
+            style={{
+              marginTop: "20px",
+              paddingTop: "16px",
+              borderTop: "1px solid var(--color-border)",
+            }}
+          >
+            <span
+              className="metadata-label"
+              style={{ display: "block", marginBottom: "8px" }}
+            >
+              Audio Handling
+            </span>
+            <div
               style={{
-                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px",
+              }}
+            >
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "10px",
+                  cursor: "pointer",
+                  fontSize: "0.88rem",
+                }}
+              >
+                <input
+                  type="radio"
+                  name="audioHandling"
+                  checked={separateAudio}
+                  onChange={() => setSeparateAudio(true)}
+                  style={{ marginTop: "3px" }}
+                />
+                <div>
+                  <strong>Separate Audio Track (Recommended)</strong>
+                  <div
+                    style={{
+                      color: "var(--color-text-secondary)",
+                      fontSize: "0.8rem",
+                      marginTop: "2px",
+                    }}
+                  >
+                    Extracts video audio onto the timeline so you can edit,
+                    trim, or delete it independently. The base video will be
+                    muted.
+                  </div>
+                </div>
+              </label>
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "10px",
+                  cursor: "pointer",
+                  fontSize: "0.88rem",
+                }}
+              >
+                <input
+                  type="radio"
+                  name="audioHandling"
+                  checked={!separateAudio}
+                  onChange={() => setSeparateAudio(false)}
+                  style={{ marginTop: "3px" }}
+                />
+                <div>
+                  <strong>Keep Embedded Audio</strong>
+                  <div
+                    style={{
+                      color: "var(--color-text-secondary)",
+                      fontSize: "0.8rem",
+                      marginTop: "2px",
+                    }}
+                  >
+                    Keeps audio built directly inside the video file. Cannot be
+                    trimmed or deleted on the timeline.
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div
+            className="metadata-actions"
+            style={{ display: "flex", gap: "12px", marginTop: "24px" }}
+          >
+            {onCancel && (
+              <button
+                className="btn-secondary"
+                type="button"
+                onClick={onCancel}
+                style={{
+                  flex: 1,
+                  padding: "10px 16px",
+                  fontSize: "0.9rem",
+                  width: "auto",
+                }}
+              >
+                Cancel
+              </button>
+            )}
+            <button
+              className="btn-primary"
+              type="button"
+              onClick={handleConfirmImport}
+              style={{
+                flex: 1.5,
                 padding: "10px 16px",
                 fontSize: "0.9rem",
                 width: "auto",
               }}
             >
-              Cancel
+              Confirm & Import Video
             </button>
-          )}
-          <button
-            className="btn-primary"
-            type="button"
-            onClick={handleConfirmImport}
-            style={{
-              flex: 1.5,
-              padding: "10px 16px",
-              fontSize: "0.9rem",
-              width: "auto",
-            }}
-          >
-            Confirm & Import Video
-          </button>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

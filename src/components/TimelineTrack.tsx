@@ -80,12 +80,23 @@ export const TimelineTrack: React.FC<TimelineTrackProps> = ({
         />
       ))}
 
-      {/* Empty State */}
-      {project.segments.length === 0 && (
-        <div className="timeline-empty-message">
-          No audio clips placed. Add audio clips from the asset panel to start.
+      {/* Embedded Audio Status Pill */}
+      {project.settings.audioSeparationMode === "embedded" && project.video && (
+        <div className="embedded-audio-notice-pill">
+          <span>
+            ℹ Embedded Video Audio — Sound plays directly from video file
+          </span>
         </div>
       )}
+
+      {/* Empty State */}
+      {project.segments.length === 0 &&
+        project.settings.audioSeparationMode !== "embedded" && (
+          <div className="timeline-empty-message">
+            No audio clips placed. Add audio clips from the asset panel to
+            start.
+          </div>
+        )}
     </div>
   );
 };

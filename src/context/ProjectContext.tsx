@@ -43,7 +43,10 @@ interface ProjectContextType {
   setSelectedSegmentId: (id: string | null) => void;
   setSelectedVideoSegmentId: (id: string | null) => void;
   importVideo: (
-    video: Omit<VideoAssetMetadata, "blobUrl"> & { file: File },
+    video: Omit<VideoAssetMetadata, "blobUrl"> & {
+      file: File;
+      separateAudio?: boolean;
+    },
   ) => void;
   importAudio: (file: File, duration: number, peaks?: number[]) => void;
   removeAudio: (assetId: string) => void;
@@ -196,11 +199,13 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const importVideo = (
-    videoData: Omit<VideoAssetMetadata, "blobUrl"> & { file: File },
+    videoData: Omit<VideoAssetMetadata, "blobUrl"> & {
+      file: File;
+      separateAudio?: boolean;
+    },
   ) => {
+    const shouldSeparate = videoData.separateAudio ?? true;
     const blobUrl = URL.createObjectURL(videoData.file);
-    // Autodetect orientation from source dimensions so the editor frame and
-    // export default match the video (portrait vs landscape).
     const orientedPreset =
       STORE_PRESETS.find(
         (p) =>
@@ -257,12 +262,18 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
           presetId: orientedPreset.id,
           width: orientedPreset.width,
           height: orientedPreset.height,
+          audioSeparationMode: (shouldSeparate ? "separated" : "embedded") as
+            "separated" | "embedded",
+          originalAudioMode: (shouldSeparate ? "mute" : "keep") as
+            "mute" | "keep",
         },
         updatedAt: Date.now(),
       };
       return updated;
     });
     setPlayheadState(0);
+
+    if (!shouldSeparate) return;
 
     // Asynchronously extract original audio track if it exists
     extractAudioTrack(videoData.file)

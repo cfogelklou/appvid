@@ -139,10 +139,12 @@ export class PreviewPlayer {
     if (!this.video) return;
     const targetRate = this.getTargetPlaybackRate();
 
-    // Mute the video element if playing at a high speed to bypass Safari's 2.0x cap
-    const originalAudioMode = this.project?.settings.originalAudioMode;
+    const originalAudioMode = this.project?.settings?.originalAudioMode;
+    const separationMode = this.project?.settings?.audioSeparationMode;
+    const isSeparated = separationMode === "separated";
+
     const shouldMuteVideoElement =
-      targetRate > 2.0 || originalAudioMode === "mute";
+      targetRate > 2.0 || isSeparated || originalAudioMode === "mute";
     if (this.video.muted !== shouldMuteVideoElement) {
       this.video.muted = shouldMuteVideoElement;
     }

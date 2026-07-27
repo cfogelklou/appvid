@@ -240,7 +240,10 @@ export async function processVideo(
     };
 
     // Check if we should keep original audio
-    if (project.settings.originalAudioMode === "keep" && hasAudio) {
+    const isSeparated = project.settings.audioSeparationMode === "separated";
+    const keepOriginalAudio =
+      !isSeparated && project.settings.originalAudioMode === "keep";
+    if (keepOriginalAudio && hasAudio) {
       let origAudioLabel = "";
       if (segments.length === 1) {
         const S = segments[0];
@@ -625,7 +628,10 @@ export async function renderVideo(
     };
 
     // Check if we should keep original audio
-    if (project.settings.originalAudioMode === "keep" && hasAudio) {
+    const isSeparated = project.settings.audioSeparationMode === "separated";
+    const keepOriginalAudio =
+      !isSeparated && project.settings.originalAudioMode === "keep";
+    if (keepOriginalAudio && hasAudio) {
       let origAudioLabel = "";
       if (segments.length === 1) {
         const S = segments[0];

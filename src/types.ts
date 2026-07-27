@@ -41,6 +41,7 @@ export interface ExportSettings {
   height: number;
   fitMode: "fit" | "fill";
   originalAudioMode: "keep" | "mute";
+  audioSeparationMode?: "separated" | "embedded" | "none";
   quality: "high";
 }
 

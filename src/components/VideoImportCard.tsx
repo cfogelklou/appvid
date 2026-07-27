@@ -57,7 +57,6 @@ export const VideoImportCard: React.FC<VideoImportCardProps> = ({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={handleZoneClick}
       >
         <input
           type="file"
@@ -87,14 +86,15 @@ export const VideoImportCard: React.FC<VideoImportCardProps> = ({
 
         <h3 className="import-title">Import Screen Recording</h3>
         <p className="import-subtitle">
-          Drag & drop your mobile screen recording here, or click to browse
-          files.
+          Drag & drop your mobile screen recording here, or click the button
+          below to browse files.
         </p>
         <button
-          className="btn-secondary"
+          className="btn-primary"
           type="button"
+          onClick={handleZoneClick}
           style={{
-            maxWidth: "160px",
+            maxWidth: "180px",
             marginTop: "16px",
             padding: "10px 24px",
             fontSize: "0.85rem",

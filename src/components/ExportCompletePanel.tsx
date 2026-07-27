@@ -17,6 +17,7 @@ interface ExportCompletePanelProps {
   // For single video export (existing behavior)
   outputBlob?: Blob;
   onSingleClose?: () => void;
+  onSwitchStoreAndExport?: (targetPresetId: string) => void;
 
   // For batch export (new behavior)
   batchItems?: BatchRecoveryItem[];
@@ -39,6 +40,7 @@ const statusConfig = {
 export const ExportCompletePanel: React.FC<ExportCompletePanelProps> = ({
   outputBlob,
   onSingleClose,
+  onSwitchStoreAndExport,
   batchItems,
   onDownloadSingle,
   onDownloadAll,
@@ -54,6 +56,7 @@ export const ExportCompletePanel: React.FC<ExportCompletePanelProps> = ({
       <SingleExportComplete
         outputBlob={outputBlob}
         onClose={onSingleClose || (() => {})}
+        onSwitchStoreAndExport={onSwitchStoreAndExport}
       />
     );
   }
@@ -158,11 +161,35 @@ export const ExportCompletePanel: React.FC<ExportCompletePanelProps> = ({
 const SingleExportComplete: React.FC<{
   outputBlob: Blob;
   onClose: () => void;
-}> = ({ outputBlob, onClose }) => {
+  onSwitchStoreAndExport?: (targetPresetId: string) => void;
+}> = ({ outputBlob, onClose, onSwitchStoreAndExport }) => {
   const { activePreset } = useProject();
   // The exported video is rendered at the preset dimensions, so mirror that
   // aspect ratio onto the preview container to avoid letterboxing/collapse.
   const presetAspectRatio = activePreset.width / activePreset.height;
+
+  let counterpart: { id: string; label: string } | null = null;
+  if (activePreset.id === "appstore-portrait") {
+    counterpart = {
+      id: "google-play-portrait",
+      label: "Google Play (1080x1920)",
+    };
+  } else if (activePreset.id === "google-play-portrait") {
+    counterpart = {
+      id: "appstore-portrait",
+      label: "App Store (886x1920)",
+    };
+  } else if (activePreset.id === "appstore-landscape") {
+    counterpart = {
+      id: "google-play-landscape",
+      label: "Google Play (1920x1080)",
+    };
+  } else if (activePreset.id === "google-play-landscape") {
+    counterpart = {
+      id: "appstore-landscape",
+      label: "App Store (1920x886)",
+    };
+  }
 
   const [blobUrl, setBlobUrl] = React.useState<string>("");
   const [canShare, setCanShare] = React.useState<boolean>(false);
@@ -310,6 +337,25 @@ const SingleExportComplete: React.FC<{
                 >
                   <Share2 size={16} />
                   Share Video
+                </button>
+              )}
+
+              {counterpart && onSwitchStoreAndExport && (
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => onSwitchStoreAndExport(counterpart.id)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    borderColor: "var(--color-primary)",
+                    color: "var(--color-primary)",
+                  }}
+                >
+                  <RotateCcw size={16} />
+                  <span>Switch to {counterpart.label} & Export</span>
                 </button>
               )}
 

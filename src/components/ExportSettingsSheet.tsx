@@ -327,12 +327,27 @@ export const ExportSettingsSheet: React.FC<ExportSettingsSheetProps> = ({
               value={settings.presetId}
               onChange={handlePresetChange}
             >
-              {STORE_PRESETS.map((preset) => (
-                <option key={preset.id} value={preset.id}>
-                  {preset.name} ({preset.width}x{preset.height})
-                </option>
-              ))}
-              <option value="custom">Custom Dimensions</option>
+              <optgroup label="Apple App Store (iOS)">
+                {STORE_PRESETS.filter((p) => p.platform === "ios").map(
+                  (preset) => (
+                    <option key={preset.id} value={preset.id}>
+                      {preset.name} ({preset.width}x{preset.height})
+                    </option>
+                  ),
+                )}
+              </optgroup>
+              <optgroup label="Google Play Store (Android)">
+                {STORE_PRESETS.filter((p) => p.platform === "android").map(
+                  (preset) => (
+                    <option key={preset.id} value={preset.id}>
+                      {preset.name} ({preset.width}x{preset.height})
+                    </option>
+                  ),
+                )}
+              </optgroup>
+              <optgroup label="Custom">
+                <option value="custom">Custom Dimensions</option>
+              </optgroup>
             </select>
 
             {/* Custom dimensions if 'custom' selected */}

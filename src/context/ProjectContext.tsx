@@ -206,12 +206,12 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
   ) => {
     const shouldSeparate = videoData.separateAudio ?? true;
     const blobUrl = URL.createObjectURL(videoData.file);
+    const targetPresetId =
+      videoData.width > videoData.height
+        ? "appstore-landscape"
+        : "appstore-portrait";
     const orientedPreset =
-      STORE_PRESETS.find(
-        (p) =>
-          p.id ===
-          (videoData.width > videoData.height ? "landscape" : "portrait"),
-      ) || STORE_PRESETS[0];
+      STORE_PRESETS.find((p) => p.id === targetPresetId) || STORE_PRESETS[0];
     setProject((prev) => {
       // Clean up previous video URL to avoid memory leaks
       if (prev.video) {

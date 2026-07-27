@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useProject } from "../context/ProjectContext";
+import { STORE_PRESETS } from "../constants";
 import { TopBar } from "./TopBar";
 import { EditorWorkspace } from "./EditorWorkspace";
 import { VideoImportCard } from "./VideoImportCard";
@@ -30,8 +31,15 @@ import {
 import "./components.css";
 
 export const AppShell: React.FC = () => {
-  const { project, hasDraft, restoreDraft, batchItems, setBatchItems, text } =
-    useProject();
+  const {
+    project,
+    hasDraft,
+    restoreDraft,
+    batchItems,
+    setBatchItems,
+    text,
+    updateSettings,
+  } = useProject();
 
   // Dialog / overlay states
   const [isExportSettingsOpen, setIsExportSettingsOpen] = useState(false);
@@ -168,6 +176,79 @@ export const AppShell: React.FC = () => {
         error.message !== "Export cancelled by user"
       ) {
         console.error("Text export failed:", error);
+        alert(
+          `Export failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    } finally {
+      setIsProcessing(false);
+      abortControllerRef.current = null;
+    }
+  };
+
+  const handleSwitchStoreAndExport = async (targetPresetId: string) => {
+    const preset = STORE_PRESETS.find((p) => p.id === targetPresetId);
+    if (!preset) return;
+
+    setExportBlob(null);
+
+    updateSettings({
+      presetId: preset.id,
+      width: preset.width,
+      height: preset.height,
+    });
+
+    const updatedProject = {
+      ...project,
+      settings: {
+        ...project.settings,
+        presetId: preset.id,
+        width: preset.width,
+        height: preset.height,
+      },
+    };
+
+    const locale = text.previewLocale || "en";
+    const catalog = text.catalogs[locale];
+    const frame = { width: preset.width, height: preset.height };
+    const measure = createCanvasMeasurer();
+    const cueLayouts = catalog
+      ? text.cues.map((cue) =>
+          layoutCue({ cue, locale, catalog, frame, measure }),
+        )
+      : [];
+
+    setIsProcessing(true);
+    setExportProgress(0);
+    setExportStage(`Rendering for ${preset.name}...`);
+    setExportLogs([]);
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    try {
+      const output = await renderVideo(
+        updatedProject,
+        {
+          locale,
+          textOverlays: cueLayouts,
+          signal: controller.signal,
+        },
+        {
+          onProgress: ({ stage, progress }) => {
+            setExportStage(stage);
+            setExportProgress(progress);
+          },
+          onLog: (log) => setExportLogs((previous) => [...previous, log]),
+        },
+      );
+      setExportBlob(output);
+    } catch (error: unknown) {
+      if (
+        !(error instanceof Error) ||
+        error.message !== "Export cancelled by user"
+      ) {
+        console.error("Store switch export failed:", error);
         alert(
           `Export failed: ${error instanceof Error ? error.message : String(error)}`,
         );
@@ -499,6 +580,7 @@ export const AppShell: React.FC = () => {
         <ExportCompletePanel
           outputBlob={exportBlob}
           onSingleClose={() => setExportBlob(null)}
+          onSwitchStoreAndExport={handleSwitchStoreAndExport}
         />
       )}
     </div>

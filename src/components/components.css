@@ -955,13 +955,6 @@
   overflow: hidden;
 }
 
-.app-main-layout {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
 .landing-product-image {
   display: block;
   width: min(220px, 42vw);
@@ -973,13 +966,6 @@
   object-fit: cover;
   object-position: center top;
 }
-
-.ad-banner-wrapper {
-  flex-shrink: 0;
-}
-
-.ad-banner-desktop {
-  display: none;
 }
 
 .top-bar {
@@ -998,30 +984,6 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-}
-
-@media (min-width: 1024px) {
-  .app-main-layout {
-    flex-direction: row;
-  }
-
-  .app-content {
-    flex: 1;
-  }
-
-  .ad-banner-wrapper {
-    width: 160px;
-    align-self: stretch;
-  }
-
-  .ad-banner-mobile {
-    display: none;
-  }
-
-  .ad-banner-desktop {
-    display: block;
-    height: 100%;
-  }
 }
 
 .editor-workspace {

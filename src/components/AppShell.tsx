@@ -13,7 +13,6 @@ import {
   type ProcessLog,
 } from "../utils/ffmpegEngine";
 import { Sparkles, Shield, MonitorPlay, Save, RotateCcw } from "lucide-react";
-import { AdBanner } from "./AdBanner";
 import type {
   BatchItemStatus,
   LaidOutTextCue,
@@ -365,130 +364,119 @@ export const AppShell: React.FC = () => {
     <div className="app-shell zinc-theme">
       <TopBar onOpenExportSettings={handleStartExport} />
 
-      <div className="app-main-layout">
-        <main className="app-content">
-          {!project.video ? (
-            // Landing & Entry Screen
-            <div className="landing-screen">
-              <div className="landing-hero">
-                <img
-                  className="landing-product-image"
-                  src="/appvid/images/appvid-feature.png"
-                  alt="AppVid preview editor with a smartphone mockup and video timeline"
-                />
-                <div className="hero-badge">
-                  <Sparkles size={14} />
-                  <span>100% Local Browser Engine</span>
-                </div>
-                <h1 className="landing-title">AppVid</h1>
-                <p className="landing-tagline">
-                  Create app preview videos locally.
-                </p>
-                <p className="landing-trust-note">
-                  <Shield size={14} />
-                  <span>
-                    No uploads. No accounts. Your files never leave your
-                    browser.
-                  </span>
-                </p>
+      <main className="app-content">
+        {!project.video ? (
+          // Landing & Entry Screen
+          <div className="landing-screen">
+            <div className="landing-hero">
+              <img
+                className="landing-product-image"
+                src="/appvid/images/appvid-feature.png"
+                alt="AppVid preview editor with a smartphone mockup and video timeline"
+              />
+              <div className="hero-badge">
+                <Sparkles size={14} />
+                <span>100% Local Browser Engine</span>
+              </div>
+              <h1 className="landing-title">AppVid</h1>
+              <p className="landing-tagline">
+                Create app preview videos locally.
+              </p>
+              <p className="landing-trust-note">
+                <Shield size={14} />
+                <span>
+                  No uploads. No accounts. Your files never leave your
+                  browser.
+                </span>
+              </p>
+            </div>
+
+            <div className="landing-grid">
+              <div className="landing-main-card">
+                {selectedFile ? (
+                  <VideoMetadataPanel
+                    file={selectedFile}
+                    onCancel={() => setSelectedFile(null)}
+                    onImportComplete={() => setSelectedFile(null)}
+                  />
+                ) : (
+                  <>
+                    <h2 className="card-section-title">
+                      1. Import Screen Recording
+                    </h2>
+                    <VideoImportCard
+                      onFileSelected={(file) => setSelectedFile(file)}
+                    />
+                  </>
+                )}
               </div>
 
-              <div className="landing-grid">
-                <div className="landing-main-card">
-                  {selectedFile ? (
-                    <VideoMetadataPanel
-                      file={selectedFile}
-                      onCancel={() => setSelectedFile(null)}
-                      onImportComplete={() => setSelectedFile(null)}
-                    />
-                  ) : (
-                    <>
-                      <h2 className="card-section-title">
-                        1. Import Screen Recording
-                      </h2>
-                      <VideoImportCard
-                        onFileSelected={(file) => setSelectedFile(file)}
-                      />
-                    </>
-                  )}
-                </div>
-
-                <div className="landing-side-cards">
-                  {hasDraft && (
-                    <div className="landing-side-card restore-card">
-                      <div className="card-icon-header">
-                        <Save size={18} />
-                        <h3>Restore Draft</h3>
-                      </div>
-                      <p>
-                        You have a saved project draft in local storage. Click
-                        below to reload the timeline.
-                      </p>
-                      <button
-                        className="btn btn-secondary btn-full"
-                        onClick={restoreDraft}
-                      >
-                        Restore Last Session
-                      </button>
-                    </div>
-                  )}
-
-                  <div className="landing-side-card guidance-card">
+              <div className="landing-side-cards">
+                {hasDraft && (
+                  <div className="landing-side-card restore-card">
                     <div className="card-icon-header">
-                      <MonitorPlay size={18} />
-                      <h3>Getting Started</h3>
+                      <Save size={18} />
+                      <h3>Restore Draft</h3>
                     </div>
-                    <ul className="guidance-list">
-                      <li>
-                        Supports portrait-mode MP4 or MOV screen recordings.
-                      </li>
-                      <li>
-                        Designed to export exact aspect-ratios for App Store &
-                        Play Store.
-                      </li>
-                      <li>
-                        Audio clips can be placed at specific playhead times.
-                      </li>
-                      <li>
-                        High-quality offline exports can take a few minutes.
-                      </li>
-                      <li>Keep the browser tab open during encoding.</li>
-                    </ul>
+                    <p>
+                      You have a saved project draft in local storage. Click
+                      below to reload the timeline.
+                    </p>
+                    <button
+                      className="btn btn-secondary btn-full"
+                      onClick={restoreDraft}
+                    >
+                      Restore Last Session
+                    </button>
                   </div>
+                )}
+
+                <div className="landing-side-card guidance-card">
+                  <div className="card-icon-header">
+                    <MonitorPlay size={18} />
+                    <h3>Getting Started</h3>
+                  </div>
+                  <ul className="guidance-list">
+                    <li>
+                      Supports portrait-mode MP4 or MOV screen recordings.
+                    </li>
+                    <li>
+                      Designed to export exact aspect-ratios for App Store &
+                      Play Store.
+                    </li>
+                    <li>
+                      Audio clips can be placed at specific playhead times.
+                    </li>
+                    <li>
+                      High-quality offline exports can take a few minutes.
+                    </li>
+                    <li>Keep the browser tab open during encoding.</li>
+                  </ul>
                 </div>
               </div>
             </div>
-          ) : (
-            <>
-              {batchItems.some(
-                (item) =>
-                  item.status === "failed" || item.status === "cancelled",
-              ) && (
-                <div className="batch-recovery-banner">
-                  <span>An export was interrupted.</span>
-                  <button
-                    className="btn btn-secondary btn-sm"
-                    onClick={handleResumeBatchExport}
-                  >
-                    <RotateCcw size={14} />
-                    Resume Export
-                  </button>
-                </div>
-              )}
-              <EditorWorkspace />
-            </>
-          )}
-        </main>
-
-        <aside className="ad-banner-wrapper" aria-label="Advertisement">
-          <div className="ad-banner-mobile">
-            <AdBanner orientation="portrait" height={90} width={1200} />
           </div>
-          <div className="ad-banner-desktop">
-            <AdBanner orientation="landscape" height={0} width={160} />
-          </div>
-        </aside>
-      </div>
+        ) : (
+          <>
+            {batchItems.some(
+              (item) =>
+                item.status === "failed" || item.status === "cancelled",
+            ) && (
+              <div className="batch-recovery-banner">
+                <span>An export was interrupted.</span>
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={handleResumeBatchExport}
+                >
+                  <RotateCcw size={14} />
+                  Resume Export
+                </button>
+              </div>
+            )}
+            <EditorWorkspace />
+          </>
+        )}
+      </main>
 
       {/* Export Settings Dialog */}
       <ExportSettingsSheet

@@ -385,8 +385,7 @@ export const AppShell: React.FC = () => {
               <p className="landing-trust-note">
                 <Shield size={14} />
                 <span>
-                  No uploads. No accounts. Your files never leave your
-                  browser.
+                  No uploads. No accounts. Your files never leave your browser.
                 </span>
               </p>
             </div>
@@ -459,8 +458,7 @@ export const AppShell: React.FC = () => {
         ) : (
           <>
             {batchItems.some(
-              (item) =>
-                item.status === "failed" || item.status === "cancelled",
+              (item) => item.status === "failed" || item.status === "cancelled",
             ) && (
               <div className="batch-recovery-banner">
                 <span>An export was interrupted.</span>

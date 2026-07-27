@@ -616,6 +616,25 @@
   font-size: 0.85rem;
 }
 
+.help-tooltip-icon {
+  opacity: 0.65;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.help-tooltip-icon:hover {
+  opacity: 1;
+  color: var(--color-primary);
+}
+
+.btn-link-subtle {
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.btn-link-subtle:hover {
+  color: var(--color-primary) !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
 
 /* 2. Processing Overlay */
 .processing-backdrop {

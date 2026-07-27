@@ -8,6 +8,7 @@ import {
   XCircle,
   Download,
   Sparkles,
+  HelpCircle,
 } from "lucide-react";
 import type { LocaleCode } from "../text/types";
 import { defaultPreviewLocale } from "../text/localeValidation";
@@ -217,37 +218,36 @@ export const TextAssetPanel: React.FC = () => {
     <div className="text-asset-panel">
       {/* Add Text (primary, no files) */}
       <div className="panel-section">
-        <div className="panel-header">
-          <div className="panel-title">
+        <div className="panel-header" style={{ marginBottom: "12px" }}>
+          <div
+            className="panel-title"
+            style={{ display: "flex", alignItems: "center", gap: "6px" }}
+          >
             <FileText size={18} />
             <span>Add Text</span>
+            <span
+              className="help-tooltip-icon"
+              title="Type text to add it to your project, then place it on the timeline to show it in the video."
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                color: "var(--color-text-muted)",
+                cursor: "help",
+                marginLeft: "4px",
+              }}
+            >
+              <HelpCircle size={14} />
+            </span>
           </div>
         </div>
 
-        <p
-          className="asset-panel-hint"
-          style={{
-            fontSize: "11px",
-            color: "var(--color-text-secondary)",
-            marginBottom: "14px",
-            lineHeight: "1.4",
-            background: "rgba(255,255,255,0.03)",
-            padding: "8px 12px",
-            borderRadius: "6px",
-            border: "1px solid rgba(255,255,255,0.05)",
-          }}
-        >
-          💡 Type text to add it to your project, then place it on the timeline
-          to show it in the video.
-        </p>
-
         <form
           onSubmit={handleAddText}
-          style={{ display: "flex", gap: "8px", marginBottom: "10px" }}
+          style={{ display: "flex", gap: "8px", marginBottom: "6px" }}
         >
           <input
             type="text"
-            placeholder="Type text and press Enter…"
+            placeholder="Type text overlay and press Enter…"
             value={newTextValue}
             onChange={(e) => setNewTextValue(e.target.value)}
             style={{
@@ -255,9 +255,9 @@ export const TextAssetPanel: React.FC = () => {
               background: "var(--color-bg-card)",
               border: "1px solid var(--color-border)",
               color: "var(--color-text-primary)",
-              padding: "8px 10px",
+              padding: "9px 12px",
               borderRadius: "6px",
-              fontSize: "12px",
+              fontSize: "13px",
               fontFamily: "var(--font-sans)",
             }}
           />
@@ -265,7 +265,9 @@ export const TextAssetPanel: React.FC = () => {
             type="submit"
             className="btn btn-primary btn-sm"
             style={{
-              padding: "8px 12px",
+              width: "auto",
+              flexShrink: 0,
+              padding: "9px 14px",
               fontSize: "12px",
               whiteSpace: "nowrap",
             }}
@@ -275,14 +277,35 @@ export const TextAssetPanel: React.FC = () => {
           </button>
         </form>
 
-        <button
-          className="btn btn-secondary btn-sm"
-          onClick={handleAddExampleText}
-          style={{ width: "100%" }}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            marginTop: "4px",
+          }}
         >
-          <Sparkles size={14} />
-          <span>Add example text</span>
-        </button>
+          <button
+            type="button"
+            className="btn-link-subtle"
+            onClick={handleAddExampleText}
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--color-text-secondary)",
+              fontSize: "11px",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "4px",
+              cursor: "pointer",
+              padding: "2px 4px",
+              borderRadius: "4px",
+            }}
+            title="Load built-in sample text strings"
+          >
+            <Sparkles size={12} />
+            <span>Load example text</span>
+          </button>
+        </div>
       </div>
 
       {/* Locale Status List */}
@@ -533,10 +556,26 @@ export const TextAssetPanel: React.FC = () => {
 
       {/* Import / Export files (secondary) */}
       <div className="panel-section" style={{ marginTop: "20px" }}>
-        <div className="panel-header">
-          <div className="panel-title">
+        <div className="panel-header" style={{ marginBottom: "12px" }}>
+          <div
+            className="panel-title"
+            style={{ display: "flex", alignItems: "center", gap: "6px" }}
+          >
             <FileText size={18} />
             <span>Import / Export files</span>
+            <span
+              className="help-tooltip-icon"
+              title="Optional: import locale catalogs (en.json, sv.json) + timeline.json, or export your catalogs to translate them offline."
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                color: "var(--color-text-muted)",
+                cursor: "help",
+                marginLeft: "4px",
+              }}
+            >
+              <HelpCircle size={14} />
+            </span>
           </div>
           <button
             className="btn btn-secondary btn-sm"
@@ -554,19 +593,6 @@ export const TextAssetPanel: React.FC = () => {
             style={{ display: "none" }}
           />
         </div>
-
-        <p
-          className="asset-panel-hint"
-          style={{
-            fontSize: "11px",
-            color: "var(--color-text-secondary)",
-            marginBottom: "14px",
-            lineHeight: "1.4",
-          }}
-        >
-          Optional: import locale catalogs (en.json, sv.json) + timeline.json,
-          or export your catalogs to translate them offline.
-        </p>
 
         {/* Import Summary Table */}
         {importSummaries.length > 0 && (

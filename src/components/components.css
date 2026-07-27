@@ -609,6 +609,13 @@
   color: var(--color-text-primary);
 }
 
+.btn-sm {
+  width: auto;
+  flex-shrink: 0;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+
 
 /* 2. Processing Overlay */
 .processing-backdrop {

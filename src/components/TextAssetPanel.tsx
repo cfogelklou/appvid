@@ -511,6 +511,8 @@ export const TextAssetPanel: React.FC = () => {
                         className="btn btn-primary btn-sm"
                         onClick={() => handlePlaceAtPlayhead(key)}
                         style={{
+                          width: "auto",
+                          flexShrink: 0,
                           padding: "6px 10px",
                           fontSize: "11px",
                           whiteSpace: "nowrap",

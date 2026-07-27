@@ -34,6 +34,8 @@ interface IntervalClipProps {
   className?: string;
   /** Optional warning state. */
   warning?: boolean;
+  /** Optional context menu handler. */
+  onContextMenu?: (e: React.MouseEvent) => void;
 }
 
 export const IntervalClip: React.FC<IntervalClipProps> = ({
@@ -49,6 +51,7 @@ export const IntervalClip: React.FC<IntervalClipProps> = ({
   color,
   className = "",
   warning = false,
+  onContextMenu,
 }) => {
   const { project, zoom } = useProject();
   const clipRef = useRef<HTMLDivElement>(null);
@@ -205,6 +208,7 @@ export const IntervalClip: React.FC<IntervalClipProps> = ({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
+      onContextMenu={onContextMenu}
     >
       <div className="interval-clip-content">
         <div className="interval-clip-label">{label}</div>

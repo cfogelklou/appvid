@@ -39,7 +39,8 @@ export const Timeline: React.FC = () => {
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
-    segmentId: string;
+    type: "video" | "audio" | "text";
+    id: string;
   } | null>(null);
 
   // Close context menu on outside click
@@ -156,6 +157,7 @@ export const Timeline: React.FC = () => {
     segId: string,
   ) => {
     e.preventDefault();
+    e.stopPropagation();
     setSelectedVideoSegmentId(segId);
     setSelectedSegmentId(null);
 
@@ -168,7 +170,49 @@ export const Timeline: React.FC = () => {
     setContextMenu({
       x,
       y,
-      segmentId: segId,
+      type: "video",
+      id: segId,
+    });
+  };
+
+  const handleAudioSegmentContextMenu = (
+    e: React.MouseEvent,
+    segId: string,
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedSegmentId(segId);
+    setSelectedVideoSegmentId(null);
+
+    const menuWidth = 160;
+    const menuHeight = 50;
+    const x = Math.min(e.clientX, window.innerWidth - menuWidth - 10);
+    const y = Math.min(e.clientY, window.innerHeight - menuHeight - 10);
+
+    setContextMenu({
+      x,
+      y,
+      type: "audio",
+      id: segId,
+    });
+  };
+
+  const handleTextCueContextMenu = (e: React.MouseEvent, cueId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedSegmentId(cueId);
+    setSelectedVideoSegmentId(null);
+
+    const menuWidth = 160;
+    const menuHeight = 50;
+    const x = Math.min(e.clientX, window.innerWidth - menuWidth - 10);
+    const y = Math.min(e.clientY, window.innerHeight - menuHeight - 10);
+
+    setContextMenu({
+      x,
+      y,
+      type: "text",
+      id: cueId,
     });
   };
 
@@ -318,6 +362,9 @@ export const Timeline: React.FC = () => {
                                 });
                               }
                             }}
+                            onContextMenu={(e) =>
+                              handleTextCueContextMenu(e, cue.id)
+                            }
                             lane={lane}
                             laneHeight={laneHeight}
                           />
@@ -341,7 +388,9 @@ export const Timeline: React.FC = () => {
               </div>
             )}
 
-            <TimelineTrack />
+            <TimelineTrack
+              onAudioSegmentContextMenu={handleAudioSegmentContextMenu}
+            />
           </div>
 
           <Playhead
@@ -351,47 +400,79 @@ export const Timeline: React.FC = () => {
         </div>
       </div>
 
-      {/* Context Menu for Video Segments */}
+      {/* Context Menu for Timeline Clips */}
       {contextMenu && (
         <div
           className="context-menu"
           style={{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }}
           onClick={(e) => e.stopPropagation()}
         >
-          <button
-            onClick={() => {
-              splitVideoSegment(contextMenu.segmentId, playhead);
-              setContextMenu(null);
-            }}
-          >
-            Split Clip at Playhead
-          </button>
-          <button
-            onClick={() => {
-              deleteVideoSegment(contextMenu.segmentId);
-              setContextMenu(null);
-            }}
-            disabled={
-              project.videoSegments && project.videoSegments.length <= 1
-            }
-          >
-            Delete Clip
-          </button>
-          <div className="context-menu-divider" />
-          <div className="context-menu-header">Set Speed</div>
-          <div className="speed-options-grid">
-            {[0.5, 1.0, 1.5, 2.0, 4.0, 8.0, 20.0].map((speed) => (
+          {contextMenu.type === "video" && (
+            <>
               <button
-                key={speed}
                 onClick={() => {
-                  updateVideoSegmentSpeed(contextMenu.segmentId, speed);
+                  splitVideoSegment(contextMenu.id, playhead);
                   setContextMenu(null);
                 }}
               >
-                {speed}x
+                Split Clip at Playhead
               </button>
-            ))}
-          </div>
+              <button
+                onClick={() => {
+                  deleteVideoSegment(contextMenu.id);
+                  setContextMenu(null);
+                }}
+                disabled={
+                  project.videoSegments && project.videoSegments.length <= 1
+                }
+              >
+                Delete Clip
+              </button>
+              <div className="context-menu-divider" />
+              <div className="context-menu-header">Set Speed</div>
+              <div className="speed-options-grid">
+                {[0.5, 1.0, 1.5, 2.0, 4.0, 8.0, 20.0].map((speed) => (
+                  <button
+                    key={speed}
+                    onClick={() => {
+                      updateVideoSegmentSpeed(contextMenu.id, speed);
+                      setContextMenu(null);
+                    }}
+                  >
+                    {speed}x
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {contextMenu.type === "audio" && (
+            <button
+              onClick={() => {
+                removeSegment(contextMenu.id);
+                if (selectedSegmentId === contextMenu.id) {
+                  setSelectedSegmentId(null);
+                }
+                setContextMenu(null);
+              }}
+            >
+              Delete Clip
+            </button>
+          )}
+
+          {contextMenu.type === "text" && (
+            <button
+              onClick={() => {
+                deleteTextCue(contextMenu.id);
+                if (selectedSegmentId === contextMenu.id) {
+                  setSelectedSegmentId(null);
+                }
+                setContextMenu(null);
+              }}
+            >
+              Delete Text Cue
+            </button>
+          )}
         </div>
       )}
     </div>

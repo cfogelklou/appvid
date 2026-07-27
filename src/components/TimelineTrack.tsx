@@ -8,7 +8,13 @@ interface PositionedSegment extends AudioSegmentType {
   lane: number;
 }
 
-export const TimelineTrack: React.FC = () => {
+interface TimelineTrackProps {
+  onAudioSegmentContextMenu?: (e: React.MouseEvent, segId: string) => void;
+}
+
+export const TimelineTrack: React.FC<TimelineTrackProps> = ({
+  onAudioSegmentContextMenu,
+}) => {
   const { project } = useProject();
 
   // Sort and assign lanes to segments to handle overlap / collision stacking
@@ -70,6 +76,7 @@ export const TimelineTrack: React.FC = () => {
           duration={seg.duration}
           lane={seg.lane}
           laneHeight={laneHeight}
+          onContextMenu={(e) => onAudioSegmentContextMenu?.(e, seg.id)}
         />
       ))}
 

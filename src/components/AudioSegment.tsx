@@ -10,6 +10,7 @@ interface AudioSegmentProps {
   duration: number;
   lane: number;
   laneHeight: number;
+  onContextMenu?: (e: React.MouseEvent) => void;
 }
 
 export const AudioSegment: React.FC<AudioSegmentProps> = ({
@@ -17,6 +18,7 @@ export const AudioSegment: React.FC<AudioSegmentProps> = ({
   duration,
   lane,
   laneHeight,
+  onContextMenu,
 }) => {
   const {
     project,
@@ -230,6 +232,7 @@ export const AudioSegment: React.FC<AudioSegmentProps> = ({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
+      onContextMenu={onContextMenu}
     >
       {renderWaveform()}
 

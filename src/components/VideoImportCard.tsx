@@ -87,7 +87,8 @@ export const VideoImportCard: React.FC<VideoImportCardProps> = ({
 
         <h3 className="import-title">Import Screen Recording</h3>
         <p className="import-subtitle">
-          Drag & drop your screen recording here, or click to browse files.
+          Drag & drop your mobile screen recording here, or click to browse
+          files.
         </p>
         <button
           className="btn-secondary"

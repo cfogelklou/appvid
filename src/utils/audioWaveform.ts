@@ -2,11 +2,15 @@
  * Decodes a File object to extract normalized audio amplitude peak values for rendering waveforms.
  * Falls back to generating a realistic pseudo-random envelope if decoding fails.
  */
-export const getAudioPeaks = async (file: File, sampleCount = 80): Promise<number[]> => {
+export const getAudioPeaks = async (
+  file: File,
+  sampleCount = 80,
+): Promise<number[]> => {
   try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    const AudioContextClass =
+      window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) {
-      throw new Error('AudioContext not supported in this browser');
+      throw new Error("AudioContext not supported in this browser");
     }
     const audioCtx = new AudioContextClass();
     let audioBuffer: AudioBuffer;
@@ -39,7 +43,10 @@ export const getAudioPeaks = async (file: File, sampleCount = 80): Promise<numbe
     const maxPeak = Math.max(...peaks, 0.01);
     return peaks.map((p) => Math.max(0.05, p / maxPeak));
   } catch (err) {
-    console.warn('Failed to decode audio peaks, using generated envelope:', err);
+    console.warn(
+      "Failed to decode audio peaks, using generated envelope:",
+      err,
+    );
     // Return pseudo-random peaks that look like a real audio clip (fade-in, dynamic body, fade-out)
     const fallbackPeaks: number[] = [];
     for (let i = 0; i < sampleCount; i++) {
@@ -58,7 +65,7 @@ export const getAudioPeaks = async (file: File, sampleCount = 80): Promise<numbe
  */
 export const getWavDuration = async (file: File): Promise<number | null> => {
   try {
-    if (!file.name.toLowerCase().endsWith('.wav')) {
+    if (!file.name.toLowerCase().endsWith(".wav")) {
       return null;
     }
 
@@ -102,7 +109,7 @@ export const getWavDuration = async (file: File): Promise<number | null> => {
     }
     return null;
   } catch (err) {
-    console.warn('Failed to parse WAV duration from header:', err);
+    console.warn("Failed to parse WAV duration from header:", err);
     return null;
   }
 };
@@ -127,13 +134,13 @@ function audioBufferToWav(buffer: AudioBuffer): Blob {
   const view = new DataView(bufferArr);
 
   /* RIFF identifier */
-  writeString(view, 0, 'RIFF');
+  writeString(view, 0, "RIFF");
   /* file length */
   view.setUint32(4, 36 + result.length * 2, true);
   /* RIFF type */
-  writeString(view, 8, 'WAVE');
+  writeString(view, 8, "WAVE");
   /* format chunk identifier */
-  writeString(view, 12, 'fmt ');
+  writeString(view, 12, "fmt ");
   /* format chunk length */
   view.setUint32(16, 16, true);
   /* sample format (raw) */
@@ -149,13 +156,13 @@ function audioBufferToWav(buffer: AudioBuffer): Blob {
   /* bits per sample */
   view.setUint16(34, bitDepth, true);
   /* data chunk identifier */
-  writeString(view, 36, 'data');
+  writeString(view, 36, "data");
   /* data chunk length */
   view.setUint32(40, result.length * 2, true);
 
   floatTo16BitPCM(view, 44, result);
 
-  return new Blob([view], { type: 'audio/wav' });
+  return new Blob([view], { type: "audio/wav" });
 }
 
 function interleave(inputL: Float32Array, inputR: Float32Array): Float32Array {
@@ -173,7 +180,11 @@ function interleave(inputL: Float32Array, inputR: Float32Array): Float32Array {
   return result;
 }
 
-function floatTo16BitPCM(output: DataView, offset: number, input: Float32Array) {
+function floatTo16BitPCM(
+  output: DataView,
+  offset: number,
+  input: Float32Array,
+) {
   for (let i = 0; i < input.length; i++, offset += 2) {
     const s = Math.max(-1, Math.min(1, input[i]));
     output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
@@ -194,7 +205,8 @@ export const extractAudioTrack = async (
   videoFile: File,
 ): Promise<{ file: File; duration: number; peaks: number[] } | null> => {
   try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    const AudioContextClass =
+      window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) {
       return null;
     }
@@ -215,7 +227,9 @@ export const extractAudioTrack = async (
 
     // Convert audioBuffer to WAV
     const wavBlob = audioBufferToWav(audioBuffer);
-    const wavFile = new File([wavBlob], 'original-audio.wav', { type: 'audio/wav' });
+    const wavFile = new File([wavBlob], "original-audio.wav", {
+      type: "audio/wav",
+    });
 
     // Generate peaks for waveform rendering
     const sampleCount = 80;
@@ -243,7 +257,7 @@ export const extractAudioTrack = async (
       peaks: normalizedPeaks,
     };
   } catch (err) {
-    console.warn('No audio track extracted or failed decoding:', err);
+    console.warn("No audio track extracted or failed decoding:", err);
     return null;
   }
 };

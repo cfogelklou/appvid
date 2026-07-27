@@ -52,6 +52,7 @@ async function runLayoutTest() {
         return document.documentElement.scrollWidth > window.innerWidth;
       });
 
+
       if (workspaceOverflowH) {
         console.error(`❌ FAIL: Editor workspace has horizontal overflow at ${vp.name}`);
         failed = true;

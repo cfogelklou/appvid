@@ -1,17 +1,25 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useProject } from '../context/ProjectContext';
-import { TopBar } from './TopBar';
-import { EditorWorkspace } from './EditorWorkspace';
-import { VideoImportCard } from './VideoImportCard';
-import { VideoMetadataPanel } from './VideoMetadataPanel';
-import { ExportSettingsSheet } from './ExportSettingsSheet';
-import { ProcessingOverlay } from './ProcessingOverlay';
-import { ExportCompletePanel } from './ExportCompletePanel';
-import { processVideo, renderVideo, type ProcessLog } from '../utils/ffmpegEngine';
-import { Sparkles, Shield, MonitorPlay, Save, RotateCcw } from 'lucide-react';
-import { AdBanner } from './AdBanner';
-import type { BatchItemStatus, LaidOutTextCue, LocaleCode } from '../text/types';
-import { layoutCue, createCanvasMeasurer } from '../text/textLayout';
+import React, { useState, useRef, useEffect } from "react";
+import { useProject } from "../context/ProjectContext";
+import { STORE_PRESETS } from "../constants";
+import { TopBar } from "./TopBar";
+import { EditorWorkspace } from "./EditorWorkspace";
+import { VideoImportCard } from "./VideoImportCard";
+import { VideoMetadataPanel } from "./VideoMetadataPanel";
+import { ExportSettingsSheet } from "./ExportSettingsSheet";
+import { ProcessingOverlay } from "./ProcessingOverlay";
+import { ExportCompletePanel } from "./ExportCompletePanel";
+import {
+  processVideo,
+  renderVideo,
+  type ProcessLog,
+} from "../utils/ffmpegEngine";
+import { Sparkles, Shield, MonitorPlay, Save, RotateCcw } from "lucide-react";
+import type {
+  BatchItemStatus,
+  LaidOutTextCue,
+  LocaleCode,
+} from "../text/types";
+import { layoutCue, createCanvasMeasurer } from "../text/textLayout";
 import {
   executeBatch,
   requestDirectoryHandle,
@@ -19,11 +27,19 @@ import {
   clearBatchRecovery,
   persistBatchRecovery,
   type BatchRecoveryItem,
-} from '../text/batchUtils';
-import './components.css';
+} from "../text/batchUtils";
+import "./components.css";
 
 export const AppShell: React.FC = () => {
-  const { project, hasDraft, restoreDraft, batchItems, setBatchItems, text } = useProject();
+  const {
+    project,
+    hasDraft,
+    restoreDraft,
+    batchItems,
+    setBatchItems,
+    text,
+    updateSettings,
+  } = useProject();
 
   // Dialog / overlay states
   const [isExportSettingsOpen, setIsExportSettingsOpen] = useState(false);
@@ -32,13 +48,14 @@ export const AppShell: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Progress states
-  const [exportStage, setExportStage] = useState('');
+  const [exportStage, setExportStage] = useState("");
   const [exportProgress, setExportProgress] = useState(0);
   const [exportLogs, setExportLogs] = useState<ProcessLog[]>([]);
 
   // Batch processing states
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
-  const [, setBatchDirectoryHandle] = useState<FileSystemDirectoryHandle | null>(null);
+  const [, setBatchDirectoryHandle] =
+    useState<FileSystemDirectoryHandle | null>(null);
 
   // Cancellation support
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -54,7 +71,7 @@ export const AppShell: React.FC = () => {
     const recoveryItems = loadBatchRecovery();
     if (recoveryItems.length > 0) {
       const hasIncomplete = recoveryItems.some(
-        (item) => item.status === 'failed' || item.status === 'cancelled',
+        (item) => item.status === "failed" || item.status === "cancelled",
       );
       if (hasIncomplete) {
         batchItemsRef.current = recoveryItems;
@@ -78,7 +95,7 @@ export const AppShell: React.FC = () => {
     setIsExportSettingsOpen(false);
     setIsProcessing(true);
     setExportProgress(0);
-    setExportStage('Initializing');
+    setExportStage("Initializing");
     setExportLogs([]);
     setExportBlob(null);
 
@@ -89,7 +106,9 @@ export const AppShell: React.FC = () => {
       const output = await processVideo(
         project,
         ({ stage, progress }) => {
-          console.log(`[Export Progress] ${stage}: ${(progress * 100).toFixed(0)}%`);
+          console.log(
+            `[Export Progress] ${stage}: ${(progress * 100).toFixed(0)}%`,
+          );
           setExportStage(stage);
           setExportProgress(progress);
         },
@@ -102,8 +121,8 @@ export const AppShell: React.FC = () => {
 
       setExportBlob(output);
     } catch (e: any) {
-      if (e.message !== 'Export cancelled by user') {
-        console.error('Export failed:', e);
+      if (e.message !== "Export cancelled by user") {
+        console.error("Export failed:", e);
         alert(`Export failed: ${e.message || e}`);
       }
     } finally {
@@ -127,7 +146,7 @@ export const AppShell: React.FC = () => {
     setIsExportSettingsOpen(false);
     setIsProcessing(true);
     setExportProgress(0);
-    setExportStage('Initializing');
+    setExportStage("Initializing");
     setExportLogs([]);
     setExportBlob(null);
 
@@ -137,7 +156,11 @@ export const AppShell: React.FC = () => {
     try {
       const output = await renderVideo(
         project,
-        { locale: item.locale, textOverlays: item.cueLayouts, signal: controller.signal },
+        {
+          locale: item.locale,
+          textOverlays: item.cueLayouts,
+          signal: controller.signal,
+        },
         {
           onProgress: ({ stage, progress }) => {
             setExportStage(stage);
@@ -148,9 +171,87 @@ export const AppShell: React.FC = () => {
       );
       setExportBlob(output);
     } catch (error: unknown) {
-      if (!(error instanceof Error) || error.message !== 'Export cancelled by user') {
-        console.error('Text export failed:', error);
-        alert(`Export failed: ${error instanceof Error ? error.message : String(error)}`);
+      if (
+        !(error instanceof Error) ||
+        error.message !== "Export cancelled by user"
+      ) {
+        console.error("Text export failed:", error);
+        alert(
+          `Export failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    } finally {
+      setIsProcessing(false);
+      abortControllerRef.current = null;
+    }
+  };
+
+  const handleSwitchStoreAndExport = async (targetPresetId: string) => {
+    const preset = STORE_PRESETS.find((p) => p.id === targetPresetId);
+    if (!preset) return;
+
+    setExportBlob(null);
+
+    updateSettings({
+      presetId: preset.id,
+      width: preset.width,
+      height: preset.height,
+    });
+
+    const updatedProject = {
+      ...project,
+      settings: {
+        ...project.settings,
+        presetId: preset.id,
+        width: preset.width,
+        height: preset.height,
+      },
+    };
+
+    const locale = text.previewLocale || "en";
+    const catalog = text.catalogs[locale];
+    const frame = { width: preset.width, height: preset.height };
+    const measure = createCanvasMeasurer();
+    const cueLayouts = catalog
+      ? text.cues.map((cue) =>
+          layoutCue({ cue, locale, catalog, frame, measure }),
+        )
+      : [];
+
+    setIsProcessing(true);
+    setExportProgress(0);
+    setExportStage(`Rendering for ${preset.name}...`);
+    setExportLogs([]);
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    try {
+      const output = await renderVideo(
+        updatedProject,
+        {
+          locale,
+          textOverlays: cueLayouts,
+          signal: controller.signal,
+        },
+        {
+          onProgress: ({ stage, progress }) => {
+            setExportStage(stage);
+            setExportProgress(progress);
+          },
+          onLog: (log) => setExportLogs((previous) => [...previous, log]),
+        },
+      );
+      setExportBlob(output);
+    } catch (error: unknown) {
+      if (
+        !(error instanceof Error) ||
+        error.message !== "Export cancelled by user"
+      ) {
+        console.error("Store switch export failed:", error);
+        alert(
+          `Export failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     } finally {
       setIsProcessing(false);
@@ -164,7 +265,7 @@ export const AppShell: React.FC = () => {
     setIsExportSettingsOpen(false);
     setIsBatchProcessing(true);
     setExportProgress(0);
-    setExportStage('Selecting output folder...');
+    setExportStage("Selecting output folder...");
     setExportLogs([]);
 
     const controller = new AbortController();
@@ -180,12 +281,12 @@ export const AppShell: React.FC = () => {
       }
 
       setBatchDirectoryHandle(handle);
-      setExportStage('Starting batch export...');
+      setExportStage("Starting batch export...");
 
       // Initialize batch items
       const initialItems = batchInput.items.map((item) => ({
         locale: item.locale,
-        status: 'queued' as BatchItemStatus,
+        status: "queued" as BatchItemStatus,
       }));
       batchItemsRef.current = initialItems;
       setBatchItems(initialItems);
@@ -196,7 +297,7 @@ export const AppShell: React.FC = () => {
         signal: controller.signal,
         callbacks: {
           onProgress: (locale, status, message) => {
-            console.log(`[Batch] ${locale}: ${status} - ${message || ''}`);
+            console.log(`[Batch] ${locale}: ${status} - ${message || ""}`);
             const nextItems = batchItemsRef.current.map((i) =>
               i.locale === locale ? { locale, status, message } : i,
             );
@@ -204,7 +305,7 @@ export const AppShell: React.FC = () => {
             setBatchItems(nextItems);
 
             // Update overall stage based on first active item
-            if (status === 'rendering' || status === 'writing') {
+            if (status === "rendering" || status === "writing") {
               setExportStage(`Processing ${locale}...`);
             }
           },
@@ -216,7 +317,7 @@ export const AppShell: React.FC = () => {
         directoryHandle: handle,
       });
 
-      console.log('Batch complete:', output);
+      console.log("Batch complete:", output);
 
       // Clear recovery on success
       if (output.failed.length === 0 && output.cancelled.length === 0) {
@@ -224,8 +325,8 @@ export const AppShell: React.FC = () => {
         setBatchItems([]);
       }
     } catch (e: any) {
-      if (e.message !== 'Export cancelled by user') {
-        console.error('Batch export failed:', e);
+      if (e.message !== "Export cancelled by user") {
+        console.error("Batch export failed:", e);
         alert(`Batch export failed: ${e.message || e}`);
       }
     } finally {
@@ -238,13 +339,13 @@ export const AppShell: React.FC = () => {
   const handleResumeBatchExport = async () => {
     const recoveryItems = loadBatchRecovery();
     if (recoveryItems.length === 0) {
-      alert('No incomplete batch export found to resume.');
+      alert("No incomplete batch export found to resume.");
       return;
     }
 
     setIsBatchProcessing(true);
     setExportProgress(0);
-    setExportStage('Resuming batch export...');
+    setExportStage("Resuming batch export...");
     setExportLogs([]);
 
     const controller = new AbortController();
@@ -262,27 +363,30 @@ export const AppShell: React.FC = () => {
 
       // Filter to only retry failed/cancelled items
       const retryItems = recoveryItems.filter(
-        (item) => item.status === 'failed' || item.status === 'cancelled',
+        (item) => item.status === "failed" || item.status === "cancelled",
       );
 
       if (retryItems.length === 0) {
-        alert('All items in the batch are already completed.');
+        alert("All items in the batch are already completed.");
         setIsBatchProcessing(false);
         return;
       }
 
-      console.log('Resuming batch with items:', retryItems);
+      console.log("Resuming batch with items:", retryItems);
 
       // Update batch items to queued for retry
       const queuedItems = retryItems.map((item) => ({
         ...item,
-        status: 'queued' as BatchItemStatus,
+        status: "queued" as BatchItemStatus,
         message: undefined,
       }));
       batchItemsRef.current = queuedItems;
       setBatchItems(queuedItems);
 
-      const frame = { width: project.settings.width, height: project.settings.height };
+      const frame = {
+        width: project.settings.width,
+        height: project.settings.height,
+      };
       const measure = createCanvasMeasurer();
       const items = retryItems.map(({ locale }) => {
         const catalog = text.catalogs[locale];
@@ -293,7 +397,9 @@ export const AppShell: React.FC = () => {
         }
         return {
           locale: locale as LocaleCode,
-          cueLayouts: text.cues.map((cue) => layoutCue({ cue, locale, catalog, frame, measure })),
+          cueLayouts: text.cues.map((cue) =>
+            layoutCue({ cue, locale, catalog, frame, measure }),
+          ),
         };
       });
 
@@ -308,7 +414,7 @@ export const AppShell: React.FC = () => {
             );
             batchItemsRef.current = nextItems;
             setBatchItems(nextItems);
-            if (status === 'rendering' || status === 'writing') {
+            if (status === "rendering" || status === "writing") {
               setExportStage(`Processing ${locale}...`);
             }
           },
@@ -317,15 +423,15 @@ export const AppShell: React.FC = () => {
         directoryHandle: handle,
       });
 
-      console.log('Batch resume complete:', result);
+      console.log("Batch resume complete:", result);
       if (result.failed.length === 0 && result.cancelled.length === 0) {
         clearBatchRecovery();
         batchItemsRef.current = [];
         setBatchItems([]);
       }
     } catch (e: any) {
-      if (e.message !== 'Export cancelled by user') {
-        console.error('Batch resume failed:', e);
+      if (e.message !== "Export cancelled by user") {
+        console.error("Batch resume failed:", e);
         alert(`Batch resume failed: ${e.message || e}`);
       }
     } finally {
@@ -336,108 +442,120 @@ export const AppShell: React.FC = () => {
   };
 
   return (
-    <div className='app-shell zinc-theme'>
+    <div className="app-shell zinc-theme">
       <TopBar onOpenExportSettings={handleStartExport} />
 
-      <div className='app-main-layout'>
-        <main className='app-content'>
-          {!project.video ? (
-            // Landing & Entry Screen
-            <div className='landing-screen'>
-              <div className='landing-hero'>
-                <img
-                  className='landing-product-image'
-                  src='/appvid/images/appvid-feature.png'
-                  alt='AppVid preview editor with a smartphone mockup and video timeline'
-                />
-                <div className='hero-badge'>
-                  <Sparkles size={14} />
-                  <span>100% Local Browser Engine</span>
-                </div>
-                <h1 className='landing-title'>AppVid</h1>
-                <p className='landing-tagline'>Create app preview videos locally.</p>
-                <p className='landing-trust-note'>
-                  <Shield size={14} />
-                  <span>No uploads. No accounts. Your files never leave your browser.</span>
-                </p>
+      <main className="app-content">
+        {!project.video ? (
+          // Landing & Entry Screen
+          <div className="landing-screen">
+            <div className="landing-hero">
+              <img
+                className="landing-product-image"
+                src="/appvid/images/appvid-feature.png"
+                alt="AppVid preview editor with a smartphone mockup and video timeline"
+              />
+              <div className="hero-badge">
+                <Sparkles size={14} />
+                <span>100% Local Browser Engine</span>
+              </div>
+              <h1 className="landing-title">AppVid</h1>
+              <p className="landing-tagline">
+                Create app preview videos locally.
+              </p>
+              <p className="landing-trust-note">
+                <Shield size={14} />
+                <span>
+                  No uploads. No accounts. Your files never leave your browser.
+                </span>
+              </p>
+            </div>
+
+            <div className="landing-grid">
+              <div className="landing-main-card">
+                {selectedFile ? (
+                  <VideoMetadataPanel
+                    file={selectedFile}
+                    onCancel={() => setSelectedFile(null)}
+                    onImportComplete={() => setSelectedFile(null)}
+                  />
+                ) : (
+                  <>
+                    <h2 className="card-section-title">
+                      1. Import Screen Recording
+                    </h2>
+                    <VideoImportCard
+                      onFileSelected={(file) => setSelectedFile(file)}
+                    />
+                  </>
+                )}
               </div>
 
-              <div className='landing-grid'>
-                <div className='landing-main-card'>
-                  {selectedFile ? (
-                    <VideoMetadataPanel
-                      file={selectedFile}
-                      onCancel={() => setSelectedFile(null)}
-                      onImportComplete={() => setSelectedFile(null)}
-                    />
-                  ) : (
-                    <>
-                      <h2 className='card-section-title'>1. Import Screen Recording</h2>
-                      <VideoImportCard onFileSelected={(file) => setSelectedFile(file)} />
-                    </>
-                  )}
-                </div>
-
-                <div className='landing-side-cards'>
-                  {hasDraft && (
-                    <div className='landing-side-card restore-card'>
-                      <div className='card-icon-header'>
-                        <Save size={18} />
-                        <h3>Restore Draft</h3>
-                      </div>
-                      <p>
-                        You have a saved project draft in local storage. Click below to reload the
-                        timeline.
-                      </p>
-                      <button className='btn btn-secondary btn-full' onClick={restoreDraft}>
-                        Restore Last Session
-                      </button>
+              <div className="landing-side-cards">
+                {hasDraft && (
+                  <div className="landing-side-card restore-card">
+                    <div className="card-icon-header">
+                      <Save size={18} />
+                      <h3>Restore Draft</h3>
                     </div>
-                  )}
-
-                  <div className='landing-side-card guidance-card'>
-                    <div className='card-icon-header'>
-                      <MonitorPlay size={18} />
-                      <h3>Getting Started</h3>
-                    </div>
-                    <ul className='guidance-list'>
-                      <li>Supports portrait-mode MP4 or MOV screen recordings.</li>
-                      <li>Designed to export exact aspect-ratios for App Store & Play Store.</li>
-                      <li>Audio clips can be placed at specific playhead times.</li>
-                      <li>High-quality offline exports can take a few minutes.</li>
-                      <li>Keep the browser tab open during encoding.</li>
-                    </ul>
+                    <p>
+                      You have a saved project draft in local storage. Click
+                      below to reload the timeline.
+                    </p>
+                    <button
+                      className="btn btn-secondary btn-full"
+                      onClick={restoreDraft}
+                    >
+                      Restore Last Session
+                    </button>
                   </div>
+                )}
+
+                <div className="landing-side-card guidance-card">
+                  <div className="card-icon-header">
+                    <MonitorPlay size={18} />
+                    <h3>Getting Started</h3>
+                  </div>
+                  <ul className="guidance-list">
+                    <li>
+                      Supports portrait-mode MP4 or MOV screen recordings.
+                    </li>
+                    <li>
+                      Designed to export exact aspect-ratios for App Store &
+                      Play Store.
+                    </li>
+                    <li>
+                      Audio clips can be placed at specific playhead times.
+                    </li>
+                    <li>
+                      High-quality offline exports can take a few minutes.
+                    </li>
+                    <li>Keep the browser tab open during encoding.</li>
+                  </ul>
                 </div>
               </div>
             </div>
-          ) : (
-            <>
-              {batchItems.some(
-                (item) => item.status === 'failed' || item.status === 'cancelled',
-              ) && (
-                <div className='batch-recovery-banner'>
-                  <span>An export was interrupted.</span>
-                  <button className='btn btn-secondary btn-sm' onClick={handleResumeBatchExport}>
-                    <RotateCcw size={14} />
-                    Resume Export
-                  </button>
-                </div>
-              )}
-              <EditorWorkspace />
-            </>
-          )}
-        </main>
-
-        <aside className='ad-banner-wrapper' aria-label='Advertisement'>
-          <div className='ad-banner-mobile'>
-            <AdBanner orientation='portrait' height={90} width={1200} />
           </div>
-          <div className='ad-banner-desktop'>
-            <AdBanner orientation='landscape' height={0} width={160} />
-          </div>
-        </aside>
-      </div>
+        ) : (
+          <>
+            {batchItems.some(
+              (item) => item.status === "failed" || item.status === "cancelled",
+            ) && (
+              <div className="batch-recovery-banner">
+                <span>An export was interrupted.</span>
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={handleResumeBatchExport}
+                >
+                  <RotateCcw size={14} />
+                  Resume Export
+                </button>
+              </div>
+            )}
+            <EditorWorkspace />
+          </>
+        )}
+      </main>
 
       {/* Export Settings Dialog */}
       <ExportSettingsSheet
@@ -459,7 +577,11 @@ export const AppShell: React.FC = () => {
 
       {/* Export Complete Overlay */}
       {exportBlob && (
-        <ExportCompletePanel outputBlob={exportBlob} onSingleClose={() => setExportBlob(null)} />
+        <ExportCompletePanel
+          outputBlob={exportBlob}
+          onSingleClose={() => setExportBlob(null)}
+          onSwitchStoreAndExport={handleSwitchStoreAndExport}
+        />
       )}
     </div>
   );

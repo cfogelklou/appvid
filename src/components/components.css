@@ -609,6 +609,32 @@
   color: var(--color-text-primary);
 }
 
+.btn-sm {
+  width: auto;
+  flex-shrink: 0;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+
+.help-tooltip-icon {
+  opacity: 0.65;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.help-tooltip-icon:hover {
+  opacity: 1;
+  color: var(--color-primary);
+}
+
+.btn-link-subtle {
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.btn-link-subtle:hover {
+  color: var(--color-primary) !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
 
 /* 2. Processing Overlay */
 .processing-backdrop {
@@ -955,13 +981,6 @@
   overflow: hidden;
 }
 
-.app-main-layout {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
 .landing-product-image {
   display: block;
   width: min(220px, 42vw);
@@ -972,14 +991,6 @@
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
   object-fit: cover;
   object-position: center top;
-}
-
-.ad-banner-wrapper {
-  flex-shrink: 0;
-}
-
-.ad-banner-desktop {
-  display: none;
 }
 
 .top-bar {
@@ -998,30 +1009,6 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-}
-
-@media (min-width: 1024px) {
-  .app-main-layout {
-    flex-direction: row;
-  }
-
-  .app-content {
-    flex: 1;
-  }
-
-  .ad-banner-wrapper {
-    width: 160px;
-    align-self: stretch;
-  }
-
-  .ad-banner-mobile {
-    display: none;
-  }
-
-  .ad-banner-desktop {
-    display: block;
-    height: 100%;
-  }
 }
 
 .editor-workspace {

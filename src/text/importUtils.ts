@@ -11,9 +11,9 @@ import type {
   LocaleCode,
   TextProjectState,
   TimelineImportResult,
-} from './types';
-import { parseCatalogBatch, parseTimeline, mergeCues } from './textPackage';
-import { defaultPreviewLocale } from './localeValidation';
+} from "./types";
+import { parseCatalogBatch, parseTimeline, mergeCues } from "./textPackage";
+import { defaultPreviewLocale } from "./localeValidation";
 
 export interface CatalogFileInput {
   fileName: string;
@@ -31,12 +31,12 @@ export const readFilesAsText = async (
   const fileArray = Array.from(files);
   const results = await Promise.all(
     fileArray.map(async (file) => {
-      if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+      if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
       const text = await file.text();
       return { fileName: file.name, text };
     }),
   );
-  if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+  if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
   return results;
 };
 
@@ -67,9 +67,11 @@ export const importTextCatalogs = async (
 
   // Determine new preview locale
   const allLocales = Object.keys(newCatalogs) as LocaleCode[];
-  const browserLocale = typeof navigator !== 'undefined' ? navigator.language : undefined;
+  const browserLocale =
+    typeof navigator !== "undefined" ? navigator.language : undefined;
   const newPreviewLocale =
-    currentState.previewLocale || defaultPreviewLocale(allLocales, browserLocale);
+    currentState.previewLocale ||
+    defaultPreviewLocale(allLocales, browserLocale);
 
   const newState: TextProjectState = {
     ...currentState,
@@ -93,10 +95,10 @@ export const importTextTimeline = async (
   file: File,
   signal?: AbortSignal,
 ): Promise<{ newState: TextProjectState; result: TimelineImportResult }> => {
-  if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+  if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
   const text = await file.text();
-  if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+  if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
   const parseResult = parseTimeline(text);
 

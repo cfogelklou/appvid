@@ -1,13 +1,13 @@
-import React, { useRef, useEffect, useState, useMemo } from 'react';
-import { useProject } from '../context/ProjectContext';
-import { previewPlayer } from '../utils/previewPlayer';
-import { layoutCue, createCanvasMeasurer } from '../text/textLayout';
-import { FONT_ASSET } from '../text/constants';
-import { isIntervalActive } from '../text/types';
-import { PreviewLocaleSelector } from './PreviewLocaleSelector';
-import { AlertTriangle } from 'lucide-react';
-import './VideoPreview.css';
-import './components.css';
+import React, { useRef, useEffect, useState, useMemo } from "react";
+import { useProject } from "../context/ProjectContext";
+import { previewPlayer } from "../utils/previewPlayer";
+import { layoutCue, createCanvasMeasurer } from "../text/textLayout";
+import { FONT_ASSET } from "../text/constants";
+import { isIntervalActive } from "../text/types";
+import { PreviewLocaleSelector } from "./PreviewLocaleSelector";
+import { AlertTriangle } from "lucide-react";
+import "./VideoPreview.css";
+import "./components.css";
 
 export const VideoPreview: React.FC = () => {
   const {
@@ -76,15 +76,15 @@ export const VideoPreview: React.FC = () => {
   // Handle original audio muting based on settings
   useEffect(() => {
     if (videoRef.current) {
-      videoRef.current.muted = project.settings.originalAudioMode === 'mute';
+      videoRef.current.muted = project.settings.originalAudioMode === "mute";
     }
   }, [project.settings.originalAudioMode]);
 
   // Extract video duration and dimensions, then import
   const processAndImportVideoFile = (file: File) => {
     const blobUrl = URL.createObjectURL(file);
-    const tempVideo = document.createElement('video');
-    tempVideo.preload = 'metadata';
+    const tempVideo = document.createElement("video");
+    tempVideo.preload = "metadata";
     tempVideo.src = blobUrl;
 
     tempVideo.onloadedmetadata = () => {
@@ -101,7 +101,7 @@ export const VideoPreview: React.FC = () => {
     };
 
     tempVideo.onerror = () => {
-      console.error('Failed to load video metadata for file:', file.name);
+      console.error("Failed to load video metadata for file:", file.name);
       URL.revokeObjectURL(blobUrl);
     };
   };
@@ -118,7 +118,9 @@ export const VideoPreview: React.FC = () => {
     if (file) {
       const success = relinkVideo(file);
       if (!success) {
-        alert(`Selected file does not match the project video:\nExpected: ${project.video?.name}`);
+        alert(
+          `Selected file does not match the project video:\nExpected: ${project.video?.name}`,
+        );
       }
     }
   };
@@ -146,7 +148,7 @@ export const VideoPreview: React.FC = () => {
     setIsDragOver(false);
 
     const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith('video/')) {
+    if (file && file.type.startsWith("video/")) {
       processAndImportVideoFile(file);
     }
   };
@@ -187,12 +189,18 @@ export const VideoPreview: React.FC = () => {
             measure: measureText,
           });
         } catch (error) {
-          console.error('Failed to layout cue:', error);
+          console.error("Failed to layout cue:", error);
           return null;
         }
       })
       .filter((cue): cue is NonNullable<typeof cue> => cue !== null);
-  }, [activeCues, text.previewLocale, text.catalogs, activePreset, measureText]);
+  }, [
+    activeCues,
+    text.previewLocale,
+    text.catalogs,
+    activePreset,
+    measureText,
+  ]);
 
   // Check for overflow warnings
   const hasOverflow = laidOutCues.some((cue) => cue.overflow);
@@ -214,13 +222,13 @@ export const VideoPreview: React.FC = () => {
     // Compute horizontal position
     let left: number;
     switch (horizontalAlign) {
-      case 'left':
+      case "left":
         left = safeAreaInset;
         break;
-      case 'center':
+      case "center":
         left = (activePreset.width - blockWidth) / 2;
         break;
-      case 'right':
+      case "right":
         left = activePreset.width - safeAreaInset - blockWidth;
         break;
       default:
@@ -228,20 +236,23 @@ export const VideoPreview: React.FC = () => {
     }
 
     // Clamp to safe area
-    left = Math.max(safeAreaInset, Math.min(left, activePreset.width - safeAreaInset - blockWidth));
+    left = Math.max(
+      safeAreaInset,
+      Math.min(left, activePreset.width - safeAreaInset - blockWidth),
+    );
 
     // Compute vertical position
     let top: number;
     const verticalSafeAreaInset = activePreset.height * 0.05;
     const availableHeight = activePreset.height - 2 * verticalSafeAreaInset;
     switch (verticalAlign) {
-      case 'top':
+      case "top":
         top = verticalSafeAreaInset;
         break;
-      case 'middle':
+      case "middle":
         top = verticalSafeAreaInset + (availableHeight - blockHeight) / 2;
         break;
-      case 'bottom':
+      case "bottom":
         top = activePreset.height - verticalSafeAreaInset - blockHeight;
         break;
       default:
@@ -258,7 +269,7 @@ export const VideoPreview: React.FC = () => {
     const fontFamilyCss = FONT_ASSET[fontFamily].cssFamily;
 
     return {
-      position: 'absolute' as const,
+      position: "absolute" as const,
       // Position/size in % of the device-screen, font in cqh, so the overlay
       // scales with the rendered preview (which is CSS-sized, not preset-sized).
       left: `${(left / activePreset.width) * 100}%`,
@@ -270,34 +281,34 @@ export const VideoPreview: React.FC = () => {
       lineHeight: `${(lineHeight / activePreset.height) * 100}cqh`,
       color: color,
       textAlign: horizontalAlign,
-      whiteSpace: 'pre-wrap',
-      overflow: 'hidden',
+      whiteSpace: "pre-wrap",
+      overflow: "hidden",
     };
   };
 
   return (
     <div
-      className='video-preview-wrapper'
+      className="video-preview-wrapper"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      style={{ border: isDragOver ? '2px dashed #6366f1' : 'none' }}
+      style={{ border: isDragOver ? "2px dashed #6366f1" : "none" }}
     >
       {/* Target Store Preset Badge */}
       {project.video && (
-        <div className='preset-badge'>
+        <div className="preset-badge">
           {activePreset.name} ({project.settings.fitMode.toUpperCase()})
         </div>
       )}
 
       {/* Preview Locale Selector */}
-      {project.video && text.previewLocale && Object.keys(text.catalogs).length > 0 && (
-        <PreviewLocaleSelector />
-      )}
+      {project.video &&
+        text.previewLocale &&
+        Object.keys(text.catalogs).length > 0 && <PreviewLocaleSelector />}
 
       {/* Overflow Warning Banner */}
       {hasOverflow && isVideoLoaded && (
-        <div className='text-overflow-warning'>
+        <div className="text-overflow-warning">
           <AlertTriangle size={16} />
           <span>Text exceeds safe area boundaries</span>
         </div>
@@ -305,13 +316,15 @@ export const VideoPreview: React.FC = () => {
 
       {/* Main Viewport Mock Device Frame */}
       <div
-        className='device-frame'
-        data-orientation={presetAspectRatio >= 1 ? 'landscape' : 'portrait'}
-        style={{ '--preset-aspect-ratio': presetAspectRatio } as React.CSSProperties}
+        className="device-frame"
+        data-orientation={presetAspectRatio >= 1 ? "landscape" : "portrait"}
+        style={
+          { "--preset-aspect-ratio": presetAspectRatio } as React.CSSProperties
+        }
       >
         {/* Device elements */}
-        {activePreset.platform === 'ios' && <div className='device-notch' />}
-        <div className='device-home-bar' />
+        {activePreset.platform === "ios" && <div className="device-notch" />}
+        <div className="device-home-bar" />
 
         {/* Viewport Screen */}
         <div className={`device-screen fit-mode-${project.settings.fitMode}`}>
@@ -319,19 +332,23 @@ export const VideoPreview: React.FC = () => {
             <>
               <video
                 ref={videoRef}
-                className='preview-video'
+                className="preview-video"
                 src={project.video!.blobUrl}
                 playsInline
-                muted={project.settings.originalAudioMode === 'mute'}
-                preload='auto'
+                muted={project.settings.originalAudioMode === "mute"}
+                preload="auto"
               />
               {/* Text Overlay Container */}
               {laidOutCues.length > 0 && (
-                <div className='text-overlay-container'>
+                <div className="text-overlay-container">
                   {laidOutCues.map((cue) => (
-                    <div key={cue.id} className='text-overlay' style={getTextOverlayStyle(cue)}>
+                    <div
+                      key={cue.id}
+                      className="text-overlay"
+                      style={getTextOverlayStyle(cue)}
+                    >
                       {cue.lines.map((line, lineIdx) => (
-                        <div key={lineIdx} className='text-overlay-line'>
+                        <div key={lineIdx} className="text-overlay-line">
                           {line}
                         </div>
                       ))}
@@ -340,63 +357,67 @@ export const VideoPreview: React.FC = () => {
                 </div>
               )}
               {/* Optional overlay borders to indicate visual safe area constraints */}
-              <div className='safe-area-guide' />
+              <div className="safe-area-guide" />
             </>
           ) : isVideoOffline ? (
             /* Offline File State (e.g. from restored draft) */
-            <div className='relink-container'>
+            <div className="relink-container">
               <svg
-                className='relink-warning-icon'
-                fill='none'
-                viewBox='0 0 24 24'
-                stroke='currentColor'
+                className="relink-warning-icon"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
                 strokeWidth={2}
               >
                 <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                 />
               </svg>
               <h3>Video File Offline</h3>
               <p>
-                The draft was restored, but you need to relink the video file: <br />
+                The draft was restored, but you need to relink the video file:{" "}
+                <br />
                 <strong>{project.video!.name}</strong>
               </p>
-              <button className='relink-btn' onClick={triggerRelinkInput}>
+              <button className="relink-btn" onClick={triggerRelinkInput}>
                 Relink Video File
               </button>
               <input
-                type='file'
+                type="file"
                 ref={relinkInputRef}
-                className='preview-file-input'
-                accept='video/*'
+                className="preview-file-input"
+                accept="video/*"
                 onChange={handleRelinkChange}
               />
             </div>
           ) : (
             /* Empty State (Drag & Drop or Click to import) */
-            <div className='preview-empty-state' onClick={triggerFileInput}>
+            <div className="preview-empty-state" onClick={triggerFileInput}>
               <svg
-                className='preview-empty-icon'
-                fill='none'
-                viewBox='0 0 24 24'
-                stroke='currentColor'
+                className="preview-empty-icon"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
                 strokeWidth={1.5}
               >
                 <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  d='M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12'
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                 />
               </svg>
               <h3>Import a Video</h3>
-              <p>Drag and drop a video here, or click to browse files from your computer.</p>
+              <p>
+                Drag and drop a video here, or click to browse files from your
+                computer.
+              </p>
               <input
-                type='file'
+                type="file"
                 ref={fileInputRef}
-                className='preview-file-input'
-                accept='video/*'
+                className="preview-file-input"
+                accept="video/*"
                 onChange={handleFileChange}
               />
             </div>

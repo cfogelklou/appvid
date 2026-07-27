@@ -1,14 +1,20 @@
-import React from 'react';
-import { useProject } from '../context/ProjectContext';
-import { AudioSegment } from './AudioSegment';
-import type { AudioSegment as AudioSegmentType } from '../types';
+import React from "react";
+import { useProject } from "../context/ProjectContext";
+import { AudioSegment } from "./AudioSegment";
+import type { AudioSegment as AudioSegmentType } from "../types";
 
 interface PositionedSegment extends AudioSegmentType {
   duration: number;
   lane: number;
 }
 
-export const TimelineTrack: React.FC = () => {
+interface TimelineTrackProps {
+  onAudioSegmentContextMenu?: (e: React.MouseEvent, segId: string) => void;
+}
+
+export const TimelineTrack: React.FC<TimelineTrackProps> = ({
+  onAudioSegmentContextMenu,
+}) => {
   const { project } = useProject();
 
   // Sort and assign lanes to segments to handle overlap / collision stacking
@@ -17,7 +23,8 @@ export const TimelineTrack: React.FC = () => {
       const asset = project.audioAssets.find((a) => a.id === s.assetId);
       return {
         ...s,
-        duration: s.duration !== undefined ? s.duration : asset ? asset.duration : 0,
+        duration:
+          s.duration !== undefined ? s.duration : asset ? asset.duration : 0,
       };
     })
     .sort((a, b) => a.startTime - b.startTime);
@@ -45,12 +52,15 @@ export const TimelineTrack: React.FC = () => {
   const trackHeight = laneCount * laneHeight;
 
   return (
-    <div className='timeline-track-container' style={{ height: `${trackHeight}px` }}>
+    <div
+      className="timeline-track-container"
+      style={{ height: `${trackHeight}px` }}
+    >
       {/* Background track lanes for visual guidance */}
       {Array.from({ length: laneCount }).map((_, index) => (
         <div
           key={`lane-bg-${index}`}
-          className='track-lane-bg'
+          className="track-lane-bg"
           style={{
             top: `${index * laneHeight}px`,
             height: `${laneHeight}px`,
@@ -66,15 +76,27 @@ export const TimelineTrack: React.FC = () => {
           duration={seg.duration}
           lane={seg.lane}
           laneHeight={laneHeight}
+          onContextMenu={(e) => onAudioSegmentContextMenu?.(e, seg.id)}
         />
       ))}
 
-      {/* Empty State */}
-      {project.segments.length === 0 && (
-        <div className='timeline-empty-message'>
-          No audio clips placed. Add audio clips from the asset panel to start.
+      {/* Embedded Audio Status Pill */}
+      {project.settings.audioSeparationMode === "embedded" && project.video && (
+        <div className="embedded-audio-notice-pill">
+          <span>
+            ℹ Embedded Video Audio — Sound plays directly from video file
+          </span>
         </div>
       )}
+
+      {/* Empty State */}
+      {project.segments.length === 0 &&
+        project.settings.audioSeparationMode !== "embedded" && (
+          <div className="timeline-empty-message">
+            No audio clips placed. Add audio clips from the asset panel to
+            start.
+          </div>
+        )}
     </div>
   );
 };

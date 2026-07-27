@@ -11,6 +11,7 @@
   position: relative;
   overflow: hidden;
   user-select: none;
+  container-type: size;
 }
 
 /* Background ambient glow */

@@ -12,7 +12,7 @@ import {
   DEFAULT_TEXT_COLOR,
   DEFAULT_VERTICAL_ALIGN,
   TIMELINE_VERSION,
-} from './constants';
+} from "./constants";
 import type {
   CatalogBatchResult,
   CatalogFileSummary,
@@ -25,8 +25,8 @@ import type {
   TextCueDefinition,
   TimelineImportResult,
   TranslationCatalog,
-} from './types';
-import { localeFromFile, validateCatalogValue } from './localeValidation';
+} from "./types";
+import { localeFromFile, validateCatalogValue } from "./localeValidation";
 
 export interface CatalogFileInput {
   fileName: string;
@@ -36,16 +36,19 @@ export interface CatalogFileInput {
 
 /** Normalize a color to uppercase #RRGGBB, or null if not a valid hex color. */
 export const normalizeColor = (value: unknown): string | null => {
-  if (typeof value !== 'string') return null;
+  if (typeof value !== "string") return null;
   const trimmed = value.trim();
   if (/^#?[0-9a-fA-F]{6}$/.test(trimmed)) {
-    return `#${trimmed.replace(/^#/, '').toUpperCase()}`;
+    return `#${trimmed.replace(/^#/, "").toUpperCase()}`;
   }
   return null;
 };
 
 /** Validate + parse a single catalog file text into a TranslationCatalog. */
-export const parseCatalog = (fileName: string, text: string): CatalogImportResult => {
+export const parseCatalog = (
+  fileName: string,
+  text: string,
+): CatalogImportResult => {
   const errors: string[] = [];
   const locale = localeFromFile(fileName);
   if (locale == null) {
@@ -65,7 +68,11 @@ export const parseCatalog = (fileName: string, text: string): CatalogImportResul
   if (strings == null) {
     return { ok: false, errors: errors.concat(summary.reasons) };
   }
-  const catalog: TranslationCatalog = { locale, sourceFileName: fileName, strings };
+  const catalog: TranslationCatalog = {
+    locale,
+    sourceFileName: fileName,
+    strings,
+  };
   return { ok: true, catalog, errors: summary.reasons };
 };
 
@@ -73,14 +80,19 @@ export const parseCatalog = (fileName: string, text: string): CatalogImportResul
  * Parse many catalog files at once. Duplicate canonical locales (two files for
  * the same locale in one batch) are rejected — neither is accepted.
  */
-export const parseCatalogBatch = (inputs: CatalogFileInput[]): CatalogBatchResult => {
+export const parseCatalogBatch = (
+  inputs: CatalogFileInput[],
+): CatalogBatchResult => {
   const accepted: Record<LocaleCode, TranslationCatalog> = {};
   const summaries: CatalogFileSummary[] = [];
   // Map locale -> files that claim it, to detect duplicates.
   const localeToFiles = new Map<LocaleCode, string[]>();
 
-  const perFile: { fileName: string; locale: LocaleCode | null; result: CatalogImportResult }[] =
-    [];
+  const perFile: {
+    fileName: string;
+    locale: LocaleCode | null;
+    result: CatalogImportResult;
+  }[] = [];
   for (const { fileName, text } of inputs) {
     const result = parseCatalog(fileName, text);
     const locale = result.ok ? result.catalog!.locale : null;
@@ -115,7 +127,9 @@ export const parseCatalogBatch = (inputs: CatalogFileInput[]): CatalogBatchResul
         locale,
         accepted: false,
         stringCount: Object.keys(result.catalog!.strings).length,
-        reasons: [`Duplicate locale "${locale}" — another file in this import also targets it.`],
+        reasons: [
+          `Duplicate locale "${locale}" — another file in this import also targets it.`,
+        ],
       });
       continue;
     }
@@ -133,25 +147,27 @@ export const parseCatalogBatch = (inputs: CatalogFileInput[]): CatalogBatchResul
 };
 
 const isFiniteNonNegative = (n: unknown): n is number =>
-  typeof n === 'number' && Number.isFinite(n) && n >= 0;
+  typeof n === "number" && Number.isFinite(n) && n >= 0;
 const isFinitePositive = (n: unknown): n is number =>
-  typeof n === 'number' && Number.isFinite(n) && n > 0;
+  typeof n === "number" && Number.isFinite(n) && n > 0;
 
 const knownCueFields = new Set<keyof RawTimelineCue>([
-  'id',
-  'stringKey',
-  'startTime',
-  'duration',
-  'horizontalAlign',
-  'verticalAlign',
-  'color',
-  'fontSize',
+  "id",
+  "stringKey",
+  "startTime",
+  "duration",
+  "horizontalAlign",
+  "verticalAlign",
+  "color",
+  "fontSize",
 ]);
 
-const isHorizontalAlign = (v: unknown): v is TextCueDefinition['horizontalAlign'] =>
-  v === 'left' || v === 'center' || v === 'right';
-const isVerticalAlign = (v: unknown): v is TextCueDefinition['verticalAlign'] =>
-  v === 'top' || v === 'middle' || v === 'bottom';
+const isHorizontalAlign = (
+  v: unknown,
+): v is TextCueDefinition["horizontalAlign"] =>
+  v === "left" || v === "center" || v === "right";
+const isVerticalAlign = (v: unknown): v is TextCueDefinition["verticalAlign"] =>
+  v === "top" || v === "middle" || v === "bottom";
 
 /**
  * Parse timeline.json. Malformed JSON or an unsupported version rejects the
@@ -170,18 +186,20 @@ export const parseTimeline = (text: string): TimelineImportResult => {
     errors.push(`Malformed JSON: ${(e as Error).message}`);
     return { ok: false, version: null, cues: [], errors, warnings };
   }
-  if (root == null || typeof root !== 'object' || Array.isArray(root)) {
-    errors.push('Timeline file top level must be an object.');
+  if (root == null || typeof root !== "object" || Array.isArray(root)) {
+    errors.push("Timeline file top level must be an object.");
     return { ok: false, version: null, cues: [], errors, warnings };
   }
   const obj = root as { version?: unknown; cues?: unknown };
-  if (typeof obj.version !== 'number' || !Number.isFinite(obj.version)) {
+  if (typeof obj.version !== "number" || !Number.isFinite(obj.version)) {
     errors.push('Missing or invalid required field "version".');
     return { ok: false, version: null, cues: [], errors, warnings };
   }
   const version = obj.version;
   if (version !== TIMELINE_VERSION) {
-    errors.push(`Unsupported timeline version ${version} (expected ${TIMELINE_VERSION}).`);
+    errors.push(
+      `Unsupported timeline version ${version} (expected ${TIMELINE_VERSION}).`,
+    );
     return { ok: false, version, cues: [], errors, warnings };
   }
   if (!Array.isArray(obj.cues)) {
@@ -193,7 +211,7 @@ export const parseTimeline = (text: string): TimelineImportResult => {
   const seenIds = new Set<string>();
   for (const [index, raw] of (obj.cues as RawTimelineCue[]).entries()) {
     const prefix = `cue[${index}]`;
-    if (raw == null || typeof raw !== 'object' || Array.isArray(raw)) {
+    if (raw == null || typeof raw !== "object" || Array.isArray(raw)) {
       warnings.push(`${prefix}: not an object, skipped.`);
       continue;
     }
@@ -203,7 +221,7 @@ export const parseTimeline = (text: string): TimelineImportResult => {
         warnings.push(`${prefix}: unknown field "${key}" ignored.`);
       }
     }
-    if (typeof raw.id !== 'string' || raw.id === '') {
+    if (typeof raw.id !== "string" || raw.id === "") {
       warnings.push(`${prefix}: missing or invalid "id", skipped.`);
       continue;
     }
@@ -211,22 +229,28 @@ export const parseTimeline = (text: string): TimelineImportResult => {
       warnings.push(`${prefix}: duplicate id "${raw.id}", skipped.`);
       continue;
     }
-    if (typeof raw.stringKey !== 'string' || raw.stringKey === '') {
+    if (typeof raw.stringKey !== "string" || raw.stringKey === "") {
       warnings.push(`${prefix} (${raw.id}): missing "stringKey", skipped.`);
       continue;
     }
     if (!isFiniteNonNegative(raw.startTime)) {
-      warnings.push(`${prefix} (${raw.id}): "startTime" must be finite and non-negative, skipped.`);
+      warnings.push(
+        `${prefix} (${raw.id}): "startTime" must be finite and non-negative, skipped.`,
+      );
       continue;
     }
     if (!isFinitePositive(raw.duration)) {
-      warnings.push(`${prefix} (${raw.id}): "duration" must be finite and positive, skipped.`);
+      warnings.push(
+        `${prefix} (${raw.id}): "duration" must be finite and positive, skipped.`,
+      );
       continue;
     }
 
     const color = normalizeColor(raw.color);
     if (raw.color !== undefined && color == null) {
-      warnings.push(`${prefix} (${raw.id}): invalid color "${String(raw.color)}", using default.`);
+      warnings.push(
+        `${prefix} (${raw.id}): invalid color "${String(raw.color)}", using default.`,
+      );
     }
 
     const base: TextCueDefinition = createDefaultCueBase(
@@ -234,21 +258,31 @@ export const parseTimeline = (text: string): TimelineImportResult => {
       raw.startTime,
       raw.duration,
     );
-    if (isHorizontalAlign(raw.horizontalAlign)) base.horizontalAlign = raw.horizontalAlign;
+    if (isHorizontalAlign(raw.horizontalAlign))
+      base.horizontalAlign = raw.horizontalAlign;
     else if (raw.horizontalAlign !== undefined)
-      warnings.push(`${prefix} (${raw.id}): invalid horizontalAlign, using default.`);
-    if (isVerticalAlign(raw.verticalAlign)) base.verticalAlign = raw.verticalAlign;
+      warnings.push(
+        `${prefix} (${raw.id}): invalid horizontalAlign, using default.`,
+      );
+    if (isVerticalAlign(raw.verticalAlign))
+      base.verticalAlign = raw.verticalAlign;
     else if (raw.verticalAlign !== undefined)
-      warnings.push(`${prefix} (${raw.id}): invalid verticalAlign, using default.`);
+      warnings.push(
+        `${prefix} (${raw.id}): invalid verticalAlign, using default.`,
+      );
     if (color) base.color = color;
-    if (typeof raw.fontSize === 'number' && Number.isFinite(raw.fontSize) && raw.fontSize > 0) {
+    if (
+      typeof raw.fontSize === "number" &&
+      Number.isFinite(raw.fontSize) &&
+      raw.fontSize > 0
+    ) {
       base.fontSize = raw.fontSize;
     } else if (raw.fontSize !== undefined) {
       warnings.push(`${prefix} (${raw.id}): invalid fontSize, using default.`);
     }
 
     seenIds.add(raw.id);
-    cues.push({ id: raw.id, origin: 'timeline-import', base, overrides: {} });
+    cues.push({ id: raw.id, origin: "timeline-import", base, overrides: {} });
   }
 
   return { ok: true, version, cues, errors, warnings };
@@ -260,7 +294,10 @@ export const parseTimeline = (text: string): TimelineImportResult => {
  * absent from the import remain; imported IDs that collide with MANUAL cue IDs
  * are skipped (never overwrite a user-placed cue).
  */
-export const mergeCues = (existing: TextCue[], imported: TextCue[]): CueMergeResult => {
+export const mergeCues = (
+  existing: TextCue[],
+  imported: TextCue[],
+): CueMergeResult => {
   const importedById = new Map(imported.map((c) => [c.id, c]));
   const appended: string[] = [];
   const updated: string[] = [];
@@ -274,7 +311,7 @@ export const mergeCues = (existing: TextCue[], imported: TextCue[]): CueMergeRes
       return cue;
     }
     importedById.delete(cue.id);
-    if (cue.origin === 'manual') {
+    if (cue.origin === "manual") {
       // Collision with a manual cue: skip the import for this id.
       skipped.push(cue.id);
       return cue;
@@ -314,7 +351,9 @@ export const validateLocaleKeys = (
   }
   const missingKeys = resolvedKeys.filter((k) => !(k in catalog.strings));
   if (missingKeys.length > 0) {
-    reasons.push(`Missing ${missingKeys.length} key(s): ${missingKeys.join(', ')}.`);
+    reasons.push(
+      `Missing ${missingKeys.length} key(s): ${missingKeys.join(", ")}.`,
+    );
   }
   return { locale, blocked: missingKeys.length > 0, missingKeys, reasons };
 };

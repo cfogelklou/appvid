@@ -8,4 +8,4 @@ AppVid is a local production desk for turning mobile recordings into store-ready
 
 - [x] **M1: Import desk** — Replace the centered landing hero/card stack with a task-first production desk that makes import the dominant action.
 - [x] **M2: Editor workspace** — Apply the same hierarchy to the preview, timeline, inspector, and toolbar surfaces.
-- [ ] **M3: Responsive and finish review** — Validate narrow layouts, accessibility, and visual consistency.
+- [x] **M3: Responsive and finish review** — Validated narrow layouts, accessibility, and visual consistency with Playwright at 320px, 390px, 768px, and desktop widths.

@@ -9,7 +9,7 @@ import { ExportSettingsSheet } from './ExportSettingsSheet';
 import { ProcessingOverlay } from './ProcessingOverlay';
 import { ExportCompletePanel } from './ExportCompletePanel';
 import { processVideo, renderVideo, type ProcessLog } from '../utils/ffmpegEngine';
-import { Sparkles, Shield, MonitorPlay, Save, RotateCcw } from 'lucide-react';
+import { Clapperboard, HardDrive, MonitorPlay, Save, RotateCcw } from 'lucide-react';
 import type { BatchItemStatus, LaidOutTextCue, LocaleCode } from '../text/types';
 import { layoutCue, createCanvasMeasurer } from '../text/textLayout';
 import {
@@ -416,27 +416,36 @@ export const AppShell: React.FC = () => {
       <main className='app-content'>
         {!project.video ? (
           // Landing & Entry Screen
-          <div className='landing-screen'>
-            <div className='landing-hero'>
-              <img
-                className='landing-product-image'
-                src='/appvid/images/appvid-feature.png'
-                alt='AppVid preview editor with a smartphone mockup and video timeline'
-              />
-              <div className='hero-badge'>
-                <Sparkles size={14} />
-                <span>100% Local Browser Engine</span>
-              </div>
+          <div className='landing-screen landing-desk'>
+            <aside className='landing-rail' aria-label='AppVid workflow'>
+              <p className='rail-label'>Local video production</p>
               <h1 className='landing-title'>AppVid</h1>
-              <p className='landing-tagline'>Create app preview videos locally.</p>
-              <p className='landing-trust-note'>
-                <Shield size={14} />
-                <span>No uploads. No accounts. Your files never leave your browser.</span>
-              </p>
-            </div>
-
-            <div className='landing-grid'>
-              <div className='landing-main-card'>
+              <p className='rail-summary'>Store-preview videos, built entirely in your browser.</p>
+              <ol className='workflow-list'>
+                <li className='workflow-step workflow-step-active'>
+                  <span>01</span>
+                  <strong>Source recording</strong>
+                </li>
+                <li className='workflow-step'>
+                  <span>02</span>
+                  <strong>Arrange timeline</strong>
+                </li>
+                <li className='workflow-step'>
+                  <span>03</span>
+                  <strong>Export for store</strong>
+                </li>
+              </ol>
+            </aside>
+            <section className='landing-workbench' aria-labelledby='import-desk-title'>
+              <header className='workbench-header'>
+                <p className='section-index'>01 / Source</p>
+                <h2 id='import-desk-title'>Bring in a screen recording.</h2>
+                <p>
+                  Start with the source video. You can add audio, text, and store framing in the
+                  editor.
+                </p>
+              </header>
+              <div className='landing-import-area'>
                 {selectedFile ? (
                   <VideoMetadataPanel
                     file={selectedFile}
@@ -444,16 +453,30 @@ export const AppShell: React.FC = () => {
                     onImportComplete={() => setSelectedFile(null)}
                   />
                 ) : (
-                  <>
-                    <h2 className='card-section-title'>1. Import Screen Recording</h2>
-                    <VideoImportCard onFileSelected={(file) => setSelectedFile(file)} />
-                  </>
+                  <VideoImportCard onFileSelected={(file) => setSelectedFile(file)} />
                 )}
               </div>
+              <div className='workbench-footer'>
+                <HardDrive size={16} />
+                <span>Your recording stays on this device. No account or upload is required.</span>
+              </div>
+            </section>
 
-              <div className='landing-side-cards'>
+            <aside className='landing-reference' aria-label='Output and workflow notes'>
+              <figure className='landing-product-figure'>
+                <img
+                  className='landing-product-image'
+                  src='/appvid/images/appvid-feature.png'
+                  alt='AppVid preview editor with a smartphone mockup and video timeline'
+                />
+                <figcaption>
+                  <Clapperboard size={15} />
+                  Preview, timecode, and export in one local workspace.
+                </figcaption>
+              </figure>
+              <div className='reference-notes'>
                 {hasDraft && (
-                  <div className='landing-side-card restore-card'>
+                  <section className='restore-card'>
                     <div className='card-icon-header'>
                       <Save size={18} />
                       <h3>Restore Draft</h3>
@@ -465,13 +488,13 @@ export const AppShell: React.FC = () => {
                     <button className='btn btn-secondary btn-full' onClick={restoreDraft}>
                       Restore Last Session
                     </button>
-                  </div>
+                  </section>
                 )}
 
-                <div className='landing-side-card guidance-card'>
+                <section className='guidance-card'>
                   <div className='card-icon-header'>
                     <MonitorPlay size={18} />
-                    <h3>Getting Started</h3>
+                    <h3>Output notes</h3>
                   </div>
                   <ul className='guidance-list'>
                     <li>Supports portrait-mode MP4 or MOV screen recordings.</li>
@@ -480,9 +503,9 @@ export const AppShell: React.FC = () => {
                     <li>High-quality offline exports can take a few minutes.</li>
                     <li>Keep the browser tab open during encoding.</li>
                   </ul>
-                </div>
+                </section>
               </div>
-            </div>
+            </aside>
           </div>
         ) : (
           <>

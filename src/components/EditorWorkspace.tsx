@@ -32,6 +32,10 @@ export const EditorWorkspace: React.FC = () => {
       <div className='workspace-upper'>
         {/* Main Video & Controls Section */}
         <div className='preview-section'>
+          <div className='workspace-surface-label'>
+            <span>Preview monitor</span>
+            <span>Live</span>
+          </div>
           <div className='preview-container-wrapper'>
             <VideoPreview />
           </div>
@@ -40,6 +44,9 @@ export const EditorWorkspace: React.FC = () => {
 
         {/* Desktop Sidebar / Mobile Tabs Panel */}
         <aside className='sidebar-section'>
+          <div className='workspace-surface-label sidebar-surface-label'>
+            <span>Production tools</span>
+          </div>
           <div className='sidebar-tabs' role='tablist' aria-label='Sidebar Navigation Panels'>
             <button
               role='tab'
@@ -86,7 +93,7 @@ export const EditorWorkspace: React.FC = () => {
       {/* Timeline Section */}
       <div className='workspace-lower'>
         <div className='timeline-header-row'>
-          <span className='section-label'>Timeline Editor</span>
+          <span className='section-label'>Timeline / Edit decision list</span>
         </div>
         <div className='timeline-container-wrapper'>
           <Timeline />

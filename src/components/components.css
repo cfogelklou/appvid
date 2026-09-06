@@ -252,10 +252,12 @@
   --color-text-secondary: #a1a1aa;/* Zinc 400 */
   --color-text-muted: #71717a;    /* Zinc 500 */
   
-  --color-primary: #2563eb;      /* Electric Blue */
-  --color-primary-hover: #3b82f6;
-  --color-primary-active: #1d4ed8;
-  --color-primary-light: rgba(37, 99, 235, 0.15);
+  --color-primary: #007ee6;      /* AppVid electric blue */
+  --color-primary-hover: #1494ff;
+  --color-primary-active: #0063bb;
+  --color-primary-light: rgba(0, 126, 230, 0.15);
+  --color-playhead: #ef4444;
+  --color-playhead-hover: #f43f5e;
   
   --color-success: #16a34a;      /* Green 600 */
   --color-success-bg: rgba(22, 163, 74, 0.15);
@@ -270,7 +272,7 @@
   --radius-full: 9999px;
   
   --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
-  --font-sans: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 /* Glassmorphism utility */
@@ -986,7 +988,7 @@
   width: min(220px, 42vw);
   max-height: 220px;
   margin: 0 auto 16px;
-  border: 1px solid rgba(99, 102, 241, 0.28);
+  border: 1px solid rgba(0, 126, 230, 0.28);
   border-radius: 14px;
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
   object-fit: cover;
@@ -1209,24 +1211,22 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: linear-gradient(90deg, rgba(168, 85, 247, 0.12) 0%, rgba(59, 130, 246, 0.12) 100%);
-  border: 1px solid rgba(168, 85, 247, 0.25);
-  color: #c084fc; /* Purple 400 */
+  background: rgba(0, 126, 230, 0.1);
+  border: 1px solid rgba(0, 126, 230, 0.3);
+  color: #75c9ff;
   padding: 6px 16px;
   border-radius: var(--radius-full);
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.08);
+  box-shadow: none;
 }
 
 .landing-title {
   font-size: 3.2rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #ffffff 40%, #a855f7 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--color-text-primary);
   letter-spacing: -0.03em;
   margin: 16px 0 8px;
 }
@@ -1284,9 +1284,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #c084fc; /* Purple 400 */
-  border-left: 3px solid var(--accent);
-  padding-left: 10px;
+  color: var(--color-primary-hover);
   margin-bottom: 4px;
 }
 
@@ -1351,7 +1349,7 @@
 }
 
 .guidance-card .card-icon-header {
-  color: #c084fc; /* Purple icon */
+  color: var(--color-primary-hover);
 }
 
 .guidance-card p, .restore-card p {
@@ -1379,19 +1377,12 @@
 
 .guidance-list li::before {
   content: "•";
-  color: #c084fc; /* Purple bullet */
+  color: var(--color-primary-hover);
   font-weight: bold;
   font-size: 1.25rem;
   position: absolute;
   left: 4px;
   top: -2px;
-}
-
-/* Background radial gradient glow for landing screen */
-.app-shell:has(.landing-screen) {
-  background-image: 
-    radial-gradient(circle at 50% -20%, rgba(168, 85, 247, 0.08) 0%, transparent 60%),
-    radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.03) 0%, transparent 40%);
 }
 
 /* Preset Selector Styling */
@@ -1439,14 +1430,14 @@
 }
 
 .preset-card:hover {
-  border-color: rgba(168, 85, 247, 0.4);
-  background-color: rgba(168, 85, 247, 0.02);
+  border-color: rgba(0, 126, 230, 0.4);
+  background-color: rgba(0, 126, 230, 0.02);
   transform: translateY(-1px);
 }
 
 .preset-card.active {
   border-color: var(--color-primary);
-  background-color: rgba(99, 102, 241, 0.05);
+  background-color: rgba(0, 126, 230, 0.05);
   box-shadow: 0 0 0 1px var(--color-primary);
 }
 
@@ -1479,8 +1470,8 @@
 }
 
 .platform-badge.ios {
-  background-color: rgba(168, 85, 247, 0.15);
-  color: #c084fc;
+  background-color: rgba(0, 126, 230, 0.15);
+  color: #75c9ff;
 }
 
 .platform-badge.android {

@@ -39,10 +39,10 @@ export interface ExportSettings {
   presetId: string;
   width: number;
   height: number;
-  fitMode: "fit" | "fill";
-  originalAudioMode: "keep" | "mute";
-  audioSeparationMode?: "separated" | "embedded" | "none";
-  quality: "high";
+  fitMode: 'fit' | 'fill';
+  originalAudioMode: 'keep' | 'mute';
+  audioSeparationMode?: 'separated' | 'embedded' | 'none';
+  quality: 'high';
 }
 
 export interface Project {
@@ -62,6 +62,6 @@ export interface StorePreset {
   name: string;
   width: number;
   height: number;
-  platform: "ios" | "android" | "custom";
+  platform: 'ios' | 'android' | 'custom';
   description: string;
 }

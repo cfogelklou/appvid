@@ -1,15 +1,15 @@
-import React, { useRef, useState, useEffect } from "react";
-import { useProject, getEditedVideoDuration } from "../context/ProjectContext";
-import { TimelineRuler } from "./TimelineRuler";
-import { TimelineTrack } from "./TimelineTrack";
-import { IntervalClip } from "./IntervalClip";
-import { Playhead } from "./Playhead";
-import { TimelineZoomControls } from "./TimelineZoomControls";
-import { timeToX, xToTime } from "../utils/timelineMath";
-import { Video } from "lucide-react";
-import { assignLanes } from "../utils/intervalUtils";
-import { resolveTextCue } from "../text/types";
-import "./Timeline.css";
+import React, { useRef, useState, useEffect } from 'react';
+import { useProject, getEditedVideoDuration } from '../context/ProjectContext';
+import { TimelineRuler } from './TimelineRuler';
+import { TimelineTrack } from './TimelineTrack';
+import { IntervalClip } from './IntervalClip';
+import { Playhead } from './Playhead';
+import { TimelineZoomControls } from './TimelineZoomControls';
+import { timeToX, xToTime } from '../utils/timelineMath';
+import { Video } from 'lucide-react';
+import { assignLanes } from '../utils/intervalUtils';
+import { resolveTextCue } from '../text/types';
+import './Timeline.css';
 
 export const Timeline: React.FC = () => {
   const {
@@ -39,7 +39,7 @@ export const Timeline: React.FC = () => {
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
-    type: "video" | "audio" | "text";
+    type: 'video' | 'audio' | 'text';
     id: string;
   } | null>(null);
 
@@ -48,16 +48,15 @@ export const Timeline: React.FC = () => {
     const handleOutsideClick = () => {
       setContextMenu(null);
     };
-    window.addEventListener("click", handleOutsideClick);
-    return () => window.removeEventListener("click", handleOutsideClick);
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
   }, []);
 
   // Calculate total duration
   const videoDuration = getEditedVideoDuration(project);
   const maxSegmentEnd = project.segments.reduce((max, s) => {
     const asset = project.audioAssets.find((a) => a.id === s.assetId);
-    const duration =
-      s.duration !== undefined ? s.duration : asset ? asset.duration : 0;
+    const duration = s.duration !== undefined ? s.duration : asset ? asset.duration : 0;
     return Math.max(max, s.startTime + duration);
   }, 0);
   const totalDuration = Math.max(videoDuration, maxSegmentEnd, 30); // minimum 30s
@@ -95,11 +94,7 @@ export const Timeline: React.FC = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const activeTag = document.activeElement?.tagName;
-      if (
-        activeTag === "INPUT" ||
-        activeTag === "TEXTAREA" ||
-        activeTag === "SELECT"
-      ) {
+      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') {
         return;
       }
 
@@ -112,7 +107,7 @@ export const Timeline: React.FC = () => {
       if (textCue) {
         // Arrow-key nudge + drag for text cues is handled by <IntervalClip>.
         // Only delete is handled here.
-        if (e.key === "Delete" || e.key === "Backspace") {
+        if (e.key === 'Delete' || e.key === 'Backspace') {
           e.preventDefault();
           deleteTextCue(selectedSegmentId);
           setSelectedSegmentId(null);
@@ -124,23 +119,23 @@ export const Timeline: React.FC = () => {
       const segment = project.segments.find((s) => s.id === selectedSegmentId);
       if (!segment) return;
 
-      if (e.key === "ArrowLeft") {
+      if (e.key === 'ArrowLeft') {
         e.preventDefault();
         const newTime = Math.max(0, segment.startTime - step);
         updateSegment(selectedSegmentId, { startTime: newTime });
-      } else if (e.key === "ArrowRight") {
+      } else if (e.key === 'ArrowRight') {
         e.preventDefault();
         const newTime = segment.startTime + step;
         updateSegment(selectedSegmentId, { startTime: newTime });
-      } else if (e.key === "Delete" || e.key === "Backspace") {
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault();
         removeSegment(selectedSegmentId);
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, [
     selectedSegmentId,
@@ -152,10 +147,7 @@ export const Timeline: React.FC = () => {
     deleteTextCue,
   ]);
 
-  const handleVideoSegmentContextMenu = (
-    e: React.MouseEvent,
-    segId: string,
-  ) => {
+  const handleVideoSegmentContextMenu = (e: React.MouseEvent, segId: string) => {
     e.preventDefault();
     e.stopPropagation();
     setSelectedVideoSegmentId(segId);
@@ -170,15 +162,12 @@ export const Timeline: React.FC = () => {
     setContextMenu({
       x,
       y,
-      type: "video",
+      type: 'video',
       id: segId,
     });
   };
 
-  const handleAudioSegmentContextMenu = (
-    e: React.MouseEvent,
-    segId: string,
-  ) => {
+  const handleAudioSegmentContextMenu = (e: React.MouseEvent, segId: string) => {
     e.preventDefault();
     e.stopPropagation();
     setSelectedSegmentId(segId);
@@ -192,7 +181,7 @@ export const Timeline: React.FC = () => {
     setContextMenu({
       x,
       y,
-      type: "audio",
+      type: 'audio',
       id: segId,
     });
   };
@@ -211,40 +200,36 @@ export const Timeline: React.FC = () => {
     setContextMenu({
       x,
       y,
-      type: "text",
+      type: 'text',
       id: cueId,
     });
   };
 
   return (
-    <div className="timeline-container">
-      <div className="timeline-toolbar">
-        <span className="timeline-title">Timeline</span>
+    <div className='timeline-container'>
+      <div className='timeline-toolbar'>
+        <span className='timeline-title'>Timeline</span>
         <TimelineZoomControls />
       </div>
 
       <div
-        className="timeline-viewport"
+        className='timeline-viewport'
         ref={viewportRef}
         onClick={(e) => {
           // Deselect if clicking on empty space in timeline
           if (
             e.target === e.currentTarget ||
-            (e.target as HTMLElement).classList.contains("timeline-content") ||
-            (e.target as HTMLElement).classList.contains("timeline-tracks")
+            (e.target as HTMLElement).classList.contains('timeline-content') ||
+            (e.target as HTMLElement).classList.contains('timeline-tracks')
           ) {
             setSelectedSegmentId(null);
             setSelectedVideoSegmentId(null);
           }
         }}
       >
-        <div
-          className="timeline-content"
-          ref={contentRef}
-          style={{ width: `${contentWidth}px` }}
-        >
+        <div className='timeline-content' ref={contentRef} style={{ width: `${contentWidth}px` }}>
           <div
-            className="timeline-ruler-wrapper"
+            className='timeline-ruler-wrapper'
             onPointerDown={handleRulerPointerDown}
             onPointerMove={handleRulerPointerMove}
             onPointerUp={handleRulerPointerUp}
@@ -252,14 +237,14 @@ export const Timeline: React.FC = () => {
             <TimelineRuler duration={totalDuration} />
           </div>
 
-          <div className="timeline-tracks">
+          <div className='timeline-tracks'>
             {/* Visual Video Track Lane */}
             {project.video && project.videoSegments && (
-              <div className="video-track-lane">
+              <div className='video-track-lane'>
                 {project.videoSegments.map((seg) => (
                   <div
                     key={seg.id}
-                    className={`video-track-clip ${selectedVideoSegmentId === seg.id ? "selected" : ""}`}
+                    className={`video-track-clip ${selectedVideoSegmentId === seg.id ? 'selected' : ''}`}
                     style={{
                       left: `${timeToX(seg.startTime, zoom)}px`,
                       width: `${timeToX(seg.duration, zoom)}px`,
@@ -269,18 +254,14 @@ export const Timeline: React.FC = () => {
                       setSelectedVideoSegmentId(seg.id);
                       setSelectedSegmentId(null);
                     }}
-                    onContextMenu={(e) =>
-                      handleVideoSegmentContextMenu(e, seg.id)
-                    }
+                    onContextMenu={(e) => handleVideoSegmentContextMenu(e, seg.id)}
                   >
-                    <Video size={13} className="video-clip-icon" />
-                    <span className="video-clip-name">
-                      {project.video?.name}{" "}
-                      {seg.playbackRate !== 1.0 ? `(${seg.playbackRate}x)` : ""}
+                    <Video size={13} className='video-clip-icon' />
+                    <span className='video-clip-name'>
+                      {project.video?.name}{' '}
+                      {seg.playbackRate !== 1.0 ? `(${seg.playbackRate}x)` : ''}
                     </span>
-                    <span className="video-clip-duration">
-                      ({seg.duration.toFixed(1)}s)
-                    </span>
+                    <span className='video-clip-duration'>({seg.duration.toFixed(1)}s)</span>
                   </div>
                 ))}
               </div>
@@ -288,7 +269,7 @@ export const Timeline: React.FC = () => {
 
             {/* Text Track Lane */}
             {text.cues.length > 0 && (
-              <div className="text-track-container">
+              <div className='text-track-container'>
                 {(() => {
                   // Compute lanes for text cues (map to LanedInterval shape for assignLanes).
                   // Use the RESOLVED cue (base ∪ overrides) so the clip reflects the
@@ -303,8 +284,7 @@ export const Timeline: React.FC = () => {
                       };
                     }),
                   );
-                  const laneCount =
-                    Math.max(...lanedIntervals.map((c) => c.lane)) + 1;
+                  const laneCount = Math.max(...lanedIntervals.map((c) => c.lane)) + 1;
                   const laneHeight = 28; // Same as audio lane height
 
                   // Map back to original cues for rendering (access .base properties)
@@ -320,7 +300,7 @@ export const Timeline: React.FC = () => {
                       {Array.from({ length: laneCount }).map((_, laneIdx) => (
                         <div
                           key={`text-lane-${laneIdx}`}
-                          className="text-track-lane"
+                          className='text-track-lane'
                           style={{
                             top: `${laneIdx * laneHeight}px`,
                             height: `${laneHeight - 4}px`,
@@ -331,13 +311,11 @@ export const Timeline: React.FC = () => {
                         const resolved = resolveTextCue(cue);
                         const stringKey = resolved.stringKey;
                         const previewValue = text.previewLocale
-                          ? text.catalogs[text.previewLocale]?.strings[
-                              stringKey
-                            ]
+                          ? text.catalogs[text.previewLocale]?.strings[stringKey]
                           : undefined;
                         const label =
                           previewValue && previewValue.trim()
-                            ? previewValue.replace(/\s+/g, " ").slice(0, 24)
+                            ? previewValue.replace(/\s+/g, ' ').slice(0, 24)
                             : stringKey;
                         return (
                           <IntervalClip
@@ -349,8 +327,8 @@ export const Timeline: React.FC = () => {
                             }}
                             label={label}
                             selected={selectedSegmentId === cue.id}
-                            selection={{ kind: "text", id: cue.id }}
-                            className="text-track-clip"
+                            selection={{ kind: 'text', id: cue.id }}
+                            className='text-track-clip'
                             onSelect={(sel) => {
                               setSelectedSegmentId(sel.id);
                               setSelectedVideoSegmentId(null);
@@ -362,9 +340,7 @@ export const Timeline: React.FC = () => {
                                 });
                               }
                             }}
-                            onContextMenu={(e) =>
-                              handleTextCueContextMenu(e, cue.id)
-                            }
+                            onContextMenu={(e) => handleTextCueContextMenu(e, cue.id)}
                             lane={lane}
                             laneHeight={laneHeight}
                           />
@@ -379,35 +355,28 @@ export const Timeline: React.FC = () => {
             {/* Visual marker for Video Duration end */}
             {project.video && (
               <div
-                className="video-end-marker"
+                className='video-end-marker'
                 style={{ left: `${timeToX(videoDuration, zoom)}px` }}
               >
-                <div className="video-end-label">
-                  Video End ({videoDuration.toFixed(1)}s)
-                </div>
+                <div className='video-end-label'>Video End ({videoDuration.toFixed(1)}s)</div>
               </div>
             )}
 
-            <TimelineTrack
-              onAudioSegmentContextMenu={handleAudioSegmentContextMenu}
-            />
+            <TimelineTrack onAudioSegmentContextMenu={handleAudioSegmentContextMenu} />
           </div>
 
-          <Playhead
-            timelineRef={contentRef}
-            onDragStart={handleRulerPointerDown}
-          />
+          <Playhead timelineRef={contentRef} onDragStart={handleRulerPointerDown} />
         </div>
       </div>
 
       {/* Context Menu for Timeline Clips */}
       {contextMenu && (
         <div
-          className="context-menu"
+          className='context-menu'
           style={{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }}
           onClick={(e) => e.stopPropagation()}
         >
-          {contextMenu.type === "video" && (
+          {contextMenu.type === 'video' && (
             <>
               <button
                 onClick={() => {
@@ -422,15 +391,13 @@ export const Timeline: React.FC = () => {
                   deleteVideoSegment(contextMenu.id);
                   setContextMenu(null);
                 }}
-                disabled={
-                  project.videoSegments && project.videoSegments.length <= 1
-                }
+                disabled={project.videoSegments && project.videoSegments.length <= 1}
               >
                 Delete Clip
               </button>
-              <div className="context-menu-divider" />
-              <div className="context-menu-header">Set Speed</div>
-              <div className="speed-options-grid">
+              <div className='context-menu-divider' />
+              <div className='context-menu-header'>Set Speed</div>
+              <div className='speed-options-grid'>
                 {[0.5, 1.0, 1.5, 2.0, 4.0, 8.0, 20.0].map((speed) => (
                   <button
                     key={speed}
@@ -446,7 +413,7 @@ export const Timeline: React.FC = () => {
             </>
           )}
 
-          {contextMenu.type === "audio" && (
+          {contextMenu.type === 'audio' && (
             <button
               onClick={() => {
                 removeSegment(contextMenu.id);
@@ -460,7 +427,7 @@ export const Timeline: React.FC = () => {
             </button>
           )}
 
-          {contextMenu.type === "text" && (
+          {contextMenu.type === 'text' && (
             <button
               onClick={() => {
                 deleteTextCue(contextMenu.id);

@@ -1,4 +1,4 @@
-import type { Project, AudioSegment, AudioAssetMetadata } from "../types";
+import type { Project, AudioSegment, AudioAssetMetadata } from '../types';
 
 export class PreviewPlayer {
   private video: HTMLVideoElement | null = null;
@@ -45,7 +45,7 @@ export class PreviewPlayer {
   play() {
     if (this.video && this.video.paused) {
       this.video.play().catch((err) => {
-        console.warn("[PreviewPlayer] Video play failed:", err);
+        console.warn('[PreviewPlayer] Video play failed:', err);
       });
     }
   }
@@ -57,11 +57,7 @@ export class PreviewPlayer {
   }
 
   public timelineTimeToSourceTime(t: number): number {
-    if (
-      !this.project ||
-      !this.project.videoSegments ||
-      this.project.videoSegments.length === 0
-    ) {
+    if (!this.project || !this.project.videoSegments || this.project.videoSegments.length === 0) {
       return t;
     }
     // Find segment covering t
@@ -69,30 +65,22 @@ export class PreviewPlayer {
       (s) => t >= s.startTime && t <= s.startTime + s.duration,
     );
     if (!seg) {
-      const lastSeg =
-        this.project.videoSegments[this.project.videoSegments.length - 1];
+      const lastSeg = this.project.videoSegments[this.project.videoSegments.length - 1];
       return lastSeg.clipStart + lastSeg.duration * lastSeg.playbackRate;
     }
     return seg.clipStart + (t - seg.startTime) * seg.playbackRate;
   }
 
   public sourceTimeToTimelineTime(srcTime: number): number {
-    if (
-      !this.project ||
-      !this.project.videoSegments ||
-      this.project.videoSegments.length === 0
-    ) {
+    if (!this.project || !this.project.videoSegments || this.project.videoSegments.length === 0) {
       return srcTime;
     }
     // Find segment covering srcTime
     const seg = this.project.videoSegments.find(
-      (s) =>
-        srcTime >= s.clipStart &&
-        srcTime <= s.clipStart + s.duration * s.playbackRate,
+      (s) => srcTime >= s.clipStart && srcTime <= s.clipStart + s.duration * s.playbackRate,
     );
     if (!seg) {
-      const lastSeg =
-        this.project.videoSegments[this.project.videoSegments.length - 1];
+      const lastSeg = this.project.videoSegments[this.project.videoSegments.length - 1];
       return lastSeg.startTime + lastSeg.duration;
     }
     return seg.startTime + (srcTime - seg.clipStart) / seg.playbackRate;
@@ -108,7 +96,7 @@ export class PreviewPlayer {
         this.syncPlaybackRate();
         this.syncAudio();
       } catch (err) {
-        console.warn("[PreviewPlayer] Video seek failed:", err);
+        console.warn('[PreviewPlayer] Video seek failed:', err);
       }
     }
   }
@@ -120,11 +108,7 @@ export class PreviewPlayer {
 
   private getTargetPlaybackRate(): number {
     if (!this.video) return this.globalRate;
-    if (
-      !this.project ||
-      !this.project.videoSegments ||
-      this.project.videoSegments.length === 0
-    ) {
+    if (!this.project || !this.project.videoSegments || this.project.videoSegments.length === 0) {
       return this.globalRate;
     }
     const vTime = this.sourceTimeToTimelineTime(this.video.currentTime);
@@ -141,10 +125,9 @@ export class PreviewPlayer {
 
     const originalAudioMode = this.project?.settings?.originalAudioMode;
     const separationMode = this.project?.settings?.audioSeparationMode;
-    const isSeparated = separationMode === "separated";
+    const isSeparated = separationMode === 'separated';
 
-    const shouldMuteVideoElement =
-      targetRate > 2.0 || isSeparated || originalAudioMode === "mute";
+    const shouldMuteVideoElement = targetRate > 2.0 || isSeparated || originalAudioMode === 'mute';
     if (this.video.muted !== shouldMuteVideoElement) {
       this.video.muted = shouldMuteVideoElement;
     }
@@ -166,28 +149,28 @@ export class PreviewPlayer {
 
   private setupListeners() {
     if (!this.video) return;
-    this.video.addEventListener("timeupdate", this.handleTimeUpdate);
-    this.video.addEventListener("play", this.handlePlay);
-    this.video.addEventListener("pause", this.handlePause);
-    this.video.addEventListener("seeking", this.handleSeeking);
-    this.video.addEventListener("seeked", this.handleSeeked);
-    this.video.addEventListener("ratechange", this.handleRateChange);
+    this.video.addEventListener('timeupdate', this.handleTimeUpdate);
+    this.video.addEventListener('play', this.handlePlay);
+    this.video.addEventListener('pause', this.handlePause);
+    this.video.addEventListener('seeking', this.handleSeeking);
+    this.video.addEventListener('seeked', this.handleSeeked);
+    this.video.addEventListener('ratechange', this.handleRateChange);
   }
 
   private removeListeners() {
     if (!this.video) return;
-    this.video.removeEventListener("timeupdate", this.handleTimeUpdate);
-    this.video.removeEventListener("play", this.handlePlay);
-    this.video.removeEventListener("pause", this.handlePause);
-    this.video.removeEventListener("seeking", this.handleSeeking);
-    this.video.removeEventListener("seeked", this.handleSeeked);
-    this.video.removeEventListener("ratechange", this.handleRateChange);
+    this.video.removeEventListener('timeupdate', this.handleTimeUpdate);
+    this.video.removeEventListener('play', this.handlePlay);
+    this.video.removeEventListener('pause', this.handlePause);
+    this.video.removeEventListener('seeking', this.handleSeeking);
+    this.video.removeEventListener('seeked', this.handleSeeked);
+    this.video.removeEventListener('ratechange', this.handleRateChange);
   }
 
   private clearAudioPool() {
     for (const audio of this.audioPool.values()) {
       audio.pause();
-      audio.src = "";
+      audio.src = '';
     }
     this.audioPool.clear();
   }
@@ -197,11 +180,7 @@ export class PreviewPlayer {
     this.isSelfUpdatingPlayhead = true;
 
     // Check if the playhead crossed a segment boundary
-    if (
-      this.project &&
-      this.project.videoSegments &&
-      this.project.videoSegments.length > 0
-    ) {
+    if (this.project && this.project.videoSegments && this.project.videoSegments.length > 0) {
       const vTime = this.sourceTimeToTimelineTime(this.video.currentTime);
       const segIndex = this.project.videoSegments.findIndex(
         (s) => vTime >= s.startTime && vTime <= s.startTime + s.duration,
@@ -224,9 +203,7 @@ export class PreviewPlayer {
       }
     }
 
-    const currentTimelineTime = this.sourceTimeToTimelineTime(
-      this.video.currentTime,
-    );
+    const currentTimelineTime = this.sourceTimeToTimelineTime(this.video.currentTime);
     if (this.onTimeUpdateCallback) {
       this.onTimeUpdateCallback(currentTimelineTime);
     }
@@ -277,8 +254,7 @@ export class PreviewPlayer {
       const asset = this.assets.find((a) => a.id === seg.assetId);
       if (!asset || !asset.blobUrl) continue;
 
-      const duration =
-        seg.duration !== undefined ? seg.duration : asset.duration;
+      const duration = seg.duration !== undefined ? seg.duration : asset.duration;
       const clipStart = seg.clipStart !== undefined ? seg.clipStart : 0;
       const start = seg.startTime;
       const end = start + duration;
@@ -297,10 +273,7 @@ export class PreviewPlayer {
 
           if (isVideoPlaying) {
             audio.play().catch((err) => {
-              console.warn(
-                `[PreviewPlayer] Failed to play audio segment ${seg.id}:`,
-                err,
-              );
+              console.warn(`[PreviewPlayer] Failed to play audio segment ${seg.id}:`, err);
             });
           }
         } else {
@@ -318,10 +291,7 @@ export class PreviewPlayer {
           if (isVideoPlaying) {
             if (audio.paused) {
               audio.play().catch((err) => {
-                console.warn(
-                  `[PreviewPlayer] Failed to resume audio segment ${seg.id}:`,
-                  err,
-                );
+                console.warn(`[PreviewPlayer] Failed to resume audio segment ${seg.id}:`, err);
               });
             }
           } else {
@@ -336,7 +306,7 @@ export class PreviewPlayer {
     for (const [id, audio] of this.audioPool.entries()) {
       if (!activeSegmentIds.has(id)) {
         audio.pause();
-        audio.src = "";
+        audio.src = '';
         this.audioPool.delete(id);
       }
     }

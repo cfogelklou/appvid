@@ -5,8 +5,8 @@
  * These functions are lead-owned (Wave 0). Agent B builds the generic interval
  * clip/track *components* on top of them.
  */
-import type { TimelineInterval } from "../text/types";
-import { stopTimeOf } from "../text/types";
+import type { TimelineInterval } from '../text/types';
+import { stopTimeOf } from '../text/types';
 
 /** Allowed movement bounds: interval must stay within [0, maxEnd]. */
 export interface IntervalBounds {
@@ -21,8 +21,7 @@ export const clampStartTime = (
   bounds: IntervalBounds,
 ): number => {
   const lo = 0;
-  const hi =
-    bounds.maxEnd == null ? Infinity : Math.max(0, bounds.maxEnd - duration);
+  const hi = bounds.maxEnd == null ? Infinity : Math.max(0, bounds.maxEnd - duration);
   return Math.max(lo, Math.min(startTime, hi));
 };
 
@@ -36,11 +35,7 @@ export const moveInterval = (
   bounds: IntervalBounds,
 ): TimelineInterval => ({
   ...interval,
-  startTime: clampStartTime(
-    interval.startTime + delta,
-    interval.duration,
-    bounds,
-  ),
+  startTime: clampStartTime(interval.startTime + delta, interval.duration, bounds),
 });
 
 /** Clamp an interval's start/duration in place to the given bounds. */
@@ -68,9 +63,7 @@ export interface LanedInterval extends TimelineInterval {
   id: string;
 }
 
-export const assignLanes = <T extends LanedInterval>(
-  intervals: T[],
-): (T & { lane: number })[] => {
+export const assignLanes = <T extends LanedInterval>(intervals: T[]): (T & { lane: number })[] => {
   const sorted = [...intervals].sort((a, b) => {
     if (a.startTime !== b.startTime) return a.startTime - b.startTime;
     return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
@@ -91,14 +84,9 @@ export const assignLanes = <T extends LanedInterval>(
 /** Number of lanes required to display a set of intervals without overlap. */
 export const laneCount = (intervals: LanedInterval[]): number => {
   if (intervals.length === 0) return 0;
-  return assignLanes(intervals).reduce(
-    (max, iv) => Math.max(max, iv.lane + 1),
-    0,
-  );
+  return assignLanes(intervals).reduce((max, iv) => Math.max(max, iv.lane + 1), 0);
 };
 
 /** Do two intervals overlap on the half-open range? Adjacent (touching) = no. */
-export const intervalsOverlap = (
-  a: TimelineInterval,
-  b: TimelineInterval,
-): boolean => a.startTime < stopTimeOf(b) && b.startTime < stopTimeOf(a);
+export const intervalsOverlap = (a: TimelineInterval, b: TimelineInterval): boolean =>
+  a.startTime < stopTimeOf(b) && b.startTime < stopTimeOf(a);

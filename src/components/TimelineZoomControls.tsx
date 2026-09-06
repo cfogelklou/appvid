@@ -1,7 +1,7 @@
-import React from "react";
-import { useProject, getEditedVideoDuration } from "../context/ProjectContext";
-import { ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
-import "./TimelineZoomControls.css";
+import React from 'react';
+import { useProject, getEditedVideoDuration } from '../context/ProjectContext';
+import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import './TimelineZoomControls.css';
 
 export const TimelineZoomControls: React.FC = () => {
   const { zoom, setZoom, project } = useProject();
@@ -18,7 +18,7 @@ export const TimelineZoomControls: React.FC = () => {
 
   const handleZoomFit = () => {
     // Find viewport element to calculate zoom fit dynamically
-    const viewport = document.querySelector(".timeline-viewport");
+    const viewport = document.querySelector('.timeline-viewport');
     const duration = getEditedVideoDuration(project) || 30; // default 30s if no video
     if (viewport) {
       const width = viewport.clientWidth;
@@ -31,31 +31,31 @@ export const TimelineZoomControls: React.FC = () => {
   };
 
   return (
-    <div className="zoom-controls-container">
+    <div className='zoom-controls-container'>
       <button
-        type="button"
-        className="zoom-btn"
+        type='button'
+        className='zoom-btn'
         onClick={handleZoomOut}
-        title="Zoom Out (-10px/s)"
+        title='Zoom Out (-10px/s)'
         disabled={zoom <= 10}
       >
         <ZoomOut size={16} />
       </button>
-      <span className="zoom-percentage">{Math.round(zoom)}px/s</span>
+      <span className='zoom-percentage'>{Math.round(zoom)}px/s</span>
       <button
-        type="button"
-        className="zoom-btn"
+        type='button'
+        className='zoom-btn'
         onClick={handleZoomIn}
-        title="Zoom In (+10px/s)"
+        title='Zoom In (+10px/s)'
         disabled={zoom >= 250}
       >
         <ZoomIn size={16} />
       </button>
       <button
-        type="button"
-        className="zoom-btn zoom-fit-btn"
+        type='button'
+        className='zoom-btn zoom-fit-btn'
         onClick={handleZoomFit}
-        title="Fit Timeline to Viewport"
+        title='Fit Timeline to Viewport'
       >
         <Maximize2 size={15} />
         <span>Fit</span>

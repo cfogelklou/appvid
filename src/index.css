@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
 
 /*
  * Bundled Noto fonts for the multilingual text feature. Served from /appvid/fonts
@@ -34,10 +34,21 @@
   --shadow: var(--shadow-lg);
   --mono: 'Share Tech Mono', SFMono-Regular, Consolas, Menlo, monospace;
 
-  /* Accent Branding for Audio Elements (distinguishing from Blue Video controls) */
-  --accent: #a855f7; /* Purple 500 */
-  --accent-bg: rgba(168, 85, 247, 0.12);
-  --accent-border: rgba(168, 85, 247, 0.35);
+  /* Accent branding for audio elements, distinct from video controls. */
+  --accent: #007ee6;
+  --accent-bg: rgba(0, 126, 230, 0.12);
+  --accent-border: rgba(0, 126, 230, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Custom focus visible outlines for accessibility */
@@ -59,7 +70,7 @@ body {
   margin: 0;
   background-color: #09090b; /* matches --color-bg-base */
   color: #fafafa; /* matches --color-text-primary */
-  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden; /* AppShell manages internal scrolling */

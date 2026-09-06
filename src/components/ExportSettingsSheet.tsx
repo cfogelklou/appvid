@@ -1,13 +1,14 @@
-import React, { useState, useMemo } from "react";
-import { useProject, getEditedVideoDuration } from "../context/ProjectContext";
-import { STORE_PRESETS } from "../constants";
-import { X, AlertTriangle, Check, Info } from "lucide-react";
-import { BUILT_IN_LOCALES } from "../text/constants";
-import { validateLocaleKeys } from "../text/textPackage";
-import { resolveTextCue } from "../text/types";
-import { layoutCue, createCanvasMeasurer } from "../text/textLayout";
-import type { LaidOutTextCue } from "../text/types";
-import "./components.css";
+import React, { useState, useMemo, useRef } from 'react';
+import { useProject, getEditedVideoDuration } from '../context/ProjectContext';
+import { STORE_PRESETS } from '../constants';
+import { X, AlertTriangle, Check, Info } from 'lucide-react';
+import { BUILT_IN_LOCALES } from '../text/constants';
+import { validateLocaleKeys } from '../text/textPackage';
+import { resolveTextCue } from '../text/types';
+import { layoutCue, createCanvasMeasurer } from '../text/textLayout';
+import type { LaidOutTextCue } from '../text/types';
+import './components.css';
+import { useDialogFocus } from './useDialogFocus';
 
 interface ExportSettingsSheetProps {
   isOpen: boolean;
@@ -16,10 +17,7 @@ interface ExportSettingsSheetProps {
   onStartBatchExport?: (batchInput: {
     items: Array<{ locale: string; cueLayouts: LaidOutTextCue[] }>;
   }) => void;
-  onStartSingleTextExport?: (item: {
-    locale: string;
-    cueLayouts: LaidOutTextCue[];
-  }) => void;
+  onStartSingleTextExport?: (item: { locale: string; cueLayouts: LaidOutTextCue[] }) => void;
 }
 
 export const ExportSettingsSheet: React.FC<ExportSettingsSheetProps> = ({
@@ -30,26 +28,29 @@ export const ExportSettingsSheet: React.FC<ExportSettingsSheetProps> = ({
   onStartSingleTextExport,
 }) => {
   const { project, updateSettings, text } = useProject();
-  const [selectedLocales, setSelectedLocales] = useState<Set<string>>(
-    new Set(),
-  );
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const [selectedLocales, setSelectedLocales] = useState<Set<string>>(new Set());
+
+  useDialogFocus({
+    isOpen,
+    dialogRef,
+    initialFocusRef: closeButtonRef,
+    onClose,
+  });
 
   const { video, settings } = project;
   const tw = settings.width;
   const th = settings.height;
 
   // Check if browser supports directory picker (Chromium only)
-  const supportsDirectoryPicker =
-    typeof window !== "undefined" && "showDirectoryPicker" in window;
+  const supportsDirectoryPicker = typeof window !== 'undefined' && 'showDirectoryPicker' in window;
 
   // Determine whether to show locale selector (only when text cues exist)
   const hasTextCues = text.cues.length > 0;
 
   // Get all imported locales
-  const importedLocales = useMemo(
-    () => Object.keys(text.catalogs),
-    [text.catalogs],
-  );
+  const importedLocales = useMemo(() => Object.keys(text.catalogs), [text.catalogs]);
 
   // Compute resolved keys for validation
   const resolvedKeys = useMemo(() => {
@@ -63,11 +64,7 @@ export const ExportSettingsSheet: React.FC<ExportSettingsSheetProps> = ({
       { blocked: boolean; missingKeys: string[]; reasons: string[] }
     >();
     for (const locale of importedLocales) {
-      const validation = validateLocaleKeys(
-        resolvedKeys,
-        locale,
-        text.catalogs[locale],
-      );
+      const validation = validateLocaleKeys(resolvedKeys, locale, text.catalogs[locale]);
       validations.set(locale, {
         blocked: validation.blocked,
         missingKeys: validation.missingKeys,
@@ -123,8 +120,7 @@ export const ExportSettingsSheet: React.FC<ExportSettingsSheetProps> = ({
   const isExportDisabled =
     !video ||
     (hasTextCues &&
-      (selectedLocales.size === 0 ||
-        (!supportsDirectoryPicker && selectedLocales.size !== 1)));
+      (selectedLocales.size === 0 || (!supportsDirectoryPicker && selectedLocales.size !== 1)));
 
   // Handle start export
   const handleStartExport = () => {
@@ -177,9 +173,7 @@ export const ExportSettingsSheet: React.FC<ExportSettingsSheetProps> = ({
     if (ratioDifference > 0.02) {
       warnings.push(
         `Source aspect ratio (${sourceRatio.toFixed(2)}) differs from target preset (${targetRatio.toFixed(2)}). Video will be ${
-          settings.fitMode === "fit"
-            ? "fit with black bars"
-            : "filled and cropped"
+          settings.fitMode === 'fit' ? 'fit with black bars' : 'filled and cropped'
         }.`,
       );
     }
@@ -199,11 +193,11 @@ export const ExportSettingsSheet: React.FC<ExportSettingsSheetProps> = ({
     updateSettings({ presetId: e.target.value });
   };
 
-  const handleFitModeChange = (mode: "fit" | "fill") => {
+  const handleFitModeChange = (mode: 'fit' | 'fill') => {
     updateSettings({ fitMode: mode });
   };
 
-  const handleAudioModeChange = (mode: "keep" | "mute") => {
+  const handleAudioModeChange = (mode: 'keep' | 'mute') => {
     updateSettings({ originalAudioMode: mode });
   };
 
@@ -222,54 +216,60 @@ export const ExportSettingsSheet: React.FC<ExportSettingsSheetProps> = ({
   };
 
   return (
-    <div className="sheet-backdrop" onClick={onClose}>
-      <div className="sheet-container" onClick={(e) => e.stopPropagation()}>
-        <div className="sheet-header">
-          <h3>Export Video Settings</h3>
+    <div className='sheet-backdrop' onClick={onClose}>
+      <div
+        ref={dialogRef}
+        className='sheet-container'
+        role='dialog'
+        aria-modal='true'
+        aria-labelledby='export-settings-title'
+        tabIndex={-1}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className='sheet-header'>
+          <h3 id='export-settings-title'>Export Video Settings</h3>
           <button
-            className="close-btn"
+            ref={closeButtonRef}
+            className='close-btn'
             onClick={onClose}
-            aria-label="Close settings"
+            aria-label='Close settings'
           >
             <X size={20} />
           </button>
         </div>
 
-        <div className="sheet-body">
+        <div className='sheet-body'>
           {/* Multilingual Batch Export Section */}
           {hasTextCues && (
-            <div className="sheet-section">
-              <span className="sheet-section-title">
-                Multilingual Text Export
-              </span>
+            <div className='sheet-section'>
+              <span className='sheet-section-title'>Multilingual Text Export</span>
 
               {!supportsDirectoryPicker ? (
-                <div className="info-panel">
-                  <div className="info-panel-header">
+                <div className='info-panel'>
+                  <div className='info-panel-header'>
                     <Info size={18} />
                     <span>Browser Limitation</span>
                   </div>
-                  <p className="info-panel-text">
-                    Batch export requires a Chromium-based browser (Chrome,
-                    Edge, Opera). Your browser doesn't support folder selection
-                    for batch export.
+                  <p className='info-panel-text'>
+                    Batch export requires a Chromium-based browser (Chrome, Edge, Opera). Your
+                    browser doesn't support folder selection for batch export.
                   </p>
-                  <p className="info-panel-text">
-                    <strong>Single locale only:</strong> Select one locale below
-                    to export a single video file.
+                  <p className='info-panel-text'>
+                    <strong>Single locale only:</strong> Select one locale below to export a single
+                    video file.
                   </p>
                 </div>
               ) : null}
 
               {importedLocales.length === 0 ? (
-                <div className="info-panel">
-                  <p className="info-panel-text">
-                    No locale catalogs imported yet. Import JSON files to enable
-                    multilingual export.
+                <div className='info-panel'>
+                  <p className='info-panel-text'>
+                    No locale catalogs imported yet. Import JSON files to enable multilingual
+                    export.
                   </p>
                 </div>
               ) : (
-                <div className="locale-checkbox-list">
+                <div className='locale-checkbox-list'>
                   {importedLocales.map((locale) => {
                     const validation = localeValidations.get(locale);
                     const isBlocked = validation?.blocked ?? false;
@@ -277,31 +277,27 @@ export const ExportSettingsSheet: React.FC<ExportSettingsSheetProps> = ({
                     const isSelected = selectedLocales.has(locale);
 
                     return (
-                      <label key={locale} className="locale-checkbox-item">
+                      <label key={locale} className='locale-checkbox-item'>
                         <input
-                          type="checkbox"
+                          type='checkbox'
                           checked={isSelected}
                           onChange={() => handleLocaleToggle(locale)}
                           disabled={
                             isBlocked ||
-                            (!supportsDirectoryPicker &&
-                              !isSelected &&
-                              selectedLocales.size >= 1)
+                            (!supportsDirectoryPicker && !isSelected && selectedLocales.size >= 1)
                           }
-                          className="locale-checkbox-input"
+                          className='locale-checkbox-input'
                         />
-                        <div className="locale-checkbox-content">
-                          <span className="locale-name">{locale}</span>
+                        <div className='locale-checkbox-content'>
+                          <span className='locale-name'>{locale}</span>
                           {isBlocked && missingKeys.length > 0 && (
-                            <span className="locale-blocked-reason">
+                            <span className='locale-blocked-reason'>
                               Missing {missingKeys.length} key(s)
                             </span>
                           )}
                         </div>
                         {isBlocked && (
-                          <div className="locale-missing-keys">
-                            {missingKeys.join(", ")}
-                          </div>
+                          <div className='locale-missing-keys'>{missingKeys.join(', ')}</div>
                         )}
                       </label>
                     );
@@ -310,71 +306,59 @@ export const ExportSettingsSheet: React.FC<ExportSettingsSheetProps> = ({
               )}
 
               {selectedLocales.size === 0 && importedLocales.length > 0 && (
-                <p className="locale-selection-hint">
-                  Select at least one locale to enable export
-                </p>
+                <p className='locale-selection-hint'>Select at least one locale to enable export</p>
               )}
             </div>
           )}
 
           {/* Orientation / Preset Selector */}
-          <div className="sheet-section">
-            <span className="sheet-section-title">
-              Output Orientation & Size
-            </span>
-            <select
-              className="form-select"
-              value={settings.presetId}
-              onChange={handlePresetChange}
-            >
-              <optgroup label="Apple App Store (iOS)">
-                {STORE_PRESETS.filter((p) => p.platform === "ios").map(
-                  (preset) => (
-                    <option key={preset.id} value={preset.id}>
-                      {preset.name} ({preset.width}x{preset.height})
-                    </option>
-                  ),
-                )}
+          <div className='sheet-section'>
+            <span className='sheet-section-title'>Output Orientation & Size</span>
+            <select className='form-select' value={settings.presetId} onChange={handlePresetChange}>
+              <optgroup label='Apple App Store (iOS)'>
+                {STORE_PRESETS.filter((p) => p.platform === 'ios').map((preset) => (
+                  <option key={preset.id} value={preset.id}>
+                    {preset.name} ({preset.width}x{preset.height})
+                  </option>
+                ))}
               </optgroup>
-              <optgroup label="Google Play Store (Android)">
-                {STORE_PRESETS.filter((p) => p.platform === "android").map(
-                  (preset) => (
-                    <option key={preset.id} value={preset.id}>
-                      {preset.name} ({preset.width}x{preset.height})
-                    </option>
-                  ),
-                )}
+              <optgroup label='Google Play Store (Android)'>
+                {STORE_PRESETS.filter((p) => p.platform === 'android').map((preset) => (
+                  <option key={preset.id} value={preset.id}>
+                    {preset.name} ({preset.width}x{preset.height})
+                  </option>
+                ))}
               </optgroup>
-              <optgroup label="Custom">
-                <option value="custom">Custom Dimensions</option>
+              <optgroup label='Custom'>
+                <option value='custom'>Custom Dimensions</option>
               </optgroup>
             </select>
 
             {/* Custom dimensions if 'custom' selected */}
-            {settings.presetId === "custom" && (
-              <div className="custom-dims-row">
-                <div className="input-group">
-                  <label htmlFor="custom-width">Width (px)</label>
+            {settings.presetId === 'custom' && (
+              <div className='custom-dims-row'>
+                <div className='input-group'>
+                  <label htmlFor='custom-width'>Width (px)</label>
                   <input
-                    id="custom-width"
-                    type="number"
-                    className="form-input"
+                    id='custom-width'
+                    type='number'
+                    className='form-input'
                     value={settings.width}
                     onChange={handleCustomWidthChange}
-                    min="100"
-                    max="4000"
+                    min='100'
+                    max='4000'
                   />
                 </div>
-                <div className="input-group">
-                  <label htmlFor="custom-height">Height (px)</label>
+                <div className='input-group'>
+                  <label htmlFor='custom-height'>Height (px)</label>
                   <input
-                    id="custom-height"
-                    type="number"
-                    className="form-input"
+                    id='custom-height'
+                    type='number'
+                    className='form-input'
                     value={settings.height}
                     onChange={handleCustomHeightChange}
-                    min="100"
-                    max="4000"
+                    min='100'
+                    max='4000'
                   />
                 </div>
               </div>
@@ -382,137 +366,132 @@ export const ExportSettingsSheet: React.FC<ExportSettingsSheetProps> = ({
           </div>
 
           {/* Scaling / Fit Mode Selector */}
-          <div className="sheet-section">
-            <span className="sheet-section-title">Fit & Scaling Mode</span>
-            <div className="segmented-control">
+          <div className='sheet-section'>
+            <span className='sheet-section-title'>Fit & Scaling Mode</span>
+            <div className='segmented-control'>
               <button
-                type="button"
-                className={`segment-btn ${settings.fitMode === "fit" ? "active" : ""}`}
-                onClick={() => handleFitModeChange("fit")}
+                type='button'
+                className={`segment-btn ${settings.fitMode === 'fit' ? 'active' : ''}`}
+                onClick={() => handleFitModeChange('fit')}
               >
                 Fit with Padding
               </button>
               <button
-                type="button"
-                className={`segment-btn ${settings.fitMode === "fill" ? "active" : ""}`}
-                onClick={() => handleFitModeChange("fill")}
+                type='button'
+                className={`segment-btn ${settings.fitMode === 'fill' ? 'active' : ''}`}
+                onClick={() => handleFitModeChange('fill')}
               >
                 Fill and Crop
               </button>
             </div>
             <p
               style={{
-                margin: "4px 0 0 0",
-                fontSize: "0.8rem",
-                color: "var(--color-text-secondary)",
+                margin: '4px 0 0 0',
+                fontSize: '0.8rem',
+                color: 'var(--color-text-secondary)',
               }}
             >
-              {settings.fitMode === "fit"
-                ? "Scales the video to fit within the target dimensions, adding black bars."
-                : "Scales the video to fill the target dimensions, cropping the excess width or height."}
+              {settings.fitMode === 'fit'
+                ? 'Scales the video to fit within the target dimensions, adding black bars.'
+                : 'Scales the video to fill the target dimensions, cropping the excess width or height.'}
             </p>
           </div>
 
           {/* Original Audio Setting (only when audio is embedded in video file) */}
-          {settings.audioSeparationMode === "embedded" && (
-            <div className="sheet-section">
-              <span className="sheet-section-title">Original Video Audio</span>
-              <div className="segmented-control">
+          {settings.audioSeparationMode === 'embedded' && (
+            <div className='sheet-section'>
+              <span className='sheet-section-title'>Original Video Audio</span>
+              <div className='segmented-control'>
                 <button
-                  type="button"
-                  className={`segment-btn ${settings.originalAudioMode === "keep" ? "active" : ""}`}
-                  onClick={() => handleAudioModeChange("keep")}
+                  type='button'
+                  className={`segment-btn ${settings.originalAudioMode === 'keep' ? 'active' : ''}`}
+                  onClick={() => handleAudioModeChange('keep')}
                 >
                   Keep Embedded Audio
                 </button>
                 <button
-                  type="button"
-                  className={`segment-btn ${settings.originalAudioMode === "mute" ? "active" : ""}`}
-                  onClick={() => handleAudioModeChange("mute")}
+                  type='button'
+                  className={`segment-btn ${settings.originalAudioMode === 'mute' ? 'active' : ''}`}
+                  onClick={() => handleAudioModeChange('mute')}
                 >
                   Mute Embedded Audio
                 </button>
               </div>
               <p
                 style={{
-                  margin: "4px 0 0 0",
-                  fontSize: "0.8rem",
-                  color: "var(--color-text-secondary)",
+                  margin: '4px 0 0 0',
+                  fontSize: '0.8rem',
+                  color: 'var(--color-text-secondary)',
                 }}
               >
-                {settings.originalAudioMode === "keep"
-                  ? "The original embedded audio in the video file will play in the background."
-                  : "The embedded audio in the video file will be silenced."}
+                {settings.originalAudioMode === 'keep'
+                  ? 'The original embedded audio in the video file will play in the background.'
+                  : 'The embedded audio in the video file will be silenced.'}
               </p>
             </div>
           )}
 
           {/* Quality Indicator */}
-          <div className="sheet-section">
-            <span className="sheet-section-title">Video Quality Preset</span>
-            <div className="quality-display">
+          <div className='sheet-section'>
+            <span className='sheet-section-title'>Video Quality Preset</span>
+            <div className='quality-display'>
               <div>
-                <div style={{ fontWeight: 500, fontSize: "0.9rem" }}>
+                <div style={{ fontWeight: 500, fontSize: '0.9rem' }}>
                   High Quality (AVC / H.264)
                 </div>
                 <div
                   style={{
-                    fontSize: "0.75rem",
-                    color: "var(--color-text-secondary)",
-                    marginTop: "2px",
+                    fontSize: '0.75rem',
+                    color: 'var(--color-text-secondary)',
+                    marginTop: '2px',
                   }}
                 >
                   Targeting CRF 22, FastStart optimized for App Store upload.
                 </div>
               </div>
-              <span className="quality-badge">CRF 22</span>
+              <span className='quality-badge'>CRF 22</span>
             </div>
           </div>
 
           {/* Store Readiness Panel */}
           {video && hasWarnings && (
-            <div className="warning-panel">
-              <div className="warning-panel-header">
+            <div className='warning-panel'>
+              <div className='warning-panel-header'>
                 <AlertTriangle size={18} />
                 <span>Store Compliance Warnings</span>
               </div>
-              <ul className="warning-list">
+              <ul className='warning-list'>
                 {warnings.map((w, idx) => (
                   <li key={idx}>{w}</li>
                 ))}
               </ul>
-              <div className="warning-note">
-                This export may not meet store preview requirements, but you can
-                still export it.
+              <div className='warning-note'>
+                This export may not meet store preview requirements, but you can still export it.
               </div>
             </div>
           )}
         </div>
 
-        <div className="sheet-footer">
+        <div className='sheet-footer'>
           {hasWarnings ? (
             <>
               <button
-                className="btn-primary"
+                className='btn-primary'
                 onClick={handleStartExport}
                 disabled={isExportDisabled}
               >
                 <AlertTriangle size={18} />
                 Export Anyway
               </button>
-              <button className="btn-secondary" onClick={onClose}>
+              <button className='btn-secondary' onClick={onClose}>
                 Review Settings
               </button>
             </>
           ) : (
-            <button
-              className="btn-primary"
-              onClick={handleStartExport}
-              disabled={isExportDisabled}
-            >
+            <button className='btn-primary' onClick={handleStartExport} disabled={isExportDisabled}>
               <Check size={18} />
               {hasTextCues && selectedLocales.size > 0
-                ? `Export ${selectedLocales.size} Locale${selectedLocales.size > 1 ? "s" : ""}`
+                ? `Export ${selectedLocales.size} Locale${selectedLocales.size > 1 ? 's' : ''}`
                 : `Export ${tw} x ${th} MP4`}
             </button>
           )}

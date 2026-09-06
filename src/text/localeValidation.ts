@@ -4,8 +4,8 @@
  * Files are identified by canonical BCP 47 filename (en.json, pt-BR.json,
  * ar.json). Locale tags are canonicalized with Intl.getCanonicalLocales.
  */
-import { RESERVED_LOCALE_FILENAMES } from "./constants";
-import type { CatalogFileSummary, LocaleCode } from "./types";
+import { RESERVED_LOCALE_FILENAMES } from './constants';
+import type { CatalogFileSummary, LocaleCode } from './types';
 
 /**
  * Canonicalize a BCP 47 tag, e.g. "pt-br" -> "pt-BR". Returns null when the tag
@@ -14,7 +14,7 @@ import type { CatalogFileSummary, LocaleCode } from "./types";
 export const canonicalizeLocale = (tag: string): LocaleCode | null => {
   try {
     const [canonical] = Intl.getCanonicalLocales(tag);
-    return typeof canonical === "string" ? canonical : null;
+    return typeof canonical === 'string' ? canonical : null;
   } catch {
     return null;
   }
@@ -22,16 +22,16 @@ export const canonicalizeLocale = (tag: string): LocaleCode | null => {
 
 /** Extract the locale tag from a catalog filename ("pt-BR.json" -> "pt-BR"). */
 export const localeTagFromFileName = (fileName: string): string | null => {
-  const base = fileName.split("/").pop() ?? fileName;
+  const base = fileName.split('/').pop() ?? fileName;
   if (!/\.json$/i.test(base)) return null;
-  const stem = base.replace(/\.json$/i, "");
-  if (stem === "") return null;
+  const stem = base.replace(/\.json$/i, '');
+  if (stem === '') return null;
   return stem;
 };
 
 /** Reserved filenames (timeline.json) may not be locale catalogs. */
 export const isReservedFileName = (fileName: string): boolean => {
-  const base = (fileName.split("/").pop() ?? fileName).toLowerCase();
+  const base = (fileName.split('/').pop() ?? fileName).toLowerCase();
   return RESERVED_LOCALE_FILENAMES.some((r) => r.toLowerCase() === base);
 };
 
@@ -47,10 +47,8 @@ export const localeFromFile = (fileName: string): LocaleCode | null => {
 };
 
 /** Is this locale one of the built-in initial locales? */
-export const isBuiltInLocale = (
-  locale: LocaleCode,
-  builtIns: LocaleCode[],
-): boolean => builtIns.some((b) => b === locale);
+export const isBuiltInLocale = (locale: LocaleCode, builtIns: LocaleCode[]): boolean =>
+  builtIns.some((b) => b === locale);
 
 /**
  * Validate the raw JSON value of a catalog file. Accepts a top-level object of
@@ -64,8 +62,8 @@ export const validateCatalogValue = (
   value: unknown,
 ): { strings: Record<string, string> | null; summary: CatalogFileSummary } => {
   const reasons: string[] = [];
-  if (value == null || typeof value !== "object" || Array.isArray(value)) {
-    reasons.push("Top level must be an object of string values.");
+  if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+    reasons.push('Top level must be an object of string values.');
     return {
       strings: null,
       summary: {
@@ -80,11 +78,11 @@ export const validateCatalogValue = (
   const obj = value as Record<string, unknown>;
   const strings: Record<string, string> = {};
   for (const [key, val] of Object.entries(obj)) {
-    if (key === "") {
-      reasons.push("Empty string keys are not allowed.");
+    if (key === '') {
+      reasons.push('Empty string keys are not allowed.');
       continue;
     }
-    if (typeof val !== "string") {
+    if (typeof val !== 'string') {
       reasons.push(`Value for key "${key}" must be a string.`);
       continue;
     }
@@ -112,10 +110,8 @@ export const defaultPreviewLocale = (
     const canon = canonicalizeLocale(browserLocale);
     if (canon && importedLocales.includes(canon)) return canon;
     // Fall back to language-only match (e.g. browser "en-US" -> imported "en").
-    const lang = browserLocale.split("-")[0];
-    const langMatch = importedLocales.find(
-      (l) => l === lang || l.split("-")[0] === lang,
-    );
+    const lang = browserLocale.split('-')[0];
+    const langMatch = importedLocales.find((l) => l === lang || l.split('-')[0] === lang);
     if (langMatch) return langMatch;
   }
   return importedLocales[0]!;

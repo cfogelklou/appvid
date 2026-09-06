@@ -9,8 +9,8 @@
 /** Canonical BCP 47 locale code (e.g. "en", "pt-BR", "ja"). */
 export type LocaleCode = string;
 
-export type HorizontalTextAlign = "left" | "center" | "right";
-export type VerticalTextAlign = "top" | "middle" | "bottom";
+export type HorizontalTextAlign = 'left' | 'center' | 'right';
+export type VerticalTextAlign = 'top' | 'middle' | 'bottom';
 
 /** Shared interval shape used by audio segments, video segments, and text cues. */
 export interface TimelineInterval {
@@ -19,8 +19,7 @@ export interface TimelineInterval {
 }
 
 /** Half-open end time: a cue is active on `[startTime, stopTime)`. */
-export const stopTimeOf = (i: TimelineInterval): number =>
-  i.startTime + i.duration;
+export const stopTimeOf = (i: TimelineInterval): number => i.startTime + i.duration;
 
 /** A cue active at time `t` satisfies `startTime <= t < stopTime`. */
 export const isIntervalActive = (i: TimelineInterval, t: number): boolean =>
@@ -46,7 +45,7 @@ export const resolveTextCue = (cue: TextCue): TextCueDefinition => ({
 /** A cue in the project, either imported from timeline.json or placed manually. */
 export interface TextCue {
   id: string;
-  origin: "timeline-import" | "manual";
+  origin: 'timeline-import' | 'manual';
   base: TextCueDefinition;
   /** Non-destructive editor changes; cleared by "Reset to imported defaults". */
   overrides: Partial<TextCueDefinition>;
@@ -69,13 +68,13 @@ export interface TextProjectState {
 
 /** Discriminated project selection replaces several nullable IDs. */
 export type ProjectSelection =
-  | { kind: "audio"; id: string }
-  | { kind: "video"; id: string }
-  | { kind: "text"; id: string }
+  | { kind: 'audio'; id: string }
+  | { kind: 'video'; id: string }
+  | { kind: 'text'; id: string }
   | null;
 
 /** Which font a resolved cue renders with. */
-export type TextFontFamily = "noto-sans" | "noto-sans-jp";
+export type TextFontFamily = 'noto-sans' | 'noto-sans-jp';
 
 /**
  * Frozen layout contract. Preview (DOM) and exporter (drawtext) MUST consume
@@ -106,15 +105,11 @@ export interface LaidOutTextCue {
   /** Measured total block height in output px. */
   blockHeight: number;
   overflow: boolean;
-  overflowAxis: "none" | "horizontal" | "vertical" | "both";
+  overflowAxis: 'none' | 'horizontal' | 'vertical' | 'both';
 }
 
 /** Measures rendered text width in output pixels. Injectable for tests. */
-export type MeasureText = (
-  text: string,
-  fontFamily: TextFontFamily,
-  fontSize: number,
-) => number;
+export type MeasureText = (text: string, fontFamily: TextFontFamily, fontSize: number) => number;
 
 /** Frame dimensions for layout. */
 export interface FrameGeometry {
@@ -193,13 +188,7 @@ export interface LocaleKeyValidation {
 }
 
 export type BatchItemStatus =
-  | "queued"
-  | "blocked"
-  | "rendering"
-  | "writing"
-  | "completed"
-  | "failed"
-  | "cancelled";
+  'queued' | 'blocked' | 'rendering' | 'writing' | 'completed' | 'failed' | 'cancelled';
 
 export interface BatchRecoveryItem {
   locale: LocaleCode;

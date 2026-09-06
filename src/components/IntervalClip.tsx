@@ -2,12 +2,12 @@
  * Generic interval clip component shared by audio and text tracks.
  * Handles drag-to-move, keyboard nudge, click-select, and renders in assigned lanes.
  */
-import React, { useRef, useState, useEffect } from "react";
-import { timeToX, xToTime } from "../utils/timelineMath";
-import { useProject } from "../context/ProjectContext";
-import type { TimelineInterval } from "../text/types";
-import { nudgeInterval, clampStartTime } from "../utils/intervalUtils";
-import type { ProjectSelection } from "../text/types";
+import React, { useRef, useState, useEffect } from 'react';
+import { timeToX, xToTime } from '../utils/timelineMath';
+import { useProject } from '../context/ProjectContext';
+import type { TimelineInterval } from '../text/types';
+import { nudgeInterval, clampStartTime } from '../utils/intervalUtils';
+import type { ProjectSelection } from '../text/types';
 
 interface IntervalClipProps {
   /** Interval data (startTime, duration). */
@@ -49,7 +49,7 @@ export const IntervalClip: React.FC<IntervalClipProps> = ({
   lane,
   laneHeight,
   color,
-  className = "",
+  className = '',
   warning = false,
   onContextMenu,
 }) => {
@@ -64,9 +64,7 @@ export const IntervalClip: React.FC<IntervalClipProps> = ({
   } | null>(null);
 
   const isDragging = dragState !== null;
-  const currentStartTime = isDragging
-    ? dragState.previewTime
-    : interval.startTime;
+  const currentStartTime = isDragging ? dragState.previewTime : interval.startTime;
   const left = timeToX(currentStartTime, zoom);
   const width = timeToX(interval.duration, zoom);
 
@@ -75,7 +73,7 @@ export const IntervalClip: React.FC<IntervalClipProps> = ({
     const m = Math.floor(time / 60);
     const s = Math.floor(time % 60);
     const ms = Math.floor((time % 1) * 10);
-    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}.${ms}`;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${ms}`;
   };
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -84,7 +82,7 @@ export const IntervalClip: React.FC<IntervalClipProps> = ({
 
     e.stopPropagation();
     e.currentTarget.setPointerCapture(e.pointerId);
-    onSelect({ kind: "text", id });
+    onSelect({ kind: 'text', id });
 
     setDragState({
       startX: e.clientX,
@@ -103,10 +101,7 @@ export const IntervalClip: React.FC<IntervalClipProps> = ({
     // Get video duration for bounds
     const maxEnd = project.video
       ? project.videoSegments && project.videoSegments.length > 0
-        ? project.videoSegments.reduce(
-            (max, seg) => Math.max(max, seg.startTime + seg.duration),
-            0,
-          )
+        ? project.videoSegments.reduce((max, seg) => Math.max(max, seg.startTime + seg.duration), 0)
         : project.video.duration
       : null;
 
@@ -143,21 +138,17 @@ export const IntervalClip: React.FC<IntervalClipProps> = ({
 
   // Keyboard nudge support (when selected)
   useEffect(() => {
-    if (!selected || selection?.kind !== "text" || selection.id !== id) return;
+    if (!selected || selection?.kind !== 'text' || selection.id !== id) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       const activeTag = document.activeElement?.tagName;
-      if (
-        activeTag === "INPUT" ||
-        activeTag === "TEXTAREA" ||
-        activeTag === "SELECT"
-      ) {
+      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') {
         return;
       }
 
       const step = e.shiftKey ? 1.0 : 0.1;
 
-      if (e.key === "ArrowLeft") {
+      if (e.key === 'ArrowLeft') {
         e.preventDefault();
         const maxEnd = project.video
           ? project.videoSegments && project.videoSegments.length > 0
@@ -170,7 +161,7 @@ export const IntervalClip: React.FC<IntervalClipProps> = ({
 
         const nudged = nudgeInterval(interval, -step, { maxEnd });
         onUpdate(id, { startTime: nudged.startTime });
-      } else if (e.key === "ArrowRight") {
+      } else if (e.key === 'ArrowRight') {
         e.preventDefault();
         const maxEnd = project.video
           ? project.videoSegments && project.videoSegments.length > 0
@@ -186,14 +177,14 @@ export const IntervalClip: React.FC<IntervalClipProps> = ({
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selected, selection, interval, project, id, onUpdate]);
 
   return (
     <div
       ref={clipRef}
-      className={`interval-clip ${selected ? "selected" : ""} ${isDragging ? "dragging" : ""} ${warning ? "warning" : ""} ${className}`}
+      className={`interval-clip ${selected ? 'selected' : ''} ${isDragging ? 'dragging' : ''} ${warning ? 'warning' : ''} ${className}`}
       style={{
         left: `${left}px`,
         width: `${width}px`,
@@ -201,7 +192,7 @@ export const IntervalClip: React.FC<IntervalClipProps> = ({
         height: `${laneHeight - 6}px`,
         ...(color ? { backgroundColor: color, borderColor: color } : {}),
       }}
-      role="button"
+      role='button'
       tabIndex={0}
       aria-label={`${label}: ${formatTime(currentStartTime)} - ${formatTime(currentStartTime + interval.duration)}`}
       onPointerDown={handlePointerDown}
@@ -210,19 +201,16 @@ export const IntervalClip: React.FC<IntervalClipProps> = ({
       onPointerCancel={handlePointerCancel}
       onContextMenu={onContextMenu}
     >
-      <div className="interval-clip-content">
-        <div className="interval-clip-label">{label}</div>
-        <div className="interval-clip-timecode">
-          {formatTime(currentStartTime)} -{" "}
-          {formatTime(currentStartTime + interval.duration)}
+      <div className='interval-clip-content'>
+        <div className='interval-clip-label'>{label}</div>
+        <div className='interval-clip-timecode'>
+          {formatTime(currentStartTime)} - {formatTime(currentStartTime + interval.duration)}
         </div>
       </div>
 
       {/* Snap time overlay bubble (shown during drag) */}
       {isDragging && (
-        <div className="interval-clip-drag-bubble">
-          {formatTime(dragState.previewTime)}
-        </div>
+        <div className='interval-clip-drag-bubble'>{formatTime(dragState.previewTime)}</div>
       )}
     </div>
   );

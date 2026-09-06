@@ -23,7 +23,7 @@
   transform: translate(-50%, -50%);
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
+  background: none;
   pointer-events: none;
   z-index: 0;
 }
@@ -43,8 +43,7 @@
   box-shadow:
     0 0 0 12px #232326,
     0 0 0 13px #2d2d31,
-    0 20px 40px -10px rgba(0, 0, 0, 0.7),
-    0 0 50px 0 rgba(99, 102, 241, 0.15);
+    0 20px 40px -10px rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -56,8 +55,7 @@
   box-shadow:
     0 0 0 12px #252529,
     0 0 0 13px #323237,
-    0 25px 50px -12px rgba(0, 0, 0, 0.8),
-    0 0 60px 0 rgba(99, 102, 241, 0.25);
+    0 25px 50px -12px rgba(0, 0, 0, 0.8);
 }
 
 /* Virtual Notch / Dynamic Island */
@@ -177,12 +175,11 @@
   box-sizing: border-box;
   text-align: center;
   color: #a1a1aa;
-  cursor: pointer;
   background: radial-gradient(circle at center, #1b1b1f 0%, #111113 100%);
   transition: background-color 0.2s ease;
 }
 
-.preview-empty-state:hover {
+.preview-empty-state:has(.preview-empty-state-action:hover) {
   background: radial-gradient(circle at center, #222228 0%, #141416 100%);
 }
 
@@ -190,12 +187,12 @@
   width: 48px;
   height: 48px;
   margin-bottom: 16px;
-  color: #6366f1;
-  filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.4));
+  color: #007ee6;
+  filter: none;
 }
 
 .preview-empty-state h3 {
-  font-family: 'Outfit', 'Inter', sans-serif;
+  font-family: var(--font-sans);
   font-size: 16px;
   font-weight: 600;
   color: #f4f4f5;
@@ -203,10 +200,27 @@
 }
 
 .preview-empty-state p {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
   font-size: 12px;
   margin: 0;
   line-height: 1.5;
+}
+
+.preview-empty-state-action {
+  min-height: 44px;
+  margin-top: 16px;
+  padding: 10px 16px;
+  border: 1px solid var(--color-primary-active);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-primary);
+  color: #ffffff;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.preview-empty-state-action:hover {
+  background-color: var(--color-primary-active);
 }
 
 .preview-file-input {
@@ -242,14 +256,14 @@
 }
 
 .relink-container h3 {
-  font-family: 'Outfit', 'Inter', sans-serif;
+  font-family: var(--font-sans);
   font-size: 16px;
   margin: 0 0 8px 0;
   font-weight: 600;
 }
 
 .relink-container p {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
   font-size: 12px;
   color: #a1a1aa;
   margin: 0 0 20px 0;
@@ -257,21 +271,21 @@
 }
 
 .relink-btn {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 500;
   font-size: 12px;
   color: #ffffff;
-  background-color: #6366f1;
+  background-color: #007ee6;
   border: none;
   border-radius: 8px;
   padding: 8px 16px;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 126, 230, 0.3);
 }
 
 .relink-btn:hover {
-  background-color: #4f46e5;
+  background-color: #0063bb;
   transform: translateY(-1px);
 }
 
@@ -288,7 +302,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 6px 12px;
   border-radius: 20px;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
   font-size: 11px;
   color: #e4e4e7;
   font-weight: 500;

@@ -13,15 +13,14 @@ export const formatTimecode = (seconds: number): string => {
   const h = Math.floor(totalSeconds / 3600);
   const m = Math.floor((totalSeconds % 3600) / 60);
   const s = totalSeconds % 60;
-  const mm = (n: number) => n.toString().padStart(2, "0");
-  const msStr = millis.toString().padStart(3, "0");
+  const mm = (n: number) => n.toString().padStart(2, '0');
+  const msStr = millis.toString().padStart(3, '0');
   if (h > 0) return `${h}:${mm(m)}:${mm(s)}.${msStr}`;
   return `${m}:${mm(s)}.${msStr}`;
 };
 
 /** Format seconds as a derived stop time, e.g. "→ 0:03.000". */
-export const formatStopLabel = (seconds: number): string =>
-  `→ ${formatTimecode(seconds)}`;
+export const formatStopLabel = (seconds: number): string => `→ ${formatTimecode(seconds)}`;
 
 /**
  * Parse a timecode string to seconds. Accepts:
@@ -35,21 +34,20 @@ export const formatStopLabel = (seconds: number): string =>
  */
 export const parseTimecode = (input: string): number | null => {
   const trimmed = input.trim();
-  if (trimmed === "") return null;
+  if (trimmed === '') return null;
   // Pure decimal seconds.
   if (/^\d+(\.\d+)?$/.test(trimmed)) {
     const n = Number(trimmed);
     return Number.isFinite(n) ? n : null;
   }
-  const parts = trimmed.split(":");
+  const parts = trimmed.split(':');
   const num = (s: string) => {
     const n = Number(s);
     return Number.isFinite(n) ? n : NaN;
   };
   if (parts.length === 2) {
     // M:SS[.mmm]
-    if (!/^\d+$/.test(parts[0]) || !/^\d{1,2}(\.\d{1,3})?$/.test(parts[1]))
-      return null;
+    if (!/^\d+$/.test(parts[0]) || !/^\d{1,2}(\.\d{1,3})?$/.test(parts[1])) return null;
     const sec = num(parts[1]);
     if (sec >= 60) return null;
     return num(parts[0]) * 60 + sec;

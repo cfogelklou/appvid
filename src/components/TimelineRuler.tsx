@@ -1,6 +1,6 @@
-import React from "react";
-import { useProject } from "../context/ProjectContext";
-import { timeToX } from "../utils/timelineMath";
+import React from 'react';
+import { useProject } from '../context/ProjectContext';
+import { timeToX } from '../utils/timelineMath';
 
 interface TimelineRulerProps {
   duration: number;
@@ -50,27 +50,27 @@ export const TimelineRuler: React.FC<TimelineRulerProps> = ({ duration }) => {
       const s = Math.floor(roundedTime % 60);
       const ms = Math.floor((roundedTime % 1) * 10);
       if (ms > 0) {
-        return `${m}:${s.toString().padStart(2, "0")}.${ms}`;
+        return `${m}:${s.toString().padStart(2, '0')}.${ms}`;
       }
-      return `${m}:${s.toString().padStart(2, "0")}`;
+      return `${m}:${s.toString().padStart(2, '0')}`;
     }
   };
 
   return (
-    <div className="timeline-ruler">
+    <div className='timeline-ruler'>
       {majorTicks.map((time) => (
         <div
           key={`major-${time}`}
-          className="ruler-tick major"
+          className='ruler-tick major'
           style={{ left: `${timeToX(time, zoom)}px` }}
         >
-          <span className="tick-label">{formatTickLabel(time, duration)}</span>
+          <span className='tick-label'>{formatTickLabel(time, duration)}</span>
         </div>
       ))}
       {minorTicks.map((time) => (
         <div
           key={`minor-${time}`}
-          className="ruler-tick minor"
+          className='ruler-tick minor'
           style={{ left: `${timeToX(time, zoom)}px` }}
         />
       ))}

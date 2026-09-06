@@ -7,7 +7,7 @@ import type {
   TextCueDefinition,
   TextFontFamily,
   VerticalTextAlign,
-} from "./types";
+} from './types';
 
 /** Timeline.json schema version this build reads/writes. */
 export const TIMELINE_VERSION = 1;
@@ -24,9 +24,9 @@ export const SAFE_AREA_INSET_FRACTION = 0.05;
 /** Multiplier applied to fontSize to get line height. Shared preview/export. */
 export const LINE_HEIGHT_MULTIPLIER = 1.2;
 
-export const DEFAULT_HORIZONTAL_ALIGN: HorizontalTextAlign = "center";
-export const DEFAULT_VERTICAL_ALIGN: VerticalTextAlign = "bottom";
-export const DEFAULT_TEXT_COLOR = "#FFFFFF";
+export const DEFAULT_HORIZONTAL_ALIGN: HorizontalTextAlign = 'center';
+export const DEFAULT_VERTICAL_ALIGN: VerticalTextAlign = 'bottom';
+export const DEFAULT_TEXT_COLOR = '#FFFFFF';
 export const DEFAULT_FONT_SIZE = 72;
 
 /** Shared portrait target height for font-size scaling parity. */
@@ -34,31 +34,28 @@ export const PORTRAIT_REFERENCE_HEIGHT = 1920;
 
 /** Built-in locales imported automatically (English and text are optional). */
 export const BUILT_IN_LOCALES: LocaleCode[] = [
-  "en",
-  "sv",
-  "it",
-  "tr",
-  "pt-BR",
-  "de",
-  "fr",
-  "ja",
-  "es",
+  'en',
+  'sv',
+  'it',
+  'tr',
+  'pt-BR',
+  'de',
+  'fr',
+  'ja',
+  'es',
 ];
 
 /** Reserved filename; cannot be used as a locale catalog. */
-export const RESERVED_LOCALE_FILENAMES = ["timeline.json"];
+export const RESERVED_LOCALE_FILENAMES = ['timeline.json'];
 
 /** drawtext expects the path relative to FFmpeg's virtual FS root. */
-export const FONT_ASSET: Record<
-  TextFontFamily,
-  { fileName: string; cssFamily: string }
-> = {
-  "noto-sans": {
-    fileName: "NotoSans-Regular.ttf",
+export const FONT_ASSET: Record<TextFontFamily, { fileName: string; cssFamily: string }> = {
+  'noto-sans': {
+    fileName: 'NotoSans-Regular.ttf',
     cssFamily: "'Noto Sans', sans-serif",
   },
-  "noto-sans-jp": {
-    fileName: "NotoSansJP-Regular.ttf",
+  'noto-sans-jp': {
+    fileName: 'NotoSansJP-Regular.ttf',
     cssFamily: "'Noto Sans JP', sans-serif",
   },
 };
@@ -68,12 +65,12 @@ export const FONT_ASSET: Record<
  * entry in FONT_ASSET above) to support a new script. Falls back to Noto Sans.
  */
 const LOCALE_LANGUAGE_FONT: Partial<Record<string, TextFontFamily>> = {
-  ja: "noto-sans-jp",
+  ja: 'noto-sans-jp',
 };
-const LOCALE_FONT_FAMILY_DEFAULT: TextFontFamily = "noto-sans";
+const LOCALE_FONT_FAMILY_DEFAULT: TextFontFamily = 'noto-sans';
 
 export const fontFamilyForLocale = (locale: LocaleCode): TextFontFamily =>
-  LOCALE_LANGUAGE_FONT[locale.split("-")[0]] ?? LOCALE_FONT_FAMILY_DEFAULT;
+  LOCALE_LANGUAGE_FONT[locale.split('-')[0]] ?? LOCALE_FONT_FAMILY_DEFAULT;
 
 /**
  * Build a cue base definition using frozen defaults. Wave 0/agents use this so
@@ -105,7 +102,7 @@ export const slugifyForKey = (text: string): string => {
   const slug = text
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-  return slug || "text";
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return slug || 'text';
 };

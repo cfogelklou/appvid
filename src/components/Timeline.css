@@ -322,7 +322,7 @@
   top: 0;
   bottom: 0;
   width: 1px;
-  background-color: #ef4444; /* red playhead line */
+  background-color: var(--color-playhead);
   z-index: 50;
   pointer-events: none; /* Let clicks pass through to tracks except the handle */
 }
@@ -333,26 +333,26 @@
   left: -8px;
   width: 17px;
   height: 18px;
-  background-color: #ef4444;
+  background-color: var(--color-playhead);
   border-radius: 0 0 4px 4px;
   cursor: ew-resize;
   pointer-events: auto; /* Playhead handle is clickable and draggable! */
   z-index: 51;
   display: flex;
   justify-content: center;
-  transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.2s;
+  transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.2s;
 }
 
 .playhead-handle:hover {
   transform: scale(1.1);
-  background-color: #f43f5e; /* Rose 500 highlight */
+  background-color: var(--color-playhead-hover);
 }
 
 /* Playhead bubble */
 .playhead-bubble {
   position: absolute;
   top: -22px;
-  background-color: #ef4444;
+  background-color: var(--color-playhead);
   color: white;
   font-family: var(--mono);
   font-size: 10px;
@@ -375,7 +375,7 @@
 .playhead-line {
   width: 1px;
   height: 100%;
-  background-color: #ef4444;
+  background-color: var(--color-playhead);
 }
 
 /* Visual Video Track Lane styles */
@@ -651,4 +651,3 @@
   width: fit-content;
   pointer-events: none;
 }
-

@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   Check,
   X,
@@ -8,10 +8,10 @@ import {
   ArrowLeft,
   Share2,
   ShieldCheck,
-} from "lucide-react";
-import type { BatchRecoveryItem } from "../text/types";
-import { useProject } from "../context/ProjectContext";
-import "./components.css";
+} from 'lucide-react';
+import type { BatchRecoveryItem } from '../text/types';
+import { useProject } from '../context/ProjectContext';
+import './components.css';
 
 interface ExportCompletePanelProps {
   // For single video export (existing behavior)
@@ -28,13 +28,13 @@ interface ExportCompletePanelProps {
 }
 
 const statusConfig = {
-  queued: { label: "Queued", color: "#6b7280", icon: null },
-  blocked: { label: "Blocked", color: "#f59e0b", icon: AlertTriangle },
-  rendering: { label: "Rendering", color: "#3b82f6", icon: null },
-  writing: { label: "Writing", color: "#3b82f6", icon: null },
-  completed: { label: "Completed", color: "#10b981", icon: Check },
-  failed: { label: "Failed", color: "#ef4444", icon: X },
-  cancelled: { label: "Cancelled", color: "#6b7280", icon: null },
+  queued: { label: 'Queued', color: '#6b7280', icon: null },
+  blocked: { label: 'Blocked', color: '#f59e0b', icon: AlertTriangle },
+  rendering: { label: 'Rendering', color: '#3b82f6', icon: null },
+  writing: { label: 'Writing', color: '#3b82f6', icon: null },
+  completed: { label: 'Completed', color: '#10b981', icon: Check },
+  failed: { label: 'Failed', color: '#ef4444', icon: X },
+  cancelled: { label: 'Cancelled', color: '#6b7280', icon: null },
 };
 
 export const ExportCompletePanel: React.FC<ExportCompletePanelProps> = ({
@@ -63,28 +63,24 @@ export const ExportCompletePanel: React.FC<ExportCompletePanelProps> = ({
 
   // Batch export mode (new behavior)
   if (isBatchMode && batchItems) {
-    const completedCount = batchItems.filter(
-      (i) => i.status === "completed",
-    ).length;
-    const failedCount = batchItems.filter((i) => i.status === "failed").length;
+    const completedCount = batchItems.filter((i) => i.status === 'completed').length;
+    const failedCount = batchItems.filter((i) => i.status === 'failed').length;
     const totalCount = batchItems.length;
-    const allComplete =
-      totalCount > 0 && completedCount + failedCount === totalCount;
+    const allComplete = totalCount > 0 && completedCount + failedCount === totalCount;
 
     return (
-      <div className="export-complete-container">
-        <div className="export-complete-header">
+      <div className='export-complete-container'>
+        <div className='export-complete-header'>
           <h2>Export Complete</h2>
-          <p className="export-complete-subtitle">
-            {completedCount} of {totalCount} locale{totalCount > 1 ? "s" : ""}{" "}
-            exported successfully
+          <p className='export-complete-subtitle'>
+            {completedCount} of {totalCount} locale{totalCount > 1 ? 's' : ''} exported successfully
             {failedCount > 0 && ` (${failedCount} failed)`}
           </p>
         </div>
 
         {/* Results Table */}
-        <div className="export-results-table">
-          <table className="export-table">
+        <div className='export-results-table'>
+          <table className='export-table'>
             <thead>
               <tr>
                 <th>Locale</th>
@@ -95,16 +91,15 @@ export const ExportCompletePanel: React.FC<ExportCompletePanelProps> = ({
             </thead>
             <tbody>
               {batchItems.map((item) => {
-                const config =
-                  statusConfig[item.status as keyof typeof statusConfig];
+                const config = statusConfig[item.status as keyof typeof statusConfig];
                 const StatusIcon = config.icon;
 
                 return (
                   <tr key={item.locale}>
-                    <td className="locale-cell">{item.locale}</td>
-                    <td className="status-cell">
+                    <td className='locale-cell'>{item.locale}</td>
+                    <td className='status-cell'>
                       <span
-                        className="status-badge"
+                        className='status-badge'
                         style={{
                           backgroundColor: `${config.color}20`,
                           color: config.color,
@@ -114,11 +109,11 @@ export const ExportCompletePanel: React.FC<ExportCompletePanelProps> = ({
                         {config.label}
                       </span>
                     </td>
-                    <td className="message-cell">{item.message || "-"}</td>
-                    <td className="action-cell">
-                      {item.status === "completed" && onDownloadSingle && (
+                    <td className='message-cell'>{item.message || '-'}</td>
+                    <td className='action-cell'>
+                      {item.status === 'completed' && onDownloadSingle && (
                         <button
-                          className="btn-download-single"
+                          className='btn-download-single'
                           onClick={() => onDownloadSingle(item.locale)}
                           title={`Download ${item.locale}`}
                         >
@@ -135,16 +130,16 @@ export const ExportCompletePanel: React.FC<ExportCompletePanelProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="export-complete-footer">
+        <div className='export-complete-footer'>
           {onDownloadAll && allComplete && completedCount > 1 && (
-            <button className="btn-primary" onClick={onDownloadAll}>
+            <button className='btn-primary' onClick={onDownloadAll}>
               <Download size={18} />
               Download All as ZIP
             </button>
           )}
 
           {onExportMore && (
-            <button className="btn-secondary" onClick={onExportMore}>
+            <button className='btn-secondary' onClick={onExportMore}>
               <RotateCcw size={18} />
               Export More
             </button>
@@ -169,29 +164,29 @@ const SingleExportComplete: React.FC<{
   const presetAspectRatio = activePreset.width / activePreset.height;
 
   let counterpart: { id: string; label: string } | null = null;
-  if (activePreset.id === "appstore-portrait") {
+  if (activePreset.id === 'appstore-portrait') {
     counterpart = {
-      id: "google-play-portrait",
-      label: "Google Play (1080x1920)",
+      id: 'google-play-portrait',
+      label: 'Google Play (1080x1920)',
     };
-  } else if (activePreset.id === "google-play-portrait") {
+  } else if (activePreset.id === 'google-play-portrait') {
     counterpart = {
-      id: "appstore-portrait",
-      label: "App Store (886x1920)",
+      id: 'appstore-portrait',
+      label: 'App Store (886x1920)',
     };
-  } else if (activePreset.id === "appstore-landscape") {
+  } else if (activePreset.id === 'appstore-landscape') {
     counterpart = {
-      id: "google-play-landscape",
-      label: "Google Play (1920x1080)",
+      id: 'google-play-landscape',
+      label: 'Google Play (1920x1080)',
     };
-  } else if (activePreset.id === "google-play-landscape") {
+  } else if (activePreset.id === 'google-play-landscape') {
     counterpart = {
-      id: "appstore-landscape",
-      label: "App Store (1920x886)",
+      id: 'appstore-landscape',
+      label: 'App Store (1920x886)',
     };
   }
 
-  const [blobUrl, setBlobUrl] = React.useState<string>("");
+  const [blobUrl, setBlobUrl] = React.useState<string>('');
   const [canShare, setCanShare] = React.useState<boolean>(false);
 
   // Generate Blob URL and clean up on unmount
@@ -201,13 +196,9 @@ const SingleExportComplete: React.FC<{
     setBlobUrl(url);
 
     // Check share capability
-    const testFile = new File([outputBlob], "test.mp4", { type: "video/mp4" });
+    const testFile = new File([outputBlob], 'test.mp4', { type: 'video/mp4' });
     setCanShare(
-      !!(
-        navigator.share &&
-        navigator.canShare &&
-        navigator.canShare({ files: [testFile] })
-      ),
+      !!(navigator.share && navigator.canShare && navigator.canShare({ files: [testFile] })),
     );
 
     return () => {
@@ -218,7 +209,7 @@ const SingleExportComplete: React.FC<{
   // Programmatic download
   const handleDownload = () => {
     if (!blobUrl) return;
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = blobUrl;
     a.download = `export_preview.mp4`;
     document.body.appendChild(a);
@@ -231,15 +222,15 @@ const SingleExportComplete: React.FC<{
     if (!outputBlob) return;
     try {
       const file = new File([outputBlob], `export_preview.mp4`, {
-        type: "video/mp4",
+        type: 'video/mp4',
       });
       await navigator.share({
         files: [file],
-        title: "App Preview Video",
-        text: "Created with AppVid.",
+        title: 'App Preview Video',
+        text: 'Created with AppVid.',
       });
     } catch (e) {
-      console.warn("Share cancelled or failed:", e);
+      console.warn('Share cancelled or failed:', e);
     }
   };
 
@@ -250,32 +241,32 @@ const SingleExportComplete: React.FC<{
   };
 
   return (
-    <div className="complete-overlay">
-      <div className="complete-container">
-        <div className="complete-header">
-          <div className="complete-icon">
+    <div className='complete-overlay'>
+      <div className='complete-container'>
+        <div className='complete-header'>
+          <div className='complete-icon'>
             <Check size={28} />
           </div>
-          <h2 className="complete-title">Export Complete!</h2>
-          <p className="complete-subtitle">
+          <h2 className='complete-title'>Export Complete!</h2>
+          <p className='complete-subtitle'>
             Your app preview video was successfully created and optimized.
           </p>
         </div>
 
-        <div className="preview-layout">
+        <div className='preview-layout'>
           {/* Native video preview */}
           <div
-            className="output-preview-container"
-            data-orientation={presetAspectRatio >= 1 ? "landscape" : "portrait"}
+            className='output-preview-container'
+            data-orientation={presetAspectRatio >= 1 ? 'landscape' : 'portrait'}
             style={
               {
-                "--preset-aspect-ratio": presetAspectRatio,
+                '--preset-aspect-ratio': presetAspectRatio,
               } as React.CSSProperties
             }
           >
             {blobUrl && (
               <video
-                className="output-preview-video"
+                className='output-preview-video'
                 src={blobUrl}
                 controls
                 playsInline
@@ -287,52 +278,45 @@ const SingleExportComplete: React.FC<{
           </div>
 
           {/* Info and Actions */}
-          <div className="info-layout">
-            <div className="stats-grid">
-              <div className="stat-card">
-                <span className="stat-label">File Size</span>
-                <span className="stat-value">
-                  {formatSize(outputBlob.size)}
-                </span>
+          <div className='info-layout'>
+            <div className='stats-grid'>
+              <div className='stat-card'>
+                <span className='stat-label'>File Size</span>
+                <span className='stat-value'>{formatSize(outputBlob.size)}</span>
               </div>
             </div>
 
-            <div className="privacy-notice-panel">
+            <div className='privacy-notice-panel'>
               <ShieldCheck
                 size={20}
                 style={{
-                  color: "var(--color-success)",
+                  color: 'var(--color-success)',
                   flexShrink: 0,
-                  marginTop: "2px",
+                  marginTop: '2px',
                 }}
               />
-              <div className="privacy-notice-text">
-                <strong>Exported Locally:</strong> No files were uploaded to a
-                server. The final rendering and MP4 encoding occurred entirely
-                within this browser tab.
+              <div className='privacy-notice-text'>
+                <strong>Exported Locally:</strong> No files were uploaded to a server. The final
+                rendering and MP4 encoding occurred entirely within this browser tab.
               </div>
             </div>
 
-            <div className="action-row">
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={handleDownload}
-              >
+            <div className='action-row'>
+              <button type='button' className='btn-primary' onClick={handleDownload}>
                 <Download size={18} />
                 Download Video
               </button>
 
               {canShare && (
                 <button
-                  type="button"
-                  className="btn-secondary"
+                  type='button'
+                  className='btn-secondary'
                   onClick={handleShare}
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
                   }}
                 >
                   <Share2 size={16} />
@@ -342,16 +326,16 @@ const SingleExportComplete: React.FC<{
 
               {counterpart && onSwitchStoreAndExport && (
                 <button
-                  type="button"
-                  className="btn-secondary"
+                  type='button'
+                  className='btn-secondary'
                   onClick={() => onSwitchStoreAndExport(counterpart.id)}
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
-                    borderColor: "var(--color-primary)",
-                    color: "var(--color-primary)",
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    borderColor: 'var(--color-primary)',
+                    color: 'var(--color-primary)',
                   }}
                 >
                   <RotateCcw size={16} />
@@ -360,15 +344,15 @@ const SingleExportComplete: React.FC<{
               )}
 
               <button
-                type="button"
-                className="btn-secondary"
+                type='button'
+                className='btn-secondary'
                 onClick={onClose}
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "8px",
-                  marginTop: "12px",
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  marginTop: '12px',
                 }}
               >
                 <ArrowLeft size={16} />

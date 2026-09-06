@@ -1,7 +1,7 @@
-import React from "react";
-import { useProject } from "../context/ProjectContext";
-import { Languages } from "lucide-react";
-import "./components.css";
+import React from 'react';
+import { useProject } from '../context/ProjectContext';
+import { Languages } from 'lucide-react';
+import './components.css';
 
 export const PreviewLocaleSelector: React.FC = () => {
   const { text, setPreviewLocale } = useProject();
@@ -14,12 +14,12 @@ export const PreviewLocaleSelector: React.FC = () => {
   };
 
   return (
-    <div className="preview-locale-selector">
+    <div className='preview-locale-selector'>
       <Languages size={14} />
       <select
-        value={text.previewLocale || ""}
+        value={text.previewLocale || ''}
         onChange={handleLocaleChange}
-        className="locale-select"
+        className='locale-select'
       >
         {locales.map((locale) => (
           <option key={locale} value={locale}>

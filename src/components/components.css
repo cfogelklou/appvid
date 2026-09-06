@@ -1164,7 +1164,23 @@
 }
 
 /* Editor production-desk overrides. */
-.top-bar { padding: 10px 18px; background:var(--color-bg-rail); }
+.top-bar { gap:16px; padding:10px 18px; background:var(--color-bg-rail); }
+.top-bar-left, .top-bar-actions { display:flex; align-items:center; min-width:0; }
+.top-bar-left { gap:16px; }
+.top-bar-actions { flex:0 0 auto; gap:8px; }
+.app-logo { display:flex; align-items:center; gap:7px; flex:0 0 auto; color:var(--color-text-primary); }
+.logo-icon { color:var(--color-primary-hover); }
+.app-title { font-size:.9rem; font-weight:700; letter-spacing:-.02em; }
+.project-info { display:grid; min-width:0; gap:2px; }
+.project-name { overflow:hidden; color:var(--color-text-secondary); font-size:.72rem; text-overflow:ellipsis; white-space:nowrap; }
+.top-bar .preset-badge { display:inline-flex; align-items:center; width:max-content; max-width:100%; overflow:hidden; padding:0; color:var(--color-text-muted); font-size:.68rem; text-overflow:ellipsis; white-space:nowrap; }
+
+@media (max-width: 479px) {
+  .top-bar { gap:8px; padding-inline:14px; }
+  .top-bar-left { gap:8px; }
+  .app-title, .project-name { display:none; }
+}
+
 .editor-workspace { background:var(--color-bg-workspace); }
 .workspace-upper { border-bottom:1px solid var(--color-border); }
 .preview-section { background:#121316; }
@@ -1423,6 +1439,22 @@
 .workbench-footer { display:flex; align-items:flex-start; gap:10px; color:var(--color-text-secondary); font-size:.82rem; line-height:1.45; }.workbench-footer svg { flex:0 0 auto; margin-top:1px; color:var(--color-primary-hover); }
 .landing-reference { display:flex; flex-direction:column; gap:20px; background:var(--color-bg-panel); }.landing-product-figure { margin:0; border:1px solid var(--color-border); background:var(--color-bg-surface); }.landing-product-image { width:100%; height:240px; margin:0; border:0; border-radius:0; box-shadow:none; object-fit:contain; }.landing-product-figure figcaption { display:flex; gap:8px; padding:12px; color:var(--color-text-secondary); font-size:.76rem; line-height:1.4; }.landing-product-figure svg { flex:0 0 auto; color:var(--color-primary-hover); }
 .reference-notes, .guidance-card, .restore-card { display:grid; gap:12px; }.restore-card { padding-top:18px; border-top:1px solid var(--color-primary); background:none; border-inline-color:transparent; }
+
+/* Imported-video facts are data pairs, not a run of adjacent inline text. */
+.metadata-panel { display: grid; gap: 16px; }
+.metadata-panel .import-title { margin: 0 !important; }
+.metadata-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 20px; }
+.metadata-item { display: grid; grid-template-columns: max-content minmax(0, 1fr); align-items: baseline; gap: 8px; min-width: 0; }
+.metadata-item.full-width { grid-column: 1 / -1; }
+.metadata-label { color: var(--color-text-secondary); font-size: 0.78rem; font-weight: 600; }
+.metadata-value { min-width: 0; color: var(--color-text-primary); font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.metadata-item.full-width .metadata-value { overflow-wrap: anywhere; white-space: normal; }
+
+@media (max-width: 479px) {
+  .metadata-grid { grid-template-columns: 1fr; }
+  .metadata-item.full-width { grid-column: auto; }
+}
+
 /* Tablet is a distinct production context: keep source and reference visible,
    but do not squeeze the desktop's three working regions into a narrow frame. */
 @media (min-width: 680px) and (max-width: 1179px) {

@@ -10,6 +10,7 @@
 - [x] **VD-04:** The screen adapts from a three-region desk to a single-column mobile order without horizontal overflow.
 - [x] **VD-05:** Tablet widths use a compact workflow strip and a two-region import/reference desk; the three-region layout begins only when its content has room.
 - [x] **VD-06:** On narrow editor screens, the preview, production tools, and timeline remain reachable as a deliberate vertical sequence without horizontal clipping.
+- [x] **VD-07:** Imported-video facts retain visible separation between their labels and values, and the top bar keeps project metadata in normal flow.
 
 ### Design approval
 
@@ -25,4 +26,5 @@ The user approved a technical-editorial direction: graphite workspace, compact o
 
 - Playwright captures at 320×568, 390×844, 768×1024, and 1440×1000 show no document-level horizontal overflow.
 - A temporary 390×844 recording was imported through the visible file flow. At 390×844, the editor keeps its preview, 54px tool tabs, and timeline in the app-content scroll sequence; the timeline retains its own horizontal scroll viewport (356px visible / 1600px content).
+- Playwright captures of the import-review state at 768px and 1440px confirm readable metadata pairs, an intact output-notes panel, and no collision between AppVid and the store preset in the top bar.
 - Run existing lint, test, build, Unslop, and Impeccable detector checks.

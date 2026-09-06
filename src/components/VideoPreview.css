@@ -294,7 +294,7 @@
 }
 
 /* Preset badge overlay */
-.preset-badge {
+.preview-preset-badge {
   position: absolute;
   top: 24px;
   background-color: rgba(0, 0, 0, 0.6);
@@ -314,7 +314,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.preset-badge::before {
+.preview-preset-badge::before {
   content: '';
   width: 6px;
   height: 6px;

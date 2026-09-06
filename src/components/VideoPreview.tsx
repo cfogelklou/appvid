@@ -285,7 +285,7 @@ export const VideoPreview: React.FC = () => {
     >
       {/* Target Store Preset Badge */}
       {project.video && (
-        <div className='preset-badge'>
+        <div className='preview-preset-badge'>
           {activePreset.name} ({project.settings.fitMode.toUpperCase()})
         </div>
       )}
